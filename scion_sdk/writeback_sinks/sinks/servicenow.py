@@ -1,4 +1,4 @@
-"""ServiceNow CMDB write-back sink (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""ServiceNow CMDB write-back sink (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 Backfeeds the KG into ServiceNow — creates inventory CIs/products, enriches
 existing records, writes inferred CI relations, and retires decommissioned CIs —
@@ -259,7 +259,7 @@ class ServiceNowSink(WritebackClientMixin):
         if not (sys_id and note):
             result.skipped += 1
             return
-        # X5 (CONCEPT:AU-KG.temporal.bi-temporal-memory-layers): work_notes IS the
+        # X5 (CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers): work_notes IS the
         # ServiceNow-native audit-trail field, so the KG-state instant this
         # recommendation derived from is appended directly into the note text
         # sent to ServiceNow — not just our own returned proposal/manifest.

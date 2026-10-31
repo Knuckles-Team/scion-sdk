@@ -116,7 +116,7 @@ Specs are already designed. The work is implementation, delivered in very small,
   `artifact_kind` (lists/validates/maps one kind of MCP-served content,
   including the `skill` kind in `scion_sdk/artifacts/skills.py`),
   `transport` (opens sessions), `sink` (durably accepts batches and content
-  packs), `writeback` (applies an EG-owned change set through an authorized
+  packs), `writeback` (applies a Medulla-owned change set through an authorized
   source transport), and `repair_proposals`.
 - **Reference adapters** (`scion_sdk/adapters/`): the shipped
   `scion_sdk.source_adapters` entry point (`mcp_tool`) and the event

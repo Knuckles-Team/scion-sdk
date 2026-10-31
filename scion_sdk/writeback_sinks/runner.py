@@ -37,7 +37,7 @@ def _stamp_proposals_as_of(
     proposals: list[dict[str, Any]], as_of: str | None
 ) -> list[dict[str, Any]]:
     """Attach ``as_of`` to each proposal — the write-path audit-trail twin of the
-    read path's long-standing ``as_of`` support (CONCEPT:AU-KG.temporal.bi-temporal-memory-layers, X5).
+    read path's long-standing ``as_of`` support (CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers, X5).
 
     A falsy ``as_of`` (the default when a caller doesn't supply one) returns
     ``proposals`` unchanged, so every pre-existing caller sees byte-identical
@@ -67,7 +67,7 @@ def run_writeback(
     and returns a uniform manifest. ``ops`` carries target-specific payloads
     (inferences / enrichments / creations / retirements / process_ids / …).
 
-    ``as_of`` (ISO-8601, CONCEPT:AU-KG.temporal.bi-temporal-memory-layers) is the bitemporal
+    ``as_of`` (ISO-8601, CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers) is the bitemporal
     valid-time this pass asserts its writes are valid as of — threaded onto the
     :class:`WritebackContext` a sink receives so it can stamp
     ``storage_time``/``event_time``/``valid_from``/``valid_to`` (via

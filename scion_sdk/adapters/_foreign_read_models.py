@@ -148,7 +148,7 @@ def _check_column(name: str, value: Any) -> None:
 
 
 class ForeignReadOpenRequest(_Strict):
-    """Exact EG ``ForeignReadOpenRequest``; approval remains an EG-owned DTO."""
+    """Exact EG ``ForeignReadOpenRequest``; approval remains a Medulla-owned DTO."""
 
     schema_version: int = Field(ge=0, le=65_535)
     source_name: str = Field(min_length=1, max_length=_MAX_ID_BYTES)

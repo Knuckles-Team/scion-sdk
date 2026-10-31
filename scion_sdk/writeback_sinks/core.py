@@ -1,6 +1,6 @@
-"""Unified write-back core: result, resolver, gate, sink registry (CONCEPT:EG-KG.storage.nonblocking-checkpoint/2.9).
+"""Unified write-back core: result, resolver, gate, sink registry (CONCEPT:MEDULLA-KG.storage.nonblocking-checkpoint/2.9).
 
-Bitemporal ``as_of`` on writeback (CONCEPT:AU-KG.temporal.bi-temporal-memory-layers): read
+Bitemporal ``as_of`` on writeback (CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers): read
 paths (``engine_query.py``, ``hybrid_retriever.py``, ``context_compiler.py``) have long
 accepted an ``as_of`` instant and filtered rows via
 :func:`~agent_utilities.knowledge_graph.core.bitemporal.filter_as_of`; nothing on the
@@ -90,7 +90,7 @@ class WritebackContext:
     backend: Any = None
     engine: Any = None
     #: bitemporal valid-time (ISO-8601) this writeback pass asserts its writes
-    #: are valid as of — CONCEPT:AU-KG.temporal.bi-temporal-memory-layers.
+    #: are valid as of — CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers.
     #: ``None`` (the default) means "now": :meth:`stamp_valid_time` then
     #: stamps wall-clock storage/event/valid_from, matching every caller's
     #: pre-existing behavior byte-for-byte.
@@ -127,7 +127,7 @@ class WritebackContext:
         pass into a skip/update instead of a duplicate create. Also stamps this
         context's bitemporal validity (:meth:`stamp_valid_time`) onto the SAME
         props, so the mirrored record carries a ``valid_from``/``valid_to`` an
-        ``as_of`` read can filter on (CONCEPT:AU-KG.temporal.bi-temporal-memory-layers).
+        ``as_of`` read can filter on (CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers).
 
         Best-effort (fail-closed): a stamp failure never breaks the sink write —
         it only means the node may be re-proposed next pass.

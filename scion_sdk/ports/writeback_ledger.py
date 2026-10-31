@@ -18,7 +18,7 @@ __all__ = ["WriteBackLedger"]
 
 @runtime_checkable
 class WriteBackLedger(Protocol):
-    """Persist and read EG-owned change sets and append-only receipts."""
+    """Persist and read Medulla-owned change sets and append-only receipts."""
 
     async def create(self, change_set: SourceChangeSet) -> SourceChangeSet:
         """Create or idempotently recover one canonical change set."""

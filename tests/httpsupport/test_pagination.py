@@ -1,4 +1,4 @@
-"""Tests for scion_sdk.httpsupport.pagination (CONCEPT:AU-ECO.ui.fleet-http-client-library).
+"""Tests for scion_sdk.httpsupport.pagination (CONCEPT:MERISTEM-ECO.ui.fleet-http-client-library).
 
 Drives the iterators with fake page fetchers across all five dialects:
 cursor, page/page_size, offset, Link-header, since-id.

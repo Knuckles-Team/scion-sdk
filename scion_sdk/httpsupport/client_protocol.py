@@ -1,6 +1,6 @@
 """Implementation-neutral HTTP client protocol + exception taxonomy (GOC-87).
 
-CONCEPT:AU-ECO.mcp.protocol-compat-bridge
+CONCEPT:MERISTEM-ECO.mcp.protocol-compat-bridge
 
 This module is the neutral seam of the staged ``httpx`` -> ``httpx2``
 strangler migration. **Both packages remain concrete runtime contracts** —
@@ -88,13 +88,13 @@ def normalize_response(response: Any) -> HttpResponse:
 
 
 class HttpTransportError(RuntimeError):
-    """Base of the AU-owned taxonomy every adapter maps transport failures onto.
+    """Base of the Meristem-owned taxonomy every adapter maps transport failures onto.
 
     Application code catches THIS taxonomy — never ``httpx.TransportError``
     or ``httpx2.TransportError`` directly — so it never has to know or
     branch on which package is behind the protocol boundary for a given
     call family (GOC-87 design: "an exception taxonomy maps both packages'
-    distinct exception hierarchies onto one AU-owned set").
+    distinct exception hierarchies onto one Meristem-owned set").
     """
 
 

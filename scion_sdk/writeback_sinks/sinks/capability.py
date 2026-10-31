@@ -1,4 +1,4 @@
-"""Capability write-back sink (CONCEPT:EG-KG.storage.nonblocking-checkpoint).
+"""Capability write-back sink (CONCEPT:MEDULLA-KG.storage.nonblocking-checkpoint).
 
 Pushes minted/provisional ``BusinessCapability`` nodes back to EA tools (Archi
 and/or LeanIX). Folds the former ``capability_writeback`` module; preserves the

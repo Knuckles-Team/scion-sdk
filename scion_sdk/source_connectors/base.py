@@ -1,6 +1,6 @@
 """Document-source connector framework — load / poll / slim ABCs.
 
-CONCEPT:AU-ECO.connector.document-source-framework — Document-Source Connector Framework
+CONCEPT:MERISTEM-ECO.connector.document-source-framework — Document-Source Connector Framework
 
 This module models a *document source*: an external system (a website, a
 filesystem, a SaaS app reached through its MCP server) that yields **documents**
@@ -21,11 +21,11 @@ Design choices:
   * **Three connector shapes**, exactly mirroring the Onyx contract:
       - :class:`LoadConnector` — ``load()`` yields a full snapshot.
       - :class:`PollConnector` — ``poll(checkpoint)`` yields an incremental,
-        resumable batch (CONCEPT:AU-ECO.connector.incremental-poll-watermark).
+        resumable batch (CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark).
       - :class:`SlimConnector` — ``slim()`` yields ids + access only, for a cheap
         permission sweep without re-fetching bodies.
       - :class:`PermSyncConnector` — adds ``fetch_access()`` for external ACL sync
-        (CONCEPT:AU-ECO.connector.external-permission-sync).
+        (CONCEPT:MERISTEM-ECO.connector.external-permission-sync).
   * **Abstract, fully implemented.** Abstract methods raise ``NotImplementedError``
     tagged ``# ABSTRACT-OK`` so the contract-completeness gate recognises them as
     genuine ABC contract holes, not incomplete code.
@@ -67,7 +67,7 @@ __all__ = [
 class SourceDocument(BaseModel):
     """One document yielded by a connector, ready for the ingestion pipeline.
 
-    CONCEPT:AU-ECO.connector.document-source-framework — the unit handed to the KG-2.48 ``DocumentProcessor`` via
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework — the unit handed to the KG-2.48 ``DocumentProcessor`` via
     the ``CONNECTOR`` ingestion adaptor. ``text`` is the already-extracted body
     (connectors are responsible for extraction so the pipeline stays uniform).
 
@@ -96,7 +96,7 @@ class SourceDocument(BaseModel):
 class SlimDocument(BaseModel):
     """A lightweight ``(id, access)`` record for permission/existence sweeps.
 
-    CONCEPT:AU-ECO.connector.document-source-framework — Onyx's ``SlimDocument``: enumerated without re-fetching
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework — Onyx's ``SlimDocument``: enumerated without re-fetching
     bodies so a permission sync or prune pass is cheap.
     """
 
@@ -108,7 +108,7 @@ class SlimDocument(BaseModel):
 class BaseSourceConnector(abc.ABC):  # noqa: B024 — abstract surface lives on the load/poll/slim mixins
     """Base class for all document-source connectors.
 
-    CONCEPT:AU-ECO.connector.document-source-framework — the document surface lives on the ``Load`` / ``Poll`` /
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework — the document surface lives on the ``Load`` / ``Poll`` /
     ``Slim`` mixins, plus a cheap ``health_check`` probe.
 
     Subclasses set ``source_type`` (the registry key) and override ``configure``
@@ -148,7 +148,7 @@ class BaseSourceConnector(abc.ABC):  # noqa: B024 — abstract surface lives on 
 class LoadConnector(BaseSourceConnector):
     """A connector that yields a full snapshot of its documents.
 
-    CONCEPT:AU-ECO.connector.document-source-framework — Onyx ``LoadConnector``: ``load()`` enumerates every
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework — Onyx ``LoadConnector``: ``load()`` enumerates every
     document currently visible to the connector (used for a first full ingest or
     a non-incremental source).
     """
@@ -162,7 +162,7 @@ class LoadConnector(BaseSourceConnector):
 class PollConnector(BaseSourceConnector):
     """A connector that yields incremental, resumable batches.
 
-    CONCEPT:AU-ECO.connector.incremental-poll-watermark — Onyx ``PollConnector`` with generic checkpoint typing.
+    CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark — Onyx ``PollConnector`` with generic checkpoint typing.
     ``poll(checkpoint)`` returns a :class:`CheckpointedBatch` whose ``checkpoint``
     is fed back on the next call; ``checkpoint.has_more`` drives the drain loop and
     ``checkpoint.watermark`` makes re-polls cheap (delta, not full scan).
@@ -200,7 +200,7 @@ class PollConnector(BaseSourceConnector):
 class SlimConnector(BaseSourceConnector):
     """A connector that can enumerate ids + access without fetching bodies.
 
-    CONCEPT:AU-ECO.connector.document-source-framework — Onyx ``SlimConnector``: powers cheap permission sweeps and
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework — Onyx ``SlimConnector``: powers cheap permission sweeps and
     prune detection.
     """
 

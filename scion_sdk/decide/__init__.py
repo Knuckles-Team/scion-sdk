@@ -12,13 +12,13 @@ is exactly the fallback, reason ``no_runner``. A process that also holds a
 verified EG session may :func:`install_runner` a real
 :class:`~scion_sdk.ports.decide_runner.DecisionRunner` --
 :class:`~scion_sdk.decide.epistemic_graph.EpistemicGraphDecisionRunner`
-is the SDK's own EG-backed one, installed at the connector-sync composition
+is the SDK's own Medulla-backed one, installed at the connector-sync composition
 root (:func:`scion_sdk.runner.composition.default_services`) when
 this process was given a tenant to decide as; tests install fakes. This
 mirrors agent-utilities' own equivalent ``Decide`` consumer contract so the
 SAME EG question is asked whichever side calls it, but is implemented
 independently: the SDK never imports ``agent_utilities`` (the agent control
-plane) -- only the port, the EG-backed runner, and the three evaluate-only
+plane) -- only the port, the Medulla-backed runner, and the three evaluate-only
 call sites in :mod:`scion_sdk.decide.consumers` (connector-internal
 tool choice, inbound event triage, and write-back proposals).
 

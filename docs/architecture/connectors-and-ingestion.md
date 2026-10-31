@@ -3,7 +3,7 @@
 > **One entrypoint, one provenance contract, one delta model.** Every external
 > system the Knowledge Graph knows about — enterprise apps, code, documents,
 > research — flows in through the *same* mechanism and is enriched by the *same*
-> OWL/RDF reasoning. This is the map of all of them. (CONCEPT:AU-KG.ingest.enterprise-source-extractor)
+> OWL/RDF reasoning. This is the map of all of them. (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor)
 
 This page is the canonical inventory and architecture for how the KG is
 **hydrated**. The connector list at the bottom is **auto-generated** from the live
@@ -329,7 +329,7 @@ See also: [KG as Bidirectional ETL Hub](etl-hub.md),
 
 ---
 
-## 8. Fail-closed connector permissions (AU-P0-4)
+## 8. Fail-closed connector permissions (MERISTEM-P0-4)
 
 Three failure modes closed — none change the ~40 connectors that already report
 a real ACL (LeanIX, GitLab, ServiceNow, …); this is about what happens when a
@@ -374,8 +374,8 @@ approval requirement. Git holds the earlier `actions:` manifest block.
 ## 8b. Governed candidate-claim promotion, supersession & dead-letter drain
 
 The universal-ingestion program's governed validation/promotion and incremental
-reconciliation tracks (CONCEPT:AU-KG.ingest.governed-claim-promotion,
-CONCEPT:AU-KG.ingest.fact-supersession, CONCEPT:AU-KG.ingest.dead-letter-drain)
+reconciliation tracks (CONCEPT:MERISTEM-KG.ingest.governed-claim-promotion,
+CONCEPT:MERISTEM-KG.ingest.fact-supersession, CONCEPT:MERISTEM-KG.ingest.dead-letter-drain)
 — assembled from the pieces above, not a second ingestion stack:
 
 <div class="admonition architecture" markdown>
