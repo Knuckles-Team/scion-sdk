@@ -34,6 +34,7 @@ scratch/
 !/.specify/memory/
 /.specify/memory/*
 !/.specify/memory/constitution.md
+!/.specify/templates/
 *.log
 .env
 .envrc

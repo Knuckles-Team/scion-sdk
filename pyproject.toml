@@ -564,4 +564,4 @@ mcp_server = false
 
 [tool.pipelines_hooks.ste]
 paths = ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "CHANGELOG.md", "docs", "specs"]
-exempt = ["*.generated.md", "**/*.generated.md", "specs/_template/*"]
+exempt = ["*.generated.md", "**/*.generated.md"]

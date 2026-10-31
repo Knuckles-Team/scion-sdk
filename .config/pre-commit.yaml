@@ -85,6 +85,8 @@ repos:
   # One spec check: standard, decomposition, generated status, commit trailers.
   - id: spec
     stages: [pre-push, manual]
+  - id: spec-templates
+    stages: [pre-push, manual]
   # Affected tests only, 120 s cap.
   - id: tests-fast
     stages: [pre-push]
