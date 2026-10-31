@@ -21,8 +21,8 @@ from scion_sdk.writeback_sinks.core import (
     get_sink,
     list_sinks,
     register_sink,
-    run_writeback,
 )
+from scion_sdk.writeback_sinks.runner import run_writeback
 
 _SINK_MODULES = (
     "ansible",

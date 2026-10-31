@@ -13,7 +13,7 @@ from scion_sdk.writeback.errors import (
     AuthorizationDeniedError,
     SourceVersionConflictError,
 )
-from scion_sdk.writeback_sinks import core, run_writeback, spec_link
+from scion_sdk.writeback_sinks import core, run_writeback, runner, spec_link
 from scion_sdk.writeback_sinks.governed import (
     PATCH_FIELD,
     SinkGrant,
@@ -58,7 +58,7 @@ def flag(monkeypatch):
     """Set the write enable flag for every sink."""
 
     def _set(enabled: bool) -> None:
-        monkeypatch.setattr(core, "setting", lambda k, d=None, cast=None: enabled)
+        monkeypatch.setattr(runner, "setting", lambda k, d=None, cast=None: enabled)
 
     return _set
 
@@ -199,7 +199,10 @@ def test_writeback_package_has_no_harness_import_or_duplicate_entrypoint():
                 for module in modules
                 if module == "agent_utilities" or module.startswith("agent_utilities.")
             )
-        if path.name == "core.py" and path.parent.name == "writeback_sinks":
+        if (
+            path.name in {"core.py", "runner.py"}
+            and path.parent.name == "writeback_sinks"
+        ):
             continue
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and (

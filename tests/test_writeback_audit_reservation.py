@@ -159,7 +159,7 @@ async def test_file_reservation_is_reused_after_no_effect_retry(
 async def test_file_sync_failure_prevents_source_effect(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import scion_sdk.writeback_sinks.governed as governed
+    import scion_sdk.writeback_sinks.governed_audit as governed
 
     fixture = make_writeback_fixture()
     verifier = DeterministicAuthorizationVerifier()
