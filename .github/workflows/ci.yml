@@ -40,8 +40,6 @@ jobs:
       uv-cache-local-path: .ci/uv-cache-${{ github.run_id }}-${{ github.run_attempt }}
       # tests-fast duplicates the shared affected-test step; a fork cannot read the identity catalog.
       skip-hooks: ${{ github.event.pull_request.head.repo.fork && 'tests-fast,tracked-privacy' || 'tests-fast' }}
-      # Bash patterns (`*` crosses `/`).
-      docs-only-paths: 'specs/* docs/* *.md plans/* LICENSE'
 
   main-gates:
     # Full-tree gates on main and nightly: every file, wheel build and docs build.
