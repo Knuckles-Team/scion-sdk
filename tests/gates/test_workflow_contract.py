@@ -123,8 +123,8 @@ def test_ci_triggers_follow_the_fleet_standard_and_cancel_superseded_runs() -> N
     assert "schedule" in triggers
     assert "workflow_dispatch" in triggers
     assert not (GATES.parent / "gates-skip.yml").exists()
-    patterns = workflow["jobs"]["gates"]["with"]["docs-only-paths"].split()
-    assert patterns == ["specs/*", "docs/*", "*.md", "plans/*", "LICENSE"]
+    # The shared gates workflow scopes each run by change class; callers pass no path filter.
+    assert "docs-only-paths" not in workflow["jobs"]["gates"].get("with", {})
     # Only superseded pull-request runs are cancelled; main runs always finish.
     assert (
         workflow["concurrency"]["cancel-in-progress"]
