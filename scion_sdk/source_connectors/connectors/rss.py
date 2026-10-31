@@ -1,6 +1,6 @@
 """Native RSS/Atom feed document-source connector (zero-infra).
 
-CONCEPT:AU-KG.ingest.rss-feed-connector — native zero-infra RSS/Atom feed extractor and unified feed source.
+CONCEPT:MERISTEM-KG.ingest.rss-feed-connector — native zero-infra RSS/Atom feed extractor and unified feed source.
 Point it at one or more feed URLs and it yields each entry as a
 :class:`SourceDocument`, with NO
 external service required (unlike the FreshRSS feeder, which aggregates many feeds
@@ -47,7 +47,7 @@ _FEED_FETCH_CONCURRENCY = 12
 
 @register_source("rss")
 class RssConnector(LoadConnector, PollConnector):
-    """Fetch + parse arbitrary RSS/Atom feeds into documents (CONCEPT:AU-KG.ingest.rss-feed-connector).
+    """Fetch + parse arbitrary RSS/Atom feeds into documents (CONCEPT:MERISTEM-KG.ingest.rss-feed-connector).
 
     Config:
         feed_urls: One URL or a list of feed URLs (required).
@@ -123,7 +123,7 @@ class RssConnector(LoadConnector, PollConnector):
         sweep. Each ``_entries`` call is bounded by the per-feed fetch timeout and
         degrades to ``[]`` on error, so the whole pass costs ~the slowest single
         feed (x ceil(N / concurrency)) instead of the serial sum — the throughput
-        unlock for many-feed sweeps (the 2000-reviews/hr path). (CONCEPT:AU-KG.ingest.rss-feed-connector)"""
+        unlock for many-feed sweeps (the 2000-reviews/hr path). (CONCEPT:MERISTEM-KG.ingest.rss-feed-connector)"""
         urls = self.feed_urls
         if len(urls) <= 1:
             return self._entries(urls[0]) if urls else ([], True)
@@ -152,7 +152,7 @@ class RssConnector(LoadConnector, PollConnector):
     def poll(self, checkpoint: ConnectorCheckpoint | None = None) -> CheckpointedBatch:
         """Emit only entries newer than the prior watermark AND not already seen.
 
-        Dual guard (CONCEPT:AU-KG.ingest.rss-feed-connector): the publish-date watermark is the primary
+        Dual guard (CONCEPT:MERISTEM-KG.ingest.rss-feed-connector): the publish-date watermark is the primary
         delta; the seen-id belt catches feeds with missing or identical dates so a
         re-poll never re-emits an unchanged entry.
         """

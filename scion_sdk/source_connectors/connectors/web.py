@@ -1,7 +1,7 @@
 """Recursive web-crawler document-source connector.
 
-CONCEPT:AU-ECO.connector.document-source-framework — reference ``Load`` + ``Poll`` connector.
-CONCEPT:AU-ECO.connector.incremental-poll-watermark — incremental poll keyed on a crawl-time watermark + seen ids.
+CONCEPT:MERISTEM-ECO.connector.document-source-framework — reference ``Load`` + ``Poll`` connector.
+CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark — incremental poll keyed on a crawl-time watermark + seen ids.
 
 A same-domain breadth-first crawler. Pages are fetched (lazy ``httpx``; the caller
 may inject a ``fetch_fn`` for offline tests), converted HTML→text via the
@@ -50,7 +50,7 @@ _TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 class WebCrawlerConnector(LoadConnector, PollConnector):
     """Recursively crawl a website, same-domain, into documents.
 
-    CONCEPT:AU-ECO.connector.document-source-framework.
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework.
 
     Config:
         base_url: Seed URL (required).

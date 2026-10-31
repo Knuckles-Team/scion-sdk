@@ -119,7 +119,7 @@ def test_index_rejects_missing_module_and_unknown_owner() -> None:
         _validate_row("`SCION-CONNECTOR-CONTROL-R028`", "`absent.py`", _owner_ids())
     with pytest.raises(ValueError, match="unknown owner row"):
         _validate_row(
-            "`SDK-CONNECTOR-CONTROL-R999999`", "`http/client.py`", _owner_ids()
+            "`SCION-CONNECTOR-CONTROL-R999999`", "`http/client.py`", _owner_ids()
         )
 
 

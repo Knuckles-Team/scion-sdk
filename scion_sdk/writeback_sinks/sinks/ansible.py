@@ -1,4 +1,4 @@
-"""Ansible Tower write-back sink — KG-governed remediation (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""Ansible Tower write-back sink — KG-governed remediation (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 The KG→action arm: launch Tower job templates from KG inferences (e.g. remediate
 drift/risk). Fail-closed (``ANSIBLE_ENABLE_WRITE``), dry-run-first. ``creations``

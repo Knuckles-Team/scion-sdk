@@ -11,8 +11,8 @@ proposes, never applies.
 
 The question ids (``au.connector.tool``, ``au.connector.writeback``,
 ``au.connector.triage``) are kept identical to ``agent_utilities``'s so a
-single EG-published ``FeatureSchema`` and decision log serve both
-AU-instrumented code and connectors built on this SDK for the SAME logical
+single Medulla-published ``FeatureSchema`` and decision log serve both
+Meristem-instrumented code and connectors built on this SDK for the SAME logical
 question; only the Python implementation is independent.
 
 * Connector-internal tool choice: which of a connector's tools serves one

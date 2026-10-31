@@ -1,8 +1,8 @@
-"""Native arXiv document-source connector (zero-infra, CONCEPT:AU-KG.ingest.arxiv-feed-connector).
+"""Native arXiv document-source connector (zero-infra, CONCEPT:MERISTEM-KG.ingest.arxiv-feed-connector).
 
 Drives the public ``export.arxiv.org`` Atom query API directly — no external MCP
 server or account is required, mirroring the zero-infra ``rss``/``web`` connectors
-(CONCEPT:AU-ECO.connector.document-source-framework). This is deliberately a THIRD, narrower research feed
+(CONCEPT:MERISTEM-ECO.connector.document-source-framework). This is deliberately a THIRD, narrower research feed
 alongside ``freshrss`` (curated world-model RSS, gated by ``WorldModelPipelineRunner``)
 and ScholarX (paper search/dedup service reached via ``scholarx-mcp``): it is the raw
 per-category arXiv listing, useful when neither of those is deployed.
@@ -11,11 +11,11 @@ Each entry is emitted with the SAME ``metadata["record"]`` envelope shape as
 :func:`the host feed collector` and the
 native ``rss`` connector (``canonical`` + ``origin.streamId``), so it converges on
 the identical canonical ``arxiv:<id>`` node the moment ``WorldModelPipelineRunner``
-(CONCEPT:AU-KG.ingest.worldmodel-gated-ingestion) routes it to the research path — one paper arriving via
+(CONCEPT:MERISTEM-KG.ingest.worldmodel-gated-ingestion) routes it to the research path — one paper arriving via
 FreshRSS-arXiv, ScholarX, AND this connector collapses to one KG node, never three.
 
 **Budget-bounded by construction, never a firehose (the ★ critical constraint of
-CONCEPT:AU-KG.ingest.arxiv-feed-connector):** ``categories`` has NO default — an operator must opt in
+CONCEPT:MERISTEM-KG.ingest.arxiv-feed-connector):** ``categories`` has NO default — an operator must opt in
 explicitly (``KG_ARXIV_CATEGORIES``) — and ``max_results`` caps each category's
 per-poll page size. The connector itself does no relevance scoring; every entry it
 yields still passes through the SAME downstream gate as every other research feed
@@ -63,7 +63,7 @@ class ArxivConnector(LoadConnector, PollConnector):
     Config:
         categories: One or more arXiv category codes (e.g. ``cs.AI``), REQUIRED —
             there is no default; an unscoped query is not a valid arXiv listing and
-            would be an unbounded firehose (CONCEPT:AU-KG.ingest.arxiv-feed-connector).
+            would be an unbounded firehose (CONCEPT:MERISTEM-KG.ingest.arxiv-feed-connector).
         max_results: Per-category, per-poll page cap (default 50, capped at 500).
         doc_type: Document-type hint stamped on each item (default ``paper``).
         source_name: ``source_system`` provenance label (default ``arxiv``).

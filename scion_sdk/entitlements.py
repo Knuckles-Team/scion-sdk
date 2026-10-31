@@ -1,7 +1,7 @@
 """Identity-scoped resource entitlement resolution.
 
 Extracted from ``agent_utilities.security.entitlements``
-(CONCEPT:AU-OS.identity.identity-scoped-resource-autoload), generalizing IdP
+(CONCEPT:MERISTEM-OS.identity.identity-scoped-resource-autoload), generalizing IdP
 role inheritance from "what may I do" to "what may I *reach*": a caller's
 roles/groups (:class:`scion_sdk.identity.ActorContext`) determine
 WHICH backend resources a connector auto-loads by default -- an operator

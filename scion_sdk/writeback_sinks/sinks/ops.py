@@ -1,4 +1,4 @@
-"""Ops/observability write-back sinks (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""Ops/observability write-back sinks (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 DNS / Caddy / Uptime-Kuma / Kafka / Portainer / LGTM. Standard (reversible) sinks
 write once their ``*_ENABLE_WRITE`` flag is set; destructive ones (kafka produce,

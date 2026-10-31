@@ -1,6 +1,6 @@
 # CISO Assistant ↔ Knowledge Graph (bidirectional, OWL/RDF-native)
 
-**CONCEPT:AU-KG.enrichment.ciso-assistant-extraction (extractor) · CONCEPT:AU-KG.enrichment.ciso-2 (writeback sink)**
+**CONCEPT:MERISTEM-KG.enrichment.ciso-assistant-extraction (extractor) · CONCEPT:MERISTEM-KG.enrichment.ciso-2 (writeback sink)**
 
 **CISO Assistant** is an open-source GRC system for risk, compliance, audit,
 AppSec, third-party risk, business-impact analysis, and privacy. The native
@@ -76,10 +76,10 @@ skipped, not invented.
 
 | Path | Role |
 |---|---|
-| `enrichment/extractors/ciso_assistant.py` | inbound extractor (AU-KG.enrichment.ciso-assistant-extraction) |
-| `enrichment/writeback/sinks/ciso_assistant.py` | outbound sink (AU-KG.enrichment.ciso-2) |
+| `enrichment/extractors/ciso_assistant.py` | inbound extractor (MERISTEM-KG.enrichment.ciso-assistant-extraction) |
+| `enrichment/writeback/sinks/ciso_assistant.py` | outbound sink (MERISTEM-KG.enrichment.ciso-2) |
 | `enrichment/materialize.py` | `_CLIENT_MODULES["ciso_assistant"]="ciso_assistant_api"`, `MATERIALIZE_SOURCES` membership |
-| `agents/ciso-assistant-api` | the `ciso_assistant_api.Api` client / MCP / agent (CONCEPT:AU-ECO.connector.ciso-assistant) |
+| `agents/ciso-assistant-api` | the `ciso_assistant_api.Api` client / MCP / agent (CONCEPT:MERISTEM-ECO.connector.ciso-assistant) |
 
 ## Configuration
 

@@ -1,4 +1,4 @@
-"""Mealie write-back sink (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""Mealie write-back sink (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 Writes KG-derived meal plans and shopping lists back into Mealie (the planning
 write twin of the Mealie extractor; fuses with wger for the wellness loop).

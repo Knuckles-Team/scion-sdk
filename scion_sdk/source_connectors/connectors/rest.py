@@ -1,7 +1,7 @@
 """Generic paginated REST/JSON document-source connector.
 
-CONCEPT:AU-ECO.connector.document-source-framework — reference ``Load`` + ``Poll`` connector.
-CONCEPT:AU-ECO.connector.incremental-poll-watermark — cursor-based incremental poll.
+CONCEPT:MERISTEM-ECO.connector.document-source-framework — reference ``Load`` + ``Poll`` connector.
+CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark — cursor-based incremental poll.
 
 Fetches a JSON list endpoint and maps each record to a :class:`SourceDocument`
 via a declarative field map (``id_field`` / ``title_field`` / ``text_field`` /
@@ -36,7 +36,7 @@ from ._rest_support import JsonFetchFn, _cursor_value, _dig, _make_httpx_fetch
 class RestJsonConnector(LoadConnector, PollConnector):
     """Map a paginated JSON list endpoint to documents.
 
-    CONCEPT:AU-ECO.connector.document-source-framework.
+    CONCEPT:MERISTEM-ECO.connector.document-source-framework.
 
     Config:
         url: List endpoint (required).
@@ -208,7 +208,7 @@ class RestJsonConnector(LoadConnector, PollConnector):
     def poll(self, checkpoint: ConnectorCheckpoint | None = None) -> CheckpointedBatch:
         """Fetch the next page only, carrying the cursor across calls.
 
-        CONCEPT:AU-ECO.connector.incremental-poll-watermark — each ``poll`` advances one page; ``has_more`` and the
+        CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark — each ``poll`` advances one page; ``has_more`` and the
         ``cursor`` in the returned checkpoint drive the drain loop.
         """
         cursor = checkpoint.cursor if checkpoint else None

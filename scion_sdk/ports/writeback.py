@@ -17,7 +17,7 @@ __all__ = ["WriteBackPort"]
 
 @runtime_checkable
 class WriteBackPort(Protocol):
-    """Read, preview, apply and reconcile one EG-owned source change set."""
+    """Read, preview, apply and reconcile one Medulla-owned source change set."""
 
     async def current_version(self, change_set: SourceChangeSet) -> SourceSnapshot:
         """Read current source state without mutation."""

@@ -1,4 +1,4 @@
-"""Durable EG-backed D18 write-back composition and restart recovery."""
+"""Durable Medulla-backed D18 write-back composition and restart recovery."""
 
 from __future__ import annotations
 

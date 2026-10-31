@@ -1,4 +1,4 @@
-"""Egeria write-back sink (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""Egeria write-back sink (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 Catalogs KG-derived entities into the Egeria open-metadata estate as governed
 assets — the first-class write-back twin of the Egeria harvest, now on the unified
@@ -68,7 +68,7 @@ class EgeriaSink(WritebackClientMixin):
                 {"op": "create_asset", "type": asset_type, "name": name}
             )
             return
-        # X5 (CONCEPT:AU-KG.temporal.bi-temporal-memory-layers): additional_properties
+        # X5 (CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers): additional_properties
         # is Egeria's free-form provenance channel — the KG-state instant this
         # asset was derived from rides along in the SAME live payload.
         props: dict[str, Any] = {"source": "arbora"}

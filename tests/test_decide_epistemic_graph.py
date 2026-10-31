@@ -1,4 +1,4 @@
-"""The EG-backed connector decision runner: decide, record, or fall back --
+"""The Medulla-backed connector decision runner: decide, record, or fall back --
 never raise.
 """
 

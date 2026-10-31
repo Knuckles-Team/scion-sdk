@@ -1,4 +1,4 @@
-"""Issue-tracker write-back sinks — GitLab / GitHub / Plane (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""Issue-tracker write-back sinks — GitLab / GitHub / Plane (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 Closes the inference→action loop: KG-derived findings (TRM end-of-life/vuln risk,
 tech-debt, failing tests) become *filed tickets*. Fail-closed
@@ -121,8 +121,8 @@ class JiraIssueSink(_IssueSinkBase):
         )
 
 
-# CONCEPT:AU-KG.enrichment.ticket-status-comment-writeback — Ticket status and comment writeback
-# ── Status-transition + comment sinks (CONCEPT:AU-KG.enrichment.ticket-status-comment-writeback) ─────────────────────
+# CONCEPT:MERISTEM-KG.enrichment.ticket-status-comment-writeback — Ticket status and comment writeback
+# ── Status-transition + comment sinks (CONCEPT:MERISTEM-KG.enrichment.ticket-status-comment-writeback) ─────────────────────
 #
 # The action half of the ticket→PR loop: KG/agent decisions move an issue through
 # its workflow (In Progress → Ready for QA → Done) and leave an audit comment. These

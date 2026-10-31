@@ -1,6 +1,6 @@
 """Agent-package connector presets + Onyx connector-parity catalog.
 
-CONCEPT:AU-ECO.connector.package-manifest-catalog — declarative catalog driving the MCP fleet adapter.
+CONCEPT:MERISTEM-ECO.connector.package-manifest-catalog — declarative catalog driving the MCP fleet adapter.
 
 Two tables:
 
