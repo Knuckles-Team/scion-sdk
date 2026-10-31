@@ -16,7 +16,7 @@ integration, quality and release proof), `tasks.md` (ordered implementation and 
 `requirements.md` (the definition of every requirement ID this spec owns, one row per ID), and
 `status.json` (machine-readable delivery, acceptance, and public receipts, including a
 per-requirement `requirements` array with its own `delivery_state` and evidence for each ID).
-Start from [`_template/`](_template/). Keep status and evidence explicit; a planned or tested item
+Start from the templates in `.specify/templates/`. Keep status and evidence explicit; a planned or tested item
 is not a landed item. Put durable evidence links in the spec directory, never local scratch output.
 This follows a specify, plan and tasks flow with an explicit test contract. The tracked [constitution](../.specify/memory/constitution.md) records this repository's governing principles.
 
