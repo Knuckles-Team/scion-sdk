@@ -3,7 +3,7 @@
 One supervised scheduler serves every connector: it opens one MCP session per
 connector through the ``Transport`` port, provisions the connector's content
 pack when its digest changed, runs the manifest ``sync`` presets through the
-``mcp_tool`` adapter with EG-authoritative checkpoints, and reacts to the
+``mcp_tool`` adapter with Medulla-authoritative checkpoints, and reacts to the
 server's change events, falling back to its schedule.
 
 * :mod:`~scion_sdk.runner.descriptors`: connector descriptors and settings.

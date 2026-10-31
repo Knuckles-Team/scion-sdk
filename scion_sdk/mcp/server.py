@@ -3,7 +3,7 @@
 Extracted from ``agent_utilities.mcp.server_factory.create_mcp_server``. It keeps
 the fleet-facing contract (``create_mcp_server`` returns
 ``(args, mcp, middlewares)``; the same flags and environment defaults; fail
-closed for exposed listeners) and leaves AU-internal wiring behind: the
+closed for exposed listeners) and leaves Meristem-internal wiring behind: the
 WorkItem tasks extension, engine-backed ``/metrics``, semantic tool filtering
 through the knowledge graph, and delegation and Eunomia middleware.
 """

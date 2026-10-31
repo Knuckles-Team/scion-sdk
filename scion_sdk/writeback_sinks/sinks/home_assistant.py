@@ -1,4 +1,4 @@
-"""Home Assistant write-back sink — KG-driven control (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""Home Assistant write-back sink — KG-driven control (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 The KG→action arm for the homelab: call HA services from KG inferences (e.g. act
 on a derived state grouping). Fail-closed (``HOMEASSISTANT_ENABLE_WRITE``),

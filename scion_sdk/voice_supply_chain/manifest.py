@@ -4,7 +4,7 @@ Typed, versioned records for the Piper voice-model acquisition path this package
 These mirror the ``voice.model.manifest.v1`` / ``voice.config.manifest.v1`` /
 ``voice.license.decision.v1`` contracts defined in the lane doc
 (``plans/arbora-completion-program/lanes/GOC-36-voice-model-supply-chain-qualification.md``
-§"Schemas and APIs") — the AU-side subset this repo is authorized to own
+§"Schemas and APIs") — the Meristem-side subset this repo is authorized to own
 (``agent-utilities governed voice-model registry/acquisition adapter and evidence consumer
 only`` per the lane contract table).
 
@@ -64,7 +64,7 @@ class VoiceModelProvider(enum.StrEnum):
 
 
 class VoiceManifestStatus(enum.StrEnum):
-    """Local (AU-side) lifecycle of an acquired asset.
+    """Local (Meristem-side) lifecycle of an acquired asset.
 
     Stops at ``VERIFIED`` — see the module docstring's Authority note. ``REJECTED`` is
     terminal and never reused for a corrected re-acquisition (a corrected asset gets a

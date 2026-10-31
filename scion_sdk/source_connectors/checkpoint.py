@@ -1,13 +1,13 @@
 """Checkpointed incremental poll — resumable connector watermarks.
 
-CONCEPT:AU-ECO.connector.incremental-poll-watermark — Checkpointed Incremental Poll
+CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark — Checkpointed Incremental Poll
 
 A :class:`ConnectorCheckpoint` is the opaque, serializable cursor a
 :class:`~scion_sdk.source_connectors.base.PollConnector` returns
 from one ``poll`` so the next ``poll`` resumes exactly where it left off — Onyx's
 generic checkpoint typing, made concrete.
 
-It round-trips through the existing ``DeltaManifest`` (CONCEPT:EG-KG.storage.nonblocking-checkpoint) **without a
+It round-trips through the existing ``DeltaManifest`` (CONCEPT:MEDULLA-KG.storage.nonblocking-checkpoint) **without a
 schema change**: the JSON form (:meth:`to_json`) is stored in the manifest's
 ``content_hash`` column under a dedicated ``connector_checkpoint`` category, keyed
 by the connector's source URI. The next ingestion run reads it back with
@@ -28,7 +28,7 @@ __all__ = ["CheckpointedBatch", "ConnectorCheckpoint"]
 class ConnectorCheckpoint(BaseModel):
     """Resumable cursor for an incremental poll.
 
-    CONCEPT:AU-ECO.connector.incremental-poll-watermark.
+    CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark.
 
     Attributes:
         has_more: True while the source still has pages/batches to drain; the
@@ -66,7 +66,7 @@ class ConnectorCheckpoint(BaseModel):
 class CheckpointedBatch(BaseModel):
     """One incremental batch: the documents plus the checkpoint to resume from.
 
-    CONCEPT:AU-ECO.connector.incremental-poll-watermark — the return type of ``PollConnector.poll``.
+    CONCEPT:MERISTEM-ECO.connector.incremental-poll-watermark — the return type of ``PollConnector.poll``.
     """
 
     documents: list[Any] = Field(default_factory=list)

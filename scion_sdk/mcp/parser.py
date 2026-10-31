@@ -3,7 +3,7 @@
 Extracted from ``agent_utilities.mcp.server_factory.create_mcp_parser``. Every
 secret-bearing flag takes a reference (``--*-ref``); references are resolved
 when authentication is configured and never appear as values in ``argv``.
-Flags for AU-internal features (delegation, Eunomia, OpenAPI import) are not
+Flags for Meristem-internal features (delegation, Eunomia, OpenAPI import) are not
 part of the SDK.
 """
 

@@ -43,7 +43,7 @@ def _connect(endpoint: str) -> IngestWorkerEngine:
     """Open the generated engine client for ``endpoint``.
 
     The released engine client does not yet expose the task-queue and admission
-    methods (EG-DURABLE-KERNEL-R073), so this raises ``OSError`` and the command
+    methods (MEDULLA-DURABLE-KERNEL-R073), so this raises ``OSError`` and the command
     exits 2 rather than claiming anything.
     """
     raise OSError(f"engine client at {endpoint} lacks the task-queue methods")

@@ -28,7 +28,7 @@ class RunnerServices:
     #: Liveness/readiness state; ``None`` only in tests that build services
     #: directly without exercising the health surface.
     health: RunnerHealth | None = None
-    #: The installed connector decision runner (EG-backed), when this process
+    #: The installed connector decision runner (Medulla-backed), when this process
     #: was given a tenant to decide as; ``None`` means every connector-side
     #: ``Decide`` call site stays its deterministic fallback, exactly as
     #: before this port existed.

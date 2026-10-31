@@ -86,7 +86,7 @@ def _decide_runner(
     decide_tenant: str | None,
     decide_bindings: Bindings | None,
 ) -> DecisionRunner | None:
-    """The EG-backed connector decision runner, when this process has both a
+    """The Medulla-backed connector decision runner, when this process has both a
     verified EG session and a tenant to decide as.
 
     ``sink_client`` alone is not enough: a real ``Decide`` request is
@@ -159,7 +159,7 @@ def default_services(
     generated client. The SDK never discovers an engine endpoint, reads a token,
     or mints request identity at this boundary.
 
-    With ``decide_tenant`` also given, the EG-backed connector decision
+    With ``decide_tenant`` also given, the Medulla-backed connector decision
     runner (:class:`~scion_sdk.decide.epistemic_graph.EpistemicGraphDecisionRunner`)
     is built over the SAME verified ``sink_client`` and installed process-wide
     (:func:`scion_sdk.decide.install_runner`) -- one composition

@@ -1,4 +1,4 @@
-"""ERPNext write-back sink (CONCEPT:AU-KG.ingest.enterprise-source-extractor).
+"""ERPNext write-back sink (CONCEPT:MERISTEM-KG.ingest.enterprise-source-extractor).
 
 Backfeeds the KG into ERPNext — creates inventory as Items/Assets, enriches
 existing docs, and retires (disables) decommissioned ones — fail-closed

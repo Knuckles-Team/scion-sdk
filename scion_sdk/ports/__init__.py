@@ -10,7 +10,7 @@
 * :mod:`~scion_sdk.ports.session`: ``McpSession``, the operations the
   other ports need from a session, and ``TransportEndpoint``.
 * :mod:`~scion_sdk.ports.writeback`: ``WriteBackPort`` applies an
-  EG-owned source change set through an authorized source transport.
+  Medulla-owned source change set through an authorized source transport.
 * :mod:`~scion_sdk.ports.repair_proposals`: ``RepairProposalStore``
   records a proposed schema repair and reads whether a stream is paused.
 * :mod:`~scion_sdk.ports.errors`: the errors ports raise.

@@ -1,7 +1,7 @@
 # Knowledge Graph as a Bidirectional ETL Hub (Stardog data backend, connectors, write-back, lineage)
 
-> **CONCEPT:AU-KG.query.vendor-agnostic-traversal** (SPARQL data backend) · **KG-2.9** (unified ingestion contract) ·
-> **AU-KG.ontology.one-source** (`graph_etl` unified pipeline) · **AU-KG.ontology.kg-3** (ETL lineage)
+> **CONCEPT:MERISTEM-KG.query.vendor-agnostic-traversal** (SPARQL data backend) · **KG-2.9** (unified ingestion contract) ·
+> **MERISTEM-KG.ontology.one-source** (`graph_etl` unified pipeline) · **MERISTEM-KG.ontology.kg-3** (ETL lineage)
 > **Modules:** `knowledge_graph/etl/{pipeline,lineage}.py` ·
 > `knowledge_graph/backends/sparql/stardog_backend.py` ·
 > `knowledge_graph/enrichment/{provenance,registry,materialize,writeback}` ·
@@ -87,7 +87,7 @@ shape-coupling the fan-out backend already uses), routing each node/edge into it
 `role="mirror"` connection, every KG write replicates live; `push_to_stardog` /
 `pull_from_stardog` give on-demand control.
 
-## `graph_etl` — one pipeline run (AU-KG.ontology.one-source)
+## `graph_etl` — one pipeline run (MERISTEM-KG.ontology.one-source)
 
 <div class="admonition architecture" markdown>
 <p class="admonition-title">One `graph_etl` pipeline run</p>
@@ -112,12 +112,12 @@ lineage}` to the caller.
 `ACTION_TOOL_ROUTES`).
 
 The `{status, inbound, outbound, lineage}` manifest is built from `etl.result.EtlResult`
-(AU-KG.etl.result-contract) — a validated pydantic contract (adds a typed `counts` dict,
+(MERISTEM-KG.etl.result-contract) — a validated pydantic contract (adds a typed `counts` dict,
 replacing the old ad hoc `_count()` shape-guessing) — then serialized back to a plain
 `dict` (`.model_dump()`) so existing callers keep indexing it unchanged. `sync_source` and
 `ingest_connector_to_table` return the same coerced shape.
 
-## ETL lineage (AU-KG.ontology.kg-3)
+## ETL lineage (MERISTEM-KG.ontology.kg-3)
 
 Every run records a trail in the KG itself, reusing the existing provenance ontology (no new
 node/edge types): a `PROVENANCE_AGENT` run node (`kind="etl_run"`, source/sink/direction/counts)
