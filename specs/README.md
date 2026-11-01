@@ -62,5 +62,5 @@ bootstrap skill, together with the [SDD full lifecycle](https://github.com/Knuck
 - [`SCION-OBSERVABILITY-FEEDS`](scion-observability-feeds/spec.md) — telemetry and observability feeds.
 - [`SCION-QUALITY-RELEASE`](scion-quality-release/spec.md) — package and release proof.
 - [`SCION-REPOSITORY-TRANSPORT`](scion-repository-transport/spec.md) — repository transport contract.
-- [`SCION-SCM`](scion-scm/spec.md) — source client and virtual workspace.
+- [`SCION-SCM`](scion-scm/spec.md) — source client, virtual workspace and change-proposal contract.
 - [`SCION-SOURCE-INGEST`](scion-source-ingest/spec.md) — source ingestion contracts.

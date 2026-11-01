@@ -1,6 +1,6 @@
-# SCION-SCM — SDK source client and virtual workspace
+# SCION-SCM — SDK source client, virtual workspace and change-proposal contract
 
-**Requirement IDs:** SCION-SCM-R001, SCION-SCM-R002, and child rows SCION-SCM-R001.1 through SCION-SCM-R001.6 and SCION-SCM-R002.1 through SCION-SCM-R002.6.
+**Requirement IDs:** SCION-SCM-R001, SCION-SCM-R002, SCION-SCM-R003, and child rows SCION-SCM-R001.1 through SCION-SCM-R001.6, SCION-SCM-R002.1 through SCION-SCM-R002.6 and SCION-SCM-R003.1 through SCION-SCM-R003.5.
 **Owner:** scion-sdk.
 
 ## Outcome and boundary
@@ -70,11 +70,14 @@ connector own the served `source.*` operations. This spec links them by
 operation name and by requirement ID, pending filing in the owning
 repositories.
 
+The change-proposal contract (SCION-SCM-R003) extends this spec. The search `git grep -n -iE "pull request|merge request|webhook|review" -- specs` found no SDK owner for change-proposal records or webhook normalization. `SCION-GOVERNED-WRITEBACK` owns write effects, not feedback records. This spec owns source-control contracts, so it owns the change-proposal contract.
+
 ## Scope and interfaces
 
 Owned: the typed source client and its local bounded blob cache
 (SCION-SCM-R001); the sparse virtual workspace mount and its pending changeset
-(SCION-SCM-R002). Not owned: the served `source.*` operations and their
+(SCION-SCM-R002); the change-proposal records, the normalizer protocol, the
+shared verifier and the owner-approval flag (SCION-SCM-R003). Not owned: the served `source.*` operations and their
 admission. Epistemic-graph owns changeset storage, lock-free acceptance,
 and derived history indexes. Agent-utilities owns the in-run development
 loop. Pipelines owns gate policy around landing. The client consumes the served
@@ -105,7 +108,20 @@ A connector author or host integrator relies on the SDK for this capability: An 
 1. **Given** a connector or host that uses the SDK capability named in SCION-SCM-R001, **When** it exercises "Source client", **Then** the test bound to that row passes and the refusals the row names are typed.
 2. **Given** any active row of this spec, **When** the pre-push hooks run, **Then** its caller chain, shape and test are named in requirements.md and the row has a task line.
 
+### User Story 2 - Change-proposal contract (Priority: P1)
+
+An SCM connector author implements one contract for change proposals and their feedback. The platform then reads every provider the same way during autonomous delivery.
+
+**Acceptance Scenarios**:
+
+1. **Given** a webhook with a valid signature, **When** the connector's normalize tool runs, **Then** it returns one feedback event of one closed kind.
+2. **Given** a merge tool without an approval reference, **When** a caller invokes it, **Then** it refuses before any client call.
+3. **Given** a merge method without the owner-approval flag, **When** the tool surface registers, **Then** registration refuses with `TOOL_APPROVAL_FLAG_MISSING`.
+
 ### Edge Cases
+
+- Refusal: a wrong signature or token refuses with `SCM_SIGNATURE_INVALID` and emits no event.
+- Refusal: an unknown event type refuses with `SCM_EVENT_UNSUPPORTED`.
 
 - Refusal: the row SCION-SCM-R001.4 states the refusal or bound and its test proves it.
 - Refusal: the row SCION-SCM-R002.4 states the refusal or bound and its test proves it.
@@ -114,6 +130,7 @@ A connector author or host integrator relies on the SDK for this capability: An 
 
 - **FR-001**: Source client. Rows: SCION-SCM-R001.
 - **FR-002**: Virtual workspace mount (rollup). Rows: SCION-SCM-R002.
+- **FR-003**: Change-proposal records, the event normalizer protocol, the shared verifier and the owner-approval flag. Rows: SCION-SCM-R003.
 
 ## Success Criteria
 
@@ -125,6 +142,8 @@ A connector author or host integrator relies on the SDK for this capability: An 
 - **SC-06**: unauthorized, not_found, conflict, path_denied, oversized, deadline_exceeded, transport_unavailable refusals. Rows: SCION-SCM-R001.4.
 - **SC-07**: Mount over the client for declared prefixes; read inside and outside them. Rows: SCION-SCM-R002.2.
 - **SC-08**: Write three paths, then flush; a second flush after a conflicting base change. Rows: SCION-SCM-R002.2.
+- **SC-09**: Every valid post of two fixture connectors yields exactly one typed event. Rows: SCION-SCM-R003.5.
+- **SC-10**: A flagged merge tool makes zero client calls in 100% of calls without an approval reference. Rows: SCION-SCM-R003.3.
 
 ## Assumptions
 

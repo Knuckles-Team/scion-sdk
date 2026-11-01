@@ -13,3 +13,9 @@ Run the served proof of the rows below from a fresh checkout after `uv sync`. Ea
 - SCION-SCM-R002.2: `PYTHONNOUSERSITE=1 uv run pytest tests/test_source_mount.py::test_reads_materialize_and_writes_accumulate -q`
 - SCION-SCM-R002.3: `PYTHONNOUSERSITE=1 uv run pytest tests/test_source_mount.py::test_backend_selection_and_explicit_fuse_refusal -q`
 - SCION-SCM-R002.4: `PYTHONNOUSERSITE=1 uv run pytest tests/test_source_mount.py::test_refusals_preserve_pending_changeset -q`
+- SCION-SCM-R003: `PYTHONNOUSERSITE=1 uv run pytest tests/test_scm_contract_served.py::test_two_fixture_connectors_normalize_and_flag_merge_tools -q`
+- SCION-SCM-R003.1: `PYTHONNOUSERSITE=1 uv run pytest tests/test_scm_contract.py::test_records_are_frozen_and_closed_sets_refuse_unknown_values -q`
+- SCION-SCM-R003.2: `PYTHONNOUSERSITE=1 uv run pytest tests/test_scm_contract.py::test_verifier_refuses_bad_signatures_in_constant_time_and_unknown_events -q`
+- SCION-SCM-R003.3: `PYTHONNOUSERSITE=1 uv run pytest tests/test_scm_contract.py::test_merge_tools_need_the_flag_and_refuse_without_approval_ref -q`
+- SCION-SCM-R003.4: `PYTHONNOUSERSITE=1 uv run pytest tests/test_scm_contract.py::test_registration_adds_one_normalize_tool -q`
+- SCION-SCM-R003.5: `PYTHONNOUSERSITE=1 uv run pytest tests/test_scm_contract_served.py::test_two_fixture_connectors_normalize_and_flag_merge_tools -q`

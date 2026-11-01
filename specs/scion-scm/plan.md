@@ -6,7 +6,7 @@ Governing spec: [spec.md](spec.md). Rows: [requirements.md](requirements.md).
 
 Delivery phase: P1
 
-This plan covers the 14 active rows of SCION-SCM. Each row names its production caller chain, the files it edits and the existing helpers it reuses; the design below groups them. The SDK owns the connector side; the engine and the door own their sides by row ID.
+This plan covers the 20 active rows of SCION-SCM, including the change-proposal contract of rollup SCION-SCM-R003. Each row names its production caller chain, the files it edits and the existing helpers it reuses; the design below groups them. The SDK owns the connector side; the engine and the door own their sides by row ID.
 
 ## Technical Context
 
@@ -18,7 +18,7 @@ This plan covers the 14 active rows of SCION-SCM. Each row names its production 
 - **Project Type**: library with console scripts
 - **Performance Goals**: bounded pages, retries and caches as each row states; no unbounded growth
 - **Constraints**: no private data in the repository; engine contract read from the published package only
-- **Scale/Scope**: 14 active rows
+- **Scale/Scope**: 20 active rows
 
 ## Constitution Check
 
@@ -200,6 +200,10 @@ A cache must not treat a mutable ref plus a byte hash as access authority.
 The hash also does not prove a multi-read result is revision-consistent.
 
 
+### Change-proposal contract
+
+Rollup SCION-SCM-R003 adds the package `scion_sdk/scm/`. `records.py` holds the frozen change-proposal and feedback records; see [data-model.md](data-model.md). `events.py` holds the `ScmEventNormalizer` protocol, the `verify_webhook` verifier and `register_scm_normalizer`. The verifier supports an HMAC-SHA256 scheme and a static shared-token scheme, both compared in constant time. The owner-approval flag extends `_register_operation` in `scion_sdk/mcp/method_tools.py:163`. A flagged tool refuses without an approval reference before any client call. The SDK still serves nothing itself: each connector registers the normalize tool, and arbora calls it through `fleet.call`.
+
 ## Phase 2: Task approach
 
 tasks.md holds one task line per active row, ordered producer first; rows that share no file are marked parallel by their order.
@@ -220,8 +224,12 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 - `scion_sdk/source/_blob_cache.py` (line 15): cited by 9 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/source/_client_channel.py` (line 24): cited by 9 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/mcp/tool_surface.py` (line 72): cited by 5 rows; its importers are named in each row's Caller chain.
+- `scion_sdk/mcp/method_tools.py` (line 163): `_register_operation` carries the owner-approval flag (SCION-SCM-R003.3).
+- `scion_sdk/scm/events.py` (new): `register_scm_normalizer` adds the normalize tool (SCION-SCM-R003.4).
 - `scion_sdk/source/client.py` (line 84): cited by 4 rows; its importers are named in each row's Caller chain.
 
 ## Cross-repo seams
 
-none. Dependencies on other repositories are `Depends on:` rows that cite the owner row ID; this spec adds no new wire contract.
+- SCM connectors implement the normalizer protocol and serve the records. Rows: `SCION-SCM-R003.2`. Contract: [scm-connectors](contracts/scm-connectors.md).
+- Arbora calls the normalize tool from its intake and honours the approval flag. Rows: `SCION-SCM-R003.4`. Contract: [arbora-intake](contracts/arbora-intake.md).
+- The engine stores the feedback events as delivery records. Rows: `SCION-SCM-R003.1`. Contract: [engine-feedback](contracts/engine-feedback.md).

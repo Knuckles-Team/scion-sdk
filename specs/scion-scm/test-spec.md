@@ -58,3 +58,14 @@ Run the spec gates `spec-standard`, `spec-decomposition`, `spec-status`, and `sp
 Record the exact source revision, the command output, and the served test receipts for each acceptance run.
 A source test alone is not served acceptance.
 The served cases require the real connector tool path.
+
+## Change-proposal contract acceptance (SCION-SCM-R003)
+
+| Requirement | Case | Required assertion |
+|---|---|---|
+| `SCION-SCM-R003` | Change-proposal contract (rollup). | `tests/test_scm_contract_served.py::test_two_fixture_connectors_normalize_and_flag_merge_tools` |
+| `SCION-SCM-R003.1` | Model: change-proposal records. | `tests/test_scm_contract.py::test_records_are_frozen_and_closed_sets_refuse_unknown_values` |
+| `SCION-SCM-R003.2` | Behavior: event normalizer protocol and shared signature verifier. | `tests/test_scm_contract.py::test_verifier_refuses_bad_signatures_in_constant_time_and_unknown_events` |
+| `SCION-SCM-R003.3` | Behavior: owner-approval flag on merge tools. | `tests/test_scm_contract.py::test_merge_tools_need_the_flag_and_refuse_without_approval_ref` |
+| `SCION-SCM-R003.4` | Wiring: connectors register their normalizer. | `tests/test_scm_contract.py::test_registration_adds_one_normalize_tool` |
+| `SCION-SCM-R003.5` | Hot-path proof: two fixture connectors. | `tests/test_scm_contract_served.py::test_two_fixture_connectors_normalize_and_flag_merge_tools` |
