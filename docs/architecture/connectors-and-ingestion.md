@@ -20,7 +20,7 @@ External systems — enterprise apps (LeanIX/ServiceNow/ERPNext/Jira/…),
 process (Camunda/ARIS/Egeria/ArchiMate), and documents/web
 (ArchiveBox/crawl4ai/scholarx/search) — all feed `source_sync()`/
 `sweep_all_sources()`, the one ingestion entrypoint. Code (GitLab/GitHub
-repos) instead feeds epistemic-graph's tree-sitter parse + resolve
+repos) instead feeds medulla's tree-sitter parse + resolve
 (`IndexRepository`, `ast_hash` = content hash) first, which then also
 feeds `source_sync()`. From there: `stamp_source()` (provenance) →
 content-hash delta (skip unchanged) → `write_entities()` (the one writer)
@@ -126,7 +126,7 @@ A connector sends a `ChangeEnvelope` + `connector_preparation` evidence to
 the AU adapter, which asks the activation control plane for the exact
 binding + active generation and gets back an approved binding claim. The
 adapter checks tenant, graph, refs, and digests itself, then calls
-epistemic-graph's existing `ingest_envelope`, which runs SHACL/ICV +
+medulla's existing `ingest_envelope`, which runs SHACL/ICV +
 `ApplyChangeEnvelope` and returns success, skipped, reject, or fail. The
 adapter returns a bounded report ref and stable code to the connector.
 
@@ -169,7 +169,7 @@ re-reason; an unchanged hash is skipped (`skipped_unchanged++`).
 
 </div>
 
-**Use Rust epistemic-graph.** For code, the content hash is *free*: the
+**Use Rust medulla.** For code, the content hash is *free*: the
 tree-sitter parser emits a content-stable `ast_hash` on every symbol, so "which
 symbols changed" is answered by comparing `ast_hash`, not by node existence.
 

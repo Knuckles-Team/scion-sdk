@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prove the SDK reads epistemic-graph's generated contracts from the PyPI wheel
+# Prove the SDK reads medulla's generated contracts from the PyPI wheel
 # that uv.lock pins. There is no source checkout and no PYTHONPATH overlay: the
 # installed distribution must be the locked registry version, and the contract
 # package must resolve only inside that distribution.
@@ -17,12 +17,12 @@ import epistemic_graph.generated.source_ingestion as source
 lock = tomllib.loads(Path("uv.lock").read_text(encoding="utf-8"))
 (locked,) = [p for p in lock["package"] if p["name"] == "medulla"]
 if not str(locked.get("source", {}).get("registry", "")).startswith("https://pypi.org/"):
-    raise SystemExit(f"uv.lock does not pin epistemic-graph to PyPI: {locked.get('source')}")
+    raise SystemExit(f"uv.lock does not pin medulla to PyPI: {locked.get('source')}")
 # A release may publish an sdist beside its wheels; uv records both. The
 # contract is that a published wheel exists and is what installs:
-# [tool.uv] no-build-package forbids building epistemic-graph from source.
+# [tool.uv] no-build-package forbids building medulla from source.
 if not locked.get("wheels"):
-    raise SystemExit("uv.lock pins no published epistemic-graph wheel")
+    raise SystemExit("uv.lock pins no published medulla wheel")
 dist = metadata.distribution("medulla")
 if dist.version != locked["version"]:
     raise SystemExit(f"installed medulla {dist.version} != uv.lock {locked['version']}")

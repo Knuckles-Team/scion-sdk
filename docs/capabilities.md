@@ -17,7 +17,7 @@ part of the current public package.
 
 ## Contract boundary
 
-The SDK depends on `epistemic-graph>=2.27.6`. SourceIngest, ConnectorPack,
+The SDK depends on `medulla>=2.27.6`. SourceIngest, ConnectorPack,
 IndexRepository, and WriteBack graph models come from Medulla's
 generated surface. Arbora provides the checked client, identity, and live
 authority required for graph-bound runtime composition.

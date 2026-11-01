@@ -22,7 +22,7 @@ everything:
 
 ## Composition and running
 
-The SDK does not discover epistemic-graph or mint its request identity. Arbora
+The SDK does not discover medulla or mint its request identity. Arbora
 builds the checked generated client from its authenticated runtime context
 and injects it at the public composition seam:
 

@@ -14,7 +14,7 @@ scripts/bootstrap.sh
 
 `scripts/bootstrap.sh` is idempotent. It ensures uv >= 0.9 and installs the
 pinned Python. It runs `uv sync --frozen` with the test dependencies. uv installs
-epistemic-graph from its PyPI wheel and refuses a source build. The script then
+medulla from its PyPI wheel and refuses a source build. The script then
 installs the pre-commit and pre-push git hooks from `.config/pre-commit.yaml`.
 Add `--scanners` to also install the pinned native scanners (cccc, KISS,
 dupehound, jscpd) through `scripts/install_scanners.sh`; that needs cargo and

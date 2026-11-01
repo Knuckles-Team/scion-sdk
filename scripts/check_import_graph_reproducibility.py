@@ -36,7 +36,7 @@ from packaging.version import Version
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests" / "fixtures" / "pinned_import_graph.txt"
 PROVENANCE_FIXTURE = ROOT / "tests" / "fixtures" / "pinned_import_graph.provenance.json"
-RELEASE_MANIFEST = ROOT / "scripts" / "epistemic_graph_release.json"
+RELEASE_MANIFEST = ROOT / "scripts" / "engine_release.json"
 LOCK_FILE = ROOT / "uv.lock"
 ROOT_PYPROJECT = ROOT / "pyproject.toml"
 ROOT_DISTRIBUTION = "scion-sdk"
@@ -376,9 +376,7 @@ def _registry_declaration(
     if manifest["version"] != lock_package.version or (
         wheels.get(manifest["wheel_filename"]) != manifest["wheel_sha256"]
     ):
-        _raise(
-            "scripts/epistemic_graph_release.json does not name a wheel uv.lock pins"
-        )
+        _raise("scripts/engine_release.json does not name a wheel uv.lock pins")
     declared = tuple(sorted(installed.requires or ()))
     locked = tuple(
         sorted(
