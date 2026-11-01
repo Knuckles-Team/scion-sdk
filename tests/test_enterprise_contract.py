@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 
 import pytest
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     WriteBackAttemptKind,
     WriteBackEffectStatus,
     WriteBackOutcome,

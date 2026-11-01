@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
     SourceIngestStatus,

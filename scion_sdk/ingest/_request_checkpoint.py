@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterable
 from typing import Any
 
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint
+from medulla.generated.source_ingestion import SourceCheckpoint
 from pydantic import JsonValue
 
 from scion_sdk.ingest.errors import IngestError

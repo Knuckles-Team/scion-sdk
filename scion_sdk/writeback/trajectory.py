@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from epistemic_graph.generated import compute, graph, models
+from medulla.generated import compute, graph, models
 
 __all__ = ["TrajectoryRecorder", "TrajectoryStep", "TrajectoryWriteUncertainError"]
 

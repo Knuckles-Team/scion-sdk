@@ -8,9 +8,9 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from epistemic_graph.generated.models import GovernedChange, GovernedStatus
-from epistemic_graph.generated.security import send_governed_change
-from epistemic_graph.generated.write_back import (
+from medulla.generated.models import GovernedChange, GovernedStatus
+from medulla.generated.security import send_governed_change
+from medulla.generated.write_back import (
     SourceChangeSet,
     WriteBackAuthorizationDecision,
 )

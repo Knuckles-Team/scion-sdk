@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     ReconciliationObservation,
     ReconciliationReceipt,
     SourceChangeSet,

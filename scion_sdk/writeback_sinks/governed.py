@@ -38,7 +38,7 @@ from .governed_grant import (
 from .governed_transport import SinkWriteBackTransport
 
 if TYPE_CHECKING:
-    from epistemic_graph.generated.write_back import (
+    from medulla.generated.write_back import (
         SourceChangeSet,
         WriteBackAttempt,
     )

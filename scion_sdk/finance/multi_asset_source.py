@@ -6,7 +6,7 @@ from datetime import UTC
 from enum import StrEnum
 from typing import Any
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
     SourceRecord,

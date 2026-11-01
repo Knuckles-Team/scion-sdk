@@ -3,7 +3,7 @@
 Extracted from the ``RegisterServer`` lease loop in
 ``agent_utilities.mcp.server_factory``. AU reached the engine through its own
 ``GraphComputeEngine`` singleton; here the registry is a port, and
-:class:`EpistemicGraphServerRegistry` adapts an ``epistemic_graph`` client that
+:class:`EpistemicGraphServerRegistry` adapts an ``medulla`` client that
 exposes ``server_registry.register``. A client that predates ``RegisterServer``
 (including epistemic-graph 2.23.0) is refused at construction instead of
 failing silently on every heartbeat. Epistemic-graph 2.27.0 is the SDK's first
@@ -60,7 +60,7 @@ class ServerRegistryUnavailableError(RuntimeError):
 
 
 class EpistemicGraphServerRegistry:
-    """Adapts an ``epistemic_graph`` client's ``server_registry`` namespace."""
+    """Adapts an ``medulla`` client's ``server_registry`` namespace."""
 
     def __init__(self, client: object) -> None:
         namespace = getattr(client, "server_registry", None)

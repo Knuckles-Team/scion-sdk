@@ -32,7 +32,7 @@ from typing import Any, Protocol
 from urllib.parse import quote
 
 import yaml
-from epistemic_graph.generated.source_ingestion import SourceIngestionReceipt
+from medulla.generated.source_ingestion import SourceIngestionReceipt
 
 from scion_sdk.contracts import ExternalAccess, default_external_access
 from scion_sdk.ingest.model import (

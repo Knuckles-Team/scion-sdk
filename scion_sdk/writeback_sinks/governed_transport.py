@@ -12,7 +12,7 @@ from ._governed_common import PATCH_FIELD, _digest, _write_back
 from .core import WritebackContext, WritebackResult, WritebackSink
 
 if TYPE_CHECKING:
-    from epistemic_graph.generated.write_back import (
+    from medulla.generated.write_back import (
         ReconciliationObservation,
         SourceChangeSet,
         WriteBackAttempt,

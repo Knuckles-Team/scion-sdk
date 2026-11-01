@@ -39,8 +39,8 @@ ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = ROOT / "pyproject.toml"
 
 _IMPORT_SMOKE = (
-    "import epistemic_graph.generated.source_ingestion as _c; "
-    "import epistemic_graph.engine as _k; "
+    "import medulla.generated.source_ingestion as _c; "
+    "import medulla.engine as _k; "
     "assert _c and _k"
 )
 

@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from epistemic_graph.generated.connector_pack import (
+from medulla.generated.connector_pack import (
     PackImportResultImported,
     PackImportResultRejected,
 )

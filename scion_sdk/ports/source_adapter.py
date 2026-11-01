@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint
+from medulla.generated.source_ingestion import SourceCheckpoint
 
 from scion_sdk.contracts import (
     CapabilityDescriptor,

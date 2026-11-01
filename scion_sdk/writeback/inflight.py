@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from threading import Lock
 
-from epistemic_graph.generated.write_back import SourceChangeSet
+from medulla.generated.write_back import SourceChangeSet
 
 from scion_sdk.writeback.errors import WriteBackError
 

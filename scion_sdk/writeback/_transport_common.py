@@ -6,7 +6,7 @@ import hashlib
 import json
 from collections.abc import Sequence
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     ReconciliationObservation,
     SourceChangeSet,
     WriteBackAttempt,

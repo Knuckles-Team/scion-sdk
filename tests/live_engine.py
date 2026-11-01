@@ -52,9 +52,9 @@ _LIVE: dict[str, Path] = {}
 
 async def scoped_client(scopes: list[str]) -> Any:
     """Another client on the live engine's graph with ``scopes``."""
-    from epistemic_graph import EpistemicGraphClient
+    from medulla import MedullaClient
 
-    return await EpistemicGraphClient.connect(
+    return await MedullaClient.connect(
         socket_path=str(_LIVE["socket"]),
         auth_secret=_SECRET,
         graph_name=GRAPH,
@@ -74,9 +74,9 @@ def _wait_for(socket_path: Path, proc: subprocess.Popen[bytes]) -> None:
 
 
 def _bootstrap(socket_path: Path) -> None:
-    from epistemic_graph.client import SyncEpistemicGraphClient
+    from medulla.client import SyncMedullaClient
 
-    client = SyncEpistemicGraphClient.connect(
+    client = SyncMedullaClient.connect(
         socket_path=str(socket_path),
         auth_secret=_SECRET,
         verified_context=_context([], ["security:bootstrap"]),
@@ -87,7 +87,7 @@ def _bootstrap(socket_path: Path) -> None:
         )
     finally:
         client.close()
-    client = SyncEpistemicGraphClient.connect(
+    client = SyncMedullaClient.connect(
         socket_path=str(socket_path),
         auth_secret=_SECRET,
         verified_context=_context(["test"], ["*"]),
@@ -103,7 +103,7 @@ def live_ingest(
     tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[KnowledgeIngest]:
     """A knowledge-ingest service connected to a fresh real engine."""
-    from epistemic_graph.server_binary import (
+    from medulla.server_binary import (
         ServerBinaryNotFoundError,
         resolve_server_binary,
     )

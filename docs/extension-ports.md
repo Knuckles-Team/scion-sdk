@@ -80,7 +80,7 @@ ConnectorPack authority resolver at construction; the testing kit's
 `InMemorySink` always reports ready.
 
 `SourceIngestionRequest` is imported from
-`epistemic_graph.generated.source_ingestion`; the SDK does not define an alias,
+`medulla.generated.source_ingestion`; the SDK does not define an alias,
 parallel DTO, or digest. Its generated `canonical_digest()` binds raw records,
 provenance, exact per-record mapping references, provider checkpoint, and
 expected previous checkpoint. The runner sends it through generated
@@ -146,7 +146,7 @@ source observations go back to EG's change set for durable receipts.
 
 </div>
 
-The canonical models come from `epistemic_graph.generated.write_back`.
+The canonical models come from `medulla.generated.write_back`.
 `SourceChangeSet.canonical_digest()` and `.patch_digest()` implement EG's framed
 MessagePack digest contract; the SDK neither reconstructs those schemas nor
 implements a parallel digest. EG alone creates and persists `WriteBackReceipt`
@@ -182,7 +182,7 @@ activation and graph acceptance are separate integration steps.
 ## Contract ownership
 
 Source ingestion, ConnectorPack, and WriteBack request/result models come
-directly from `epistemic_graph.generated`. The SDK owns only connector authoring,
+directly from `medulla.generated`. The SDK owns only connector authoring,
 capture, transport, and extraction shapes; it defines no parallel EG DTO or
 digest.
 

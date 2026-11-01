@@ -9,13 +9,13 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from epistemic_graph.generated.source_ingestion import (
+from ingest_fakes import SinkBackedEngine
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
     SourceIngestionRequest,
     SourceIngestStatus,
 )
-from ingest_fakes import SinkBackedEngine
 
 from scion_sdk.ingest import (
     ChangeSet,
@@ -368,7 +368,7 @@ def test_unreachable_or_misconfigured_engine_is_unavailable(
 
 
 class _BlobClientDouble:
-    """A minimal double for ``epistemic_graph.client.BlobClient.store``."""
+    """A minimal double for ``medulla.client.BlobClient.store``."""
 
     def __init__(self) -> None:
         self.stored: dict[str, bytes] = {}

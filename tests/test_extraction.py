@@ -5,8 +5,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint
 from fixture_server import CONNECTOR, ITEMS, build_reader_server
+from medulla.generated.source_ingestion import SourceCheckpoint
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
 from scion_sdk.adapters.mcp_tool_paging import (

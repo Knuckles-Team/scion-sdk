@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from epistemic_graph.generated.source_ingestion import SourceIngestionReceipt
+from medulla.generated.source_ingestion import SourceIngestionReceipt
 
 from scion_sdk.ingest.errors import ContractNotAcceptedError, IngestError
 from scion_sdk.ingest.model import IngestBinding

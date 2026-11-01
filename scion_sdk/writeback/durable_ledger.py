@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     ReconciliationObservation,
     ReconciliationReceipt,
     SourceChangeSet,

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from epistemic_graph.generated.write_back import SourceChangeSet
+    from medulla.generated.write_back import SourceChangeSet
 
 __all__ = ["AuditReservation", "AuditReservationPort"]
 

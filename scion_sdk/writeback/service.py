@@ -7,7 +7,7 @@ import json
 import time
 from collections.abc import Callable
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     ReconciliationObservation,
     SourceChangeSet,
     WriteBackAttempt,

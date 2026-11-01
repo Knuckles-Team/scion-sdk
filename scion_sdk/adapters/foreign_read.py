@@ -107,7 +107,7 @@ def _generated_sender(method: ForeignReadMethod) -> Any:
     """Resolve one published EG sender without making it an import-time dep."""
 
     try:
-        module = importlib.import_module("epistemic_graph.generated.query")
+        module = importlib.import_module("medulla.generated.query")
         sender = getattr(module, _GENERATED_SENDERS[method], None)
     except (ImportError, KeyError):
         sender = None

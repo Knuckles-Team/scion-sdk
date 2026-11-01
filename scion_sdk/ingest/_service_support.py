@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 
-from epistemic_graph.generated.source_ingestion import SourceIngestStatus
+from medulla.generated.source_ingestion import SourceIngestStatus
 
 from scion_sdk.ingest.errors import IngestConflictError, IngestError
 from scion_sdk.ingest.model import ChangeSet, IngestBinding

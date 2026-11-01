@@ -118,7 +118,7 @@ class KvSourceCheckpoints:
         self, connector: str, source_id: str
     ) -> tuple[SourceCheckpointState, int]:
         """The checkpoint and its KV version; version 0 when none is stored."""
-        from epistemic_graph.generated import storage
+        from medulla.generated import storage
 
         entry = storage.decode_kv_get(
             await storage.send_kv_get(
@@ -141,7 +141,7 @@ class KvSourceCheckpoints:
         Raises:
             SourceSyncError: ``checkpoint_conflict`` when another writer moved it.
         """
-        from epistemic_graph.generated import storage
+        from medulla.generated import storage
 
         outcome = storage.decode_kv_cas(
             await storage.send_kv_cas(

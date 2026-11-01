@@ -10,19 +10,19 @@ from typing import Any
 
 import anyio
 import pytest
-from epistemic_graph.generated.connector_pack import (
+from fleet_declarations import DECLARATIONS
+from fleet_fixtures import (
+    FRESHRSS_READING_LIST,
+)
+from medulla.generated.connector_pack import (
     AgentLibraryMutationContext,
     McpCatalogSnapshotBinding,
     PackImportResult,
 )
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
     SourceIngestStatus,
-)
-from fleet_declarations import DECLARATIONS
-from fleet_fixtures import (
-    FRESHRSS_READING_LIST,
 )
 
 from scion_sdk.artifacts.pack import CapturedConnectorPack

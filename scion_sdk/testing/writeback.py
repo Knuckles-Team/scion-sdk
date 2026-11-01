@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     SourceChangeSet,
     WriteBackAuthorizationDecision,
     WriteBackAuthorizationMode,
