@@ -111,7 +111,7 @@ def test_bad_client_path_rejected():
 
 
 def test_connect_without_endpoint_is_unavailable(monkeypatch):
-    monkeypatch.delenv("EPISTEMIC_GRAPH_ENDPOINT", raising=False)
+    monkeypatch.delenv("MEDULLA_ENDPOINT", raising=False)
     with pytest.raises(ComputeUnavailableError):
         connect_compute()
 
@@ -128,17 +128,17 @@ def test_compute_session_asks_for_compute_scopes_only():
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R014.24")
 def test_r014_24_audience_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     for key, value in {
-        "EPISTEMIC_GRAPH_ENDPOINT": "tcp://127.0.0.1:9100",
-        "EPISTEMIC_GRAPH_AUTH_SECRET_REF": "env://EG_SECRET",
-        "EPISTEMIC_GRAPH_TENANT": "tenant-a",
-        "EPISTEMIC_GRAPH_GRAPH": "kg",
+        "MEDULLA_ENDPOINT": "tcp://127.0.0.1:9100",
+        "MEDULLA_AUTH_SECRET_REF": "env://EG_SECRET",
+        "MEDULLA_TENANT": "tenant-a",
+        "MEDULLA_GRAPH": "kg",
     }.items():
         monkeypatch.setenv(key, value)
-    monkeypatch.delenv("EPISTEMIC_GRAPH_AUDIENCE", raising=False)
+    monkeypatch.delenv("MEDULLA_AUDIENCE", raising=False)
     default = EngineSettings.from_settings()
     assert default is not None
     assert default.verified_context()["audience"] == "epistemic-graph"
-    monkeypatch.setenv("EPISTEMIC_GRAPH_AUDIENCE", "agent-services")
+    monkeypatch.setenv("MEDULLA_AUDIENCE", "agent-services")
     custom = EngineSettings.from_settings()
     assert custom is not None
     assert custom.verified_context()["audience"] == "agent-services"
