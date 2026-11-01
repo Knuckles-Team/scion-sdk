@@ -37,8 +37,8 @@ and published through GitHub Pages.
 ## Boundaries
 
 - **Owns:** connector contracts and transports. The transports are REST, GraphQL, gRPC, MCP, the A2A protocol library and the others. It also owns the EG client adapter and connector ontology pack generation.
-- **Never builds:** serving or routing (route them to arbora). Facts, storage and pushdown planning go to epistemic-graph.
-- **Allowed dependencies:** the epistemic-graph client and protocol libraries. It never imports `agent_utilities` or `arbora`. Connectors depend on this SDK only.
+- **Never builds:** serving or routing (route them to arbora). Facts, storage and pushdown planning go to medulla.
+- **Allowed dependencies:** the medulla client and protocol libraries. It never imports `agent_utilities` or `arbora`. Connectors depend on this SDK only.
 
 Route every feature with the [ecosystem boundaries standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md) before any code. A part this repository does not own goes to its owner's specs.
 
@@ -58,7 +58,7 @@ Route every feature with the [ecosystem boundaries standard](https://github.com/
 
 The repository does not own vendor API implementations, durable graph storage,
 ontology reasoning, agents, model calls, workflow orchestration, or deployment
-policy. Connectors own vendor-specific transport. `epistemic-graph` owns durable
+policy. Connectors own vendor-specific transport. `medulla` owns durable
 records, graph schemas, validation, reasoning, receipts, and semantic indexing.
 The agent control plane owns goals, workflows, and routing.
 
@@ -94,7 +94,7 @@ exercised by a test.
 
 The runner activates an extension only after its exact group, name,
 distribution, and version are certified. Sink readiness is capability based.
-The bundled epistemic-graph sink reads durable SourceIngest status and commits
+The bundled medulla sink reads durable SourceIngest status and commits
 through generated SourceIngest, ConnectorPack, and WriteBack contracts; it does
 not retain a parallel cursor authority. Construction requires a checked
 generated client and live ConnectorPack authority resolver.
@@ -166,7 +166,7 @@ a gate to land a change.
 
 - Put shared connector behavior in this SDK and vendor behavior in the owning
   connector. Do not add graph storage, reasoning, agents, or orchestration here.
-- Preserve one contract at every boundary. Import epistemic-graph-owned schemas
+- Preserve one contract at every boundary. Import medulla-owned schemas
   from its generated client surface; do not duplicate wire DTOs or digests.
 - Fail closed for unknown auth, unsafe exposure, malformed records, unverified
   tool contracts, uncertified extensions, literal credentials, and uncertain

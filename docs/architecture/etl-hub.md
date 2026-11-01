@@ -26,7 +26,7 @@ connection registry, the fan-out mirror) — so this is mostly *wiring*, not new
 External systems (LeanIX, ServiceNow, Egeria, Camunda/ARIS, GitLab/Jira/…)
 feed extractors/hydration, which `stamp_source()` (source_system + domain)
 and run through an ontology transform (interfaces, links, OWL bridge,
-metamodel compile) into the canonical Knowledge Graph (the epistemic-graph
+metamodel compile) into the canonical Knowledge Graph (the medulla
 engine, the authority, keyed by externalToolId + domain federation keys).
 
 Outbound, the hub feeds two paths: write-back sinks (18, `run_writeback`,

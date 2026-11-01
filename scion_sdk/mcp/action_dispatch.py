@@ -26,7 +26,7 @@ from scion_sdk.mcp.concurrency import (
     fold_body_arguments,
     invoke_client_method,
 )
-from scion_sdk.mcp.context import ctx_confirm_destructive
+from scion_sdk.mcp.context import confirmation_refusal, ctx_confirm_destructive
 
 __all__ = [
     "DISCOVERY_ACTIONS",
@@ -203,12 +203,15 @@ async def dispatch_async(
     aliases: Mapping[str, str] | None = None,
     service: str = "",
     result_coercer: Callable[[Any], Any] | None = None,
+    confirm: bool = False,
 ) -> Any:
     """Resolve and execute ``action`` without blocking the MCP event loop.
 
     A destructive action requires an affirmative live-context confirmation.
     Modern connections may return an InputRequiredResult for the client round
     trip; a missing or negative response returns a cancellation payload.
+    ``confirm=True`` is the caller's explicit confirmation of this call, for
+    clients that cannot elicit.
     """
     canonical = resolve_action(
         action,
@@ -220,12 +223,12 @@ async def dispatch_async(
         return canonical
     if is_destructive_action(canonical, operation):
         confirmation = await ctx_confirm_destructive(
-            ctx, canonical, confirmation_arguments=kwargs
+            ctx, canonical, confirmation_arguments=kwargs, explicit_confirm=confirm
         )
         if isinstance(confirmation, InputRequiredResult):
             return confirmation
         if confirmation is not True:
-            return {"cancelled": True, "operation": canonical}
+            return confirmation_refusal(ctx, canonical)
     result = await invoke_client_method(
         getattr(client, canonical), **dict(kwargs or {})
     )

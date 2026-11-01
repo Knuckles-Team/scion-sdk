@@ -21,7 +21,11 @@ from pydantic import (
     model_validator,
 )
 
-from .confirmation import ctx_confirm_destructive
+from .confirmation import (
+    confirmation_refusal,
+    ctx_confirm_destructive,
+    elicitation_unavailable,
+)
 
 __all__ = [
     "MAX_PROGRESS_MESSAGE_BYTES",
@@ -32,10 +36,12 @@ __all__ = [
     "ToolExecutionContext",
     "ToolExecutionResult",
     "ToolProgress",
+    "confirmation_refusal",
     "ctx_confirm_destructive",
     "ctx_graphql_get_type_details",
     "ctx_graphql_list_types",
     "ctx_log",
+    "elicitation_unavailable",
 ]
 
 MAX_PROGRESS_MESSAGE_BYTES = 4096

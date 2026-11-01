@@ -119,9 +119,9 @@ Certification lists tools without invoking them or reaching the vendor API.
 
 ## 6. Join the source lifecycle
 
-Durable source sync is composed by Arbora with a checked epistemic-graph
+Durable source sync is composed by Arbora with a checked medulla
 client and current ConnectorPack authority. The SDK discovers and extracts
-source pages; generated epistemic-graph requests own mapping, checkpoint CAS,
+source pages; generated medulla requests own mapping, checkpoint CAS,
 provenance, and durable receipts.
 
 Continue with:

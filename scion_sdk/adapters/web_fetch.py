@@ -10,7 +10,7 @@ Open Graph/Twitter Card metadata extraction, and markdown normalization. The
 ArchiveBox and crawl4ai backends stay in agent-utilities for now (they call
 back into agent-utilities-owned infrastructure: the MCP tool fleet and the
 skill-graph crawler subprocess); both remain as open lines in
-``specs/SCION-SOURCE-INGEST/tasks.md``.
+``specs/scion-source-ingest/tasks.md``.
 
 :class:`WebFetchSourceAdapter` sweeps a fixed, ordered list of URLs through a
 connector's ``web_extract`` tool (SCION-SOURCE-INGEST-R005.40.3), one URL per

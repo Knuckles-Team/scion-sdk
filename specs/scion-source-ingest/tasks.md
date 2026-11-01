@@ -1,0 +1,280 @@
+# SCION-SOURCE-INGEST — Implementation tasks
+
+Governing spec: [spec.md](spec.md). Design: [plan.md](plan.md). Rows: [requirements.md](requirements.md).
+
+Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task number and the row ID are required.
+`[P]` marks a task that may run in parallel. `[US1]` names the user story. Tasks are ordered producer first.
+
+- [x] T001 [US1] SCION-SOURCE-INGEST-R002 SDK drift classifier handles incompatible schema changes.
+- [x] T002 [US1] SCION-SOURCE-INGEST-R003 SDK records and pauses on proposed schema repairs.
+- [x] T003 [US1] SCION-SOURCE-INGEST-R005.1 Model.
+- [ ] T004 [US1] SCION-SOURCE-INGEST-R005.2 Paper providers: search, merge, quota and complete download.
+- [ ] T005 [US1] SCION-SOURCE-INGEST-R005.3 Register paper operations in a served connector.
+- [x] T006 [US1] SCION-SOURCE-INGEST-R005.4 Paper refusals.
+- [x] T007 [US1] SCION-SOURCE-INGEST-R005.5 Paper evidence and redaction.
+- [ ] T008 [US1] SCION-SOURCE-INGEST-R005.6 Hot-path proof for paper sources.
+- [x] T009 [US1] SCION-SOURCE-INGEST-R006.1 SDK ports the Uptime Kuma monitor extractor. Defines the typed vendor-extractor contract.
+- [x] T010 [US1] SCION-SOURCE-INGEST-R006.2 SDK ports the Ansible Automation inventory and job extractor.
+- [x] T011 [US1] SCION-SOURCE-INGEST-R006.3 SDK ports the Caddy reverse-proxy route extractor.
+- [x] T012 [US1] SCION-SOURCE-INGEST-R006.4 SDK ports the Home Assistant entity and scene extractor.
+- [x] T013 [US1] SCION-SOURCE-INGEST-R006.5 SDK ports the ArchiMate model element extractor.
+- [x] T014 [US1] SCION-SOURCE-INGEST-R006.6 SDK ports the Kafka topic and cluster extractor.
+- [x] T015 [US1] SCION-SOURCE-INGEST-R006.7 SDK ports the Salesforce CRM record extractor.
+- [x] T016 [US1] SCION-SOURCE-INGEST-R006.8 SDK ports the Grafana LGTM observability-stack extractor.
+- [x] T017 [US1] SCION-SOURCE-INGEST-R006.9 SDK ports the Microsoft 365 mail, calendar, and Teams extractor.
+- [x] T018 [US1] SCION-SOURCE-INGEST-R006.10 SDK ports the Technitium DNS zone and record extractor.
+- [x] T019 [US1] SCION-SOURCE-INGEST-R006.11 SDK ports the Portainer container and stack extractor.
+- [x] T020 [US1] SCION-SOURCE-INGEST-R006.12 SDK ports the Emerald Exchange market extractor.
+- [x] T021 [US1] SCION-SOURCE-INGEST-R006.13 SDK ports the Mealie recipe and meal-plan extractor.
+- [x] T022 [US1] SCION-SOURCE-INGEST-R006.14 SDK ports the Keycloak realm, client, and identity extractor.
+- [x] T023 [US1] SCION-SOURCE-INGEST-R006.15 SDK ports the Odoo ERP record extractor.
+- [x] T024 [US1] SCION-SOURCE-INGEST-R006.16 SDK ports the Nextcloud file and share extractor.
+- [x] T025 [US1] SCION-SOURCE-INGEST-R006.17 SDK ports the wger workout and exercise extractor.
+- [x] T026 [US1] SCION-SOURCE-INGEST-R006.18 SDK ports the Okta identity and directory extractor.
+- [x] T027 [US1] SCION-SOURCE-INGEST-R006.19 SDK ports the Twenty CRM record extractor.
+- [x] T028 [US1] SCION-SOURCE-INGEST-R006.20 SDK ports the RSA Archer GRC record extractor.
+- [x] T029 [US1] SCION-SOURCE-INGEST-R006.21 SDK ports the Infrastructure inventory extractor.
+- [x] T030 [US1] SCION-SOURCE-INGEST-R006.22 SDK ports the A2A agent-registry extractor.
+- [x] T031 [US1] SCION-SOURCE-INGEST-R006.23 SDK ports the Grafana dashboard extractor.
+- [x] T032 [US1] SCION-SOURCE-INGEST-R006.24 SDK ports the LeanIX enterprise-architecture factsheet extractor.
+- [x] T033 [US1] SCION-SOURCE-INGEST-R006.25 SDK ports the ERPNext record extractor.
+- [x] T034 [US1] SCION-SOURCE-INGEST-R006.26 SDK ports the ServiceNow ITSM record extractor.
+- [x] T035 [US1] SCION-SOURCE-INGEST-R006.27 SDK ports the CISO Assistant compliance extractor.
+- [x] T036 [US1] SCION-SOURCE-INGEST-R006.28 SDK ports the social-platform extractor.
+- [x] T037 [US1] SCION-SOURCE-INGEST-R006.29 SDK ports the ARIS process-model extractor.
+- [x] T038 [US1] SCION-SOURCE-INGEST-R006.30 SDK ports the Egeria governance and glossary extractor.
+- [x] T039 [US1] SCION-SOURCE-INGEST-R006.31 SDK ports the Camunda process extractor.
+- [x] T040 [US1] SCION-SOURCE-INGEST-R008 Connectors ingest occurrence and weather observations.
+- [x] T041 [US1] SCION-SOURCE-INGEST-R009 Taxonomy connector ingests NCBI/GBIF taxa as kg:Taxon.
+- [x] T042 [US1] SCION-SOURCE-INGEST-R010 SDK ships the ingest worker runner run_ingest_worker.
+- [ ] T043 [US1] SCION-SOURCE-INGEST-R011.1 The worker holds no placement policy and runs exactly the granted slots.
+- [x] T044 [US1] SCION-SOURCE-INGEST-R012.1 Model.
+- [x] T045 [US1] SCION-SOURCE-INGEST-R012.2 Behavior.
+- [x] T046 [US1] SCION-SOURCE-INGEST-R012.3 Wiring.
+- [x] T047 [US1] SCION-SOURCE-INGEST-R012.4 Refusal.
+- [x] T048 [US1] SCION-SOURCE-INGEST-R012.5 Evidence.
+- [x] T049 [US1] SCION-SOURCE-INGEST-R012.6 Hot-path proof.
+- [x] T050 [US1] SCION-SOURCE-INGEST-R012.7 Platform contract primitives.
+- [x] T051 [US1] SCION-SOURCE-INGEST-R001.1 Model.
+- [ ] T052 [US1] SCION-SOURCE-INGEST-R001.2 Stage executor: concurrent, dependency-ordered, resumable.
+- [ ] T053 [US1] SCION-SOURCE-INGEST-R001.3 Wire the stage executor into the worker cycle.
+- [ ] T054 [US1] SCION-SOURCE-INGEST-R001.4 Refuse unsafe stage graphs and ambiguous commits.
+- [ ] T055 [US1] SCION-SOURCE-INGEST-R001.5 Stage reports bind run, receipts and tokens.
+- [ ] T056 [US1] SCION-SOURCE-INGEST-R001.6 Hot-path proof for concurrent stages.
+- [x] T057 [US1] SCION-SOURCE-INGEST-R005.7 Model.
+- [x] T058 [US1] SCION-SOURCE-INGEST-R005.8 Behavior.
+- [ ] T059 [US1] SCION-SOURCE-INGEST-R005.9 Register the offline bookmark reader and feed the sync worker.
+- [x] T060 [US1] SCION-SOURCE-INGEST-R005.10 Bookmark refusals.
+- [x] T061 [US1] SCION-SOURCE-INGEST-R005.11 Bookmark evidence.
+- [ ] T062 [US1] SCION-SOURCE-INGEST-R005.12 Hot-path proof for offline bookmark import.
+- [x] T063 [US1] SCION-SOURCE-INGEST-R005.13 Model.
+- [x] T064 [US1] SCION-SOURCE-INGEST-R005.14 Chain log decoding behavior.
+- [ ] T065 [US1] SCION-SOURCE-INGEST-R005.15 Wire the chain-log reader into the event-feed path.
+- [x] T066 [US1] SCION-SOURCE-INGEST-R005.16 Chain log refusals.
+- [x] T067 [US1] SCION-SOURCE-INGEST-R005.17 Chain log evidence.
+- [ ] T068 [US1] SCION-SOURCE-INGEST-R005.18 Hot-path proof for chain log ingestion.
+- [x] T069 [US1] SCION-SOURCE-INGEST-R005.56 Offline workspace reader floor.
+- [x] T070 [US1] SCION-SOURCE-INGEST-R005.57 Stop cancelled workspace parsers.
+- [x] T071 [US1] SCION-SOURCE-INGEST-R005.19 Model.
+- [x] T072 [US1] SCION-SOURCE-INGEST-R005.20 Behavior.
+- [ ] T073 [US1] SCION-SOURCE-INGEST-R005.21 Register the workspace reader and feed the sync worker.
+- [x] T074 [US1] SCION-SOURCE-INGEST-R005.22 Refusal.
+- [x] T075 [US1] SCION-SOURCE-INGEST-R005.23 Evidence.
+- [ ] T076 [US1] SCION-SOURCE-INGEST-R005.24 Hot-path proof for workspace reads.
+- [ ] T077 [US1] SCION-SOURCE-INGEST-R005.25 Scheduled paper-intake job model.
+- [ ] T078 [US1] SCION-SOURCE-INGEST-R005.26 Scheduled intake: claim, propose, admit, ingest.
+- [ ] T079 [US1] SCION-SOURCE-INGEST-R005.27 Wire the scheduled job to the engine scheduler and worker.
+- [ ] T080 [US1] SCION-SOURCE-INGEST-R005.28 Scheduled intake refusals.
+- [ ] T081 [US1] SCION-SOURCE-INGEST-R005.29 Scheduled intake evidence.
+- [ ] T082 [US1] SCION-SOURCE-INGEST-R005.30 Hot-path proof for scheduled paper intake.
+- [x] T083 [US1] SCION-SOURCE-INGEST-R005.31 Paper fact record model with provenance and citation edges.
+- [x] T084 [US1] SCION-SOURCE-INGEST-R005.32 Extract paper facts and citation edges for engine assertion.
+- [ ] T085 [US1] SCION-SOURCE-INGEST-R005.33 Wire paper fact records into the source path.
+- [x] T086 [US1] SCION-SOURCE-INGEST-R005.34 Paper fact refusals.
+- [x] T087 [US1] SCION-SOURCE-INGEST-R005.35 Paper fact evidence.
+- [ ] T088 [US1] SCION-SOURCE-INGEST-R005.36 Hot-path proof for paper facts and citation edges.
+- [x] T089 [US1] SCION-SOURCE-INGEST-R005.37 Git-markdown domain packs with lineage and diff-based re-ingest.
+- [x] T090 [US1] SCION-SOURCE-INGEST-R005.38 Filesystem document source with a live ingestion path.
+- [x] T091 [US1] SCION-SOURCE-INGEST-R005.39 Governed document ingest applies the permission envelope before embedding.
+- [x] T092 [US1] SCION-SOURCE-INGEST-R005.40.1 Model.
+- [x] T093 [US1] SCION-SOURCE-INGEST-R005.40.2 Behavior.
+- [x] T094 [US1] SCION-SOURCE-INGEST-R005.40.3 Wiring.
+- [x] T095 [US1] SCION-SOURCE-INGEST-R005.40.4 Refusal.
+- [x] T096 [US1] SCION-SOURCE-INGEST-R005.40.5 Evidence.
+- [ ] T097 [US1] SCION-SOURCE-INGEST-R005.40.6 Hot-path proof for the web-source contract.
+- [x] T098 [US1] SCION-SOURCE-INGEST-R005.42 Pin legacy web-fetch egress during migration.
+- [x] T099 [US1] SCION-SOURCE-INGEST-R005.43 Limit web requests by host.
+- [x] T100 [US1] SCION-SOURCE-INGEST-R005.44 Preserve valid robots origins.
+- [x] T101 [US1] SCION-SOURCE-INGEST-R005.45 Redact robots refusal details.
+- [x] T102 [US1] SCION-SOURCE-INGEST-R005.46 Share concurrent robots loads.
+- [x] T103 [US1] SCION-SOURCE-INGEST-R005.47 EVM log model.
+- [x] T104 [US1] SCION-SOURCE-INGEST-R005.48 Bound legacy web responses.
+- [x] T105 [US1] SCION-SOURCE-INGEST-R005.49 Validate legacy web checkpoints.
+- [x] T106 [US1] SCION-SOURCE-INGEST-R005.50 Bind new legacy web checkpoints to the URL list.
+- [x] T107 [US1] SCION-SOURCE-INGEST-R005.51 Linear legacy tag stripping.
+- [x] T108 [US1] SCION-SOURCE-INGEST-R005.52 Linear legacy metadata scanning.
+- [x] T109 [US1] SCION-SOURCE-INGEST-R005.53 Linear legacy title scanning.
+- [x] T110 [US1] SCION-SOURCE-INGEST-R005.55 Bound legacy web fetch time.
+- [x] T111 [US1] SCION-SOURCE-INGEST-R006.32 Model.
+- [x] T112 [US1] SCION-SOURCE-INGEST-R006.33 Behavior.
+- [x] T113 [US1] SCION-SOURCE-INGEST-R006.34 Wiring.
+- [x] T114 [US1] SCION-SOURCE-INGEST-R006.35 Refusal.
+- [x] T115 [US1] SCION-SOURCE-INGEST-R006.36 Evidence.
+- [x] T116 [US1] SCION-SOURCE-INGEST-R006.37 Hot-path proof.
+- [ ] T117 [US1] SCION-SOURCE-INGEST-R004.7 Approved SQL client: models and delivery envelopes.
+- [ ] T118 [US1] SCION-SOURCE-INGEST-R004.8 Approved SQL client: checked, bounded streaming.
+- [ ] T119 [US1] SCION-SOURCE-INGEST-R004.9 Register the approved SQL receiver and feed the sync worker.
+- [ ] T120 [US1] SCION-SOURCE-INGEST-R004.10 Approved SQL client: terminal failure semantics.
+- [ ] T121 [US1] SCION-SOURCE-INGEST-R004.11 Approved SQL client: page evidence and redaction.
+- [ ] T122 [US1] SCION-SOURCE-INGEST-R004.12 Hot-path proof for approved SQL.
+- [x] T123 [US1] SCION-SOURCE-INGEST-R004.37 Generic pack receiver model.
+- [x] T124 [US1] SCION-SOURCE-INGEST-R004.38 Generic pack receiver behavior.
+- [x] T125 [US1] SCION-SOURCE-INGEST-R004.39 Generic pack receiver refusal.
+- [x] T126 [US1] SCION-SOURCE-INGEST-R004.40 Refuse cyclic stream continuations.
+- [x] T127 [US1] SCION-SOURCE-INGEST-R004.41 Validate durable cursor checkpoints.
+- [x] T128 [US1] SCION-SOURCE-INGEST-R004.42 Validate durable checkpoint sequence.
+- [x] T129 [US1] SCION-SOURCE-INGEST-R004.43 Bind SourceIngest to a request snapshot.
+- [x] T130 [US1] SCION-SOURCE-INGEST-R004.51 Check transport status identity before submission.
+- [x] T131 [US1] SCION-SOURCE-INGEST-R004.44 Refuse cursor-bearing checkpoint conflicts.
+- [x] T132 [US1] SCION-SOURCE-INGEST-R004.45 Preserve cursor across page chunks.
+- [x] T133 [US1] SCION-SOURCE-INGEST-R004.46 Refuse split-stream page sync.
+- [x] T134 [US1] SCION-SOURCE-INGEST-R004.47 Bind returned checkpoint identity.
+- [x] T135 [US1] SCION-SOURCE-INGEST-R004.48 Refuse conflicts on all page commits.
+- [x] T136 [US1] SCION-SOURCE-INGEST-R004.49 Stop after a refused page.
+- [x] T137 [US1] SCION-SOURCE-INGEST-R004.52 Keep cursor on non-page writes.
+- [x] T138 [US1] SCION-SOURCE-INGEST-R004.13 Repository delta index state model.
+- [ ] T139 [US1] SCION-SOURCE-INGEST-R004.14 Repository delta indexing: changed files only, bounded memory.
+- [x] T140 [US1] SCION-SOURCE-INGEST-R004.15 Wire delta index state into the worker and the adapter.
+- [x] T141 [US1] SCION-SOURCE-INGEST-R004.16 Repository delta index refusals.
+- [x] T142 [US1] SCION-SOURCE-INGEST-R004.17 Repository delta index evidence.
+- [ ] T143 [US1] SCION-SOURCE-INGEST-R004.18 Hot-path proof for the repository delta index.
+- [x] T144 [US1] SCION-SOURCE-INGEST-R004.53 Bound declared-source calls and records.
+- [x] T145 [US1] SCION-SOURCE-INGEST-R004.19 Model.
+- [x] T146 [US1] SCION-SOURCE-INGEST-R004.20 Behavior.
+- [x] T147 [US1] SCION-SOURCE-INGEST-R004.21 Wiring.
+- [x] T148 [US1] SCION-SOURCE-INGEST-R004.22 Refusal.
+- [x] T149 [US1] SCION-SOURCE-INGEST-R004.23 Evidence.
+- [x] T150 [US1] SCION-SOURCE-INGEST-R004.24 Hot-path proof.
+- [x] T151 [US1] SCION-SOURCE-INGEST-R004.25 Pack mapping.
+- [x] T152 [US1] SCION-SOURCE-INGEST-R004.26 Citable fields.
+- [x] T153 [US1] SCION-SOURCE-INGEST-R004.27 Operator-approved mass withdrawal.
+- [x] T154 [US1] SCION-SOURCE-INGEST-R004.28 Per-parent fan-out.
+- [x] T155 [US1] SCION-SOURCE-INGEST-R004.29 Declarations are data the SDK reads.
+- [x] T156 [US1] SCION-SOURCE-INGEST-R004.30 A connector declares its record mappers; the SDK owns the rest.
+- [x] T157 [US1] SCION-SOURCE-INGEST-R004.31 One SourceStream is the ingest entry.
+- [x] T158 [US1] SCION-SOURCE-INGEST-R004.32 SourceStream covers best-effort, split-stream, media and mixed submissions.
+- [x] T159 [US1] SCION-SOURCE-INGEST-R004.33 sync takes a cursor strategy; mapped takes a batch size.
+- [x] T160 [US1] SCION-SOURCE-INGEST-R004.34 A projection, a guard and a size limit run inside the one submit path.
+- [x] T161 [US1] SCION-SOURCE-INGEST-R004.35 Ingest tools are declared as data and registered by the SDK.
+- [x] T162 [US1] SCION-SOURCE-INGEST-R004.36 Declared sources carry edges to the records their reference fields name.
+- [ ] T163 [US1] SCION-SOURCE-INGEST-R013.1 Harness manifest model.
+- [ ] T164 [US1] SCION-SOURCE-INGEST-R013.2 Harness session sync behavior.
+- [ ] T165 [US1] SCION-SOURCE-INGEST-R013.3 Wire harness sessions into the runner and the engine index.
+- [ ] T166 [US1] SCION-SOURCE-INGEST-R013.4 Harness session refusals.
+- [ ] T167 [US1] SCION-SOURCE-INGEST-R013.5 Harness session evidence.
+- [ ] T168 [US1] SCION-SOURCE-INGEST-R013.6 Hot-path proof for harness sessions.
+- [ ] T169 [US1] SCION-SOURCE-INGEST-R014.1 Model.
+- [ ] T170 [US1] SCION-SOURCE-INGEST-R014.2 Behavior.
+- [ ] T171 [US1] SCION-SOURCE-INGEST-R014.3 Wiring.
+- [ ] T172 [US1] SCION-SOURCE-INGEST-R014.4 Refusal.
+- [ ] T173 [US1] SCION-SOURCE-INGEST-R014.5 Evidence.
+- [ ] T174 [US1] SCION-SOURCE-INGEST-R014.6 Hot-path proof.
+- [ ] T175 [US1] SCION-SOURCE-INGEST-R015.1 Model.
+- [ ] T176 [US1] SCION-SOURCE-INGEST-R015.2 Behavior.
+- [ ] T177 [US1] SCION-SOURCE-INGEST-R015.3 Wiring.
+- [ ] T178 [US1] SCION-SOURCE-INGEST-R015.4 Refusal.
+- [ ] T179 [US1] SCION-SOURCE-INGEST-R015.5 Evidence.
+- [ ] T180 [US1] SCION-SOURCE-INGEST-R015.6 Hot-path proof.
+- [ ] T181 [US1] SCION-SOURCE-INGEST-R016.1 Model.
+- [ ] T182 [US1] SCION-SOURCE-INGEST-R016.2 Behavior.
+- [ ] T183 [US1] SCION-SOURCE-INGEST-R016.3 Wiring.
+- [ ] T184 [US1] SCION-SOURCE-INGEST-R016.4 Refusal.
+- [ ] T185 [US1] SCION-SOURCE-INGEST-R016.5 Evidence.
+- [ ] T186 [US1] SCION-SOURCE-INGEST-R016.6 Hot-path proof.
+- [x] T187 [US1] SCION-SOURCE-INGEST-R600.1 Model.
+- [x] T188 [US1] SCION-SOURCE-INGEST-R600.2 Behavior.
+- [x] T189 [US1] SCION-SOURCE-INGEST-R600.3 Wiring.
+- [x] T190 [US1] SCION-SOURCE-INGEST-R600.4 Refusal.
+- [x] T191 [US1] SCION-SOURCE-INGEST-R600.5 Evidence.
+- [x] T192 [US1] SCION-SOURCE-INGEST-R600.6 Hot-path proof.
+- [x] T193 [US1] SCION-SOURCE-INGEST-R800.1 Model.
+- [x] T194 [US1] SCION-SOURCE-INGEST-R800.2 Behavior.
+- [x] T195 [US1] SCION-SOURCE-INGEST-R800.9 REST source page validity.
+- [x] T196 [US1] SCION-SOURCE-INGEST-R800.8 Partial RSS sweep checkpoint.
+- [x] T197 [US1] SCION-SOURCE-INGEST-R800.7 Partial arXiv sweep checkpoint.
+- [x] T198 [US1] SCION-SOURCE-INGEST-R800.10 Bounded web crawl.
+- [x] T199 [US1] SCION-SOURCE-INGEST-R800.11 Zero REST cursor.
+- [x] T200 [US1] SCION-SOURCE-INGEST-R800.3 Wiring.
+- [x] T201 [US1] SCION-SOURCE-INGEST-R800.4 Refusal.
+- [x] T202 [US1] SCION-SOURCE-INGEST-R800.5 Evidence.
+- [x] T203 [US1] SCION-SOURCE-INGEST-R800.6 Hot-path proof.
+- [x] T204 [US1] SCION-SOURCE-INGEST-R803.1 Model.
+- [x] T205 [US1] SCION-SOURCE-INGEST-R803.2 Behavior.
+- [x] T206 [US1] SCION-SOURCE-INGEST-R803.3 Wiring.
+- [x] T207 [US1] SCION-SOURCE-INGEST-R803.4 Refusal.
+- [x] T208 [US1] SCION-SOURCE-INGEST-R803.5 Evidence.
+- [x] T209 [US1] SCION-SOURCE-INGEST-R803.6 Hot-path proof.
+- [x] T210 [US1] SCION-SOURCE-INGEST-R803.7 Plan isolation.
+- [x] T211 [US1] SCION-SOURCE-INGEST-R803.8 Unique row fields.
+- [x] T212 [US1] SCION-SOURCE-INGEST-R803.9 Suppress rare numeric values.
+- [x] T213 [US1] SCION-SOURCE-INGEST-R803.10 No empty certification pass.
+- [x] T214 [US1] SCION-SOURCE-INGEST-R803.11 Bind certification state.
+- [x] T215 [US1] SCION-SOURCE-INGEST-R803.12 Signer output types.
+- [x] T216 [US1] SCION-SOURCE-INGEST-R803.13 Correct Arrow installation hint.
+- [x] T217 [US1] SCION-SOURCE-INGEST-R803.14 Engine profile boundary validation.
+- [x] T218 [US1] SCION-SOURCE-INGEST-R804.1 Model.
+- [x] T219 [US1] SCION-SOURCE-INGEST-R804.2 Behavior.
+- [x] T220 [US1] SCION-SOURCE-INGEST-R804.3 Wiring.
+- [x] T221 [US1] SCION-SOURCE-INGEST-R804.4 Refusal.
+- [x] T222 [US1] SCION-SOURCE-INGEST-R804.5 Evidence.
+- [x] T223 [US1] SCION-SOURCE-INGEST-R804.6 Hot-path proof.
+- [x] T224 [US1] SCION-SOURCE-INGEST-R804.7 Bound manifest paths and decisions.
+- [x] T225 [US1] SCION-SOURCE-INGEST-R900.1 Model.
+- [x] T226 [US1] SCION-SOURCE-INGEST-R900.2 Behavior.
+- [x] T227 [US1] SCION-SOURCE-INGEST-R900.3 Wiring.
+- [x] T228 [US1] SCION-SOURCE-INGEST-R900.4 Refusal.
+- [x] T229 [US1] SCION-SOURCE-INGEST-R900.5 Evidence.
+- [x] T230 [US1] SCION-SOURCE-INGEST-R900.6 Hot-path proof.
+- [x] T231 [US1] SCION-SOURCE-INGEST-R900.7 Compare timestamp watermarks by instant.
+- [x] T232 [US1] SCION-SOURCE-INGEST-R900.8 Refuse incomplete database pages.
+- [x] T233 [US1] SCION-SOURCE-INGEST-R901.1 Model.
+- [x] T234 [US1] SCION-SOURCE-INGEST-R901.2 Behavior.
+- [x] T235 [US1] SCION-SOURCE-INGEST-R901.3 Wiring.
+- [x] T236 [US1] SCION-SOURCE-INGEST-R901.4 Refusal.
+- [x] T237 [US1] SCION-SOURCE-INGEST-R901.5 Evidence.
+- [x] T238 [US1] SCION-SOURCE-INGEST-R901.6 Hot-path proof.
+- [x] T239 [US1] SCION-SOURCE-INGEST-R902.1 Model.
+- [x] T240 [US1] SCION-SOURCE-INGEST-R902.2 Behavior.
+- [x] T241 [US1] SCION-SOURCE-INGEST-R902.3 Wiring.
+- [x] T242 [US1] SCION-SOURCE-INGEST-R902.4 Refusal.
+- [x] T243 [US1] SCION-SOURCE-INGEST-R902.5 Evidence.
+- [x] T244 [US1] SCION-SOURCE-INGEST-R902.6 Hot-path proof.
+- [x] T245 [US1] SCION-SOURCE-INGEST-R017.1 Model.
+- [x] T246 [US1] SCION-SOURCE-INGEST-R017.2 Behavior.
+- [x] T247 [US1] SCION-SOURCE-INGEST-R017.3 Wiring.
+- [x] T248 [US1] SCION-SOURCE-INGEST-R017.4 Refusal.
+- [x] T249 [US1] SCION-SOURCE-INGEST-R017.5 Evidence.
+- [ ] T250 [US1] SCION-SOURCE-INGEST-R017.6 Hot-path proof.
+- [ ] T251 [US1] SCION-SOURCE-INGEST-R805.1 Permission and group sync.
+- [ ] T252 [US1] SCION-SOURCE-INGEST-R805.2 Identifier enumeration.
+- [ ] T253 [US1] SCION-SOURCE-INGEST-R805.3 Container hierarchy.
+- [x] T254 [US1] SCION-SOURCE-INGEST-R805.4 Wiring.
+- [ ] T255 [US1] SCION-SOURCE-INGEST-R805.5 Read-time access lookup port and tool.
+- [ ] T256 [US1] SCION-SOURCE-INGEST-R805.6 Hot-path proof.
+- [x] T257 [US1] SCION-SOURCE-INGEST-R805.7 SDK-local access-check boundary.
+- [x] T258 [US1] SCION-SOURCE-INGEST-R004.50 Refuse a stalled MCP cursor.
+- [ ] T259 [US1] SCION-SOURCE-INGEST-R005.41 Stream source adapter: read broker records, submit pages, commit offsets after the accepted checkpoint.
+- [ ] T260 [US1] SCION-SOURCE-INGEST-R007.1 The runner holds the checkpoint on SCHEMA_DRIFT_QUARANTINED and keeps the engine report.
+- [x] T261 [US1] SCION-SOURCE-INGEST-R017.7 Remove the legacy binding without a contract.
+- [ ] T262 [US1] SCION-SOURCE-INGEST-R903.1 Model.
+- [ ] T263 [US1] SCION-SOURCE-INGEST-R903.2 Behavior.
+- [ ] T264 [US1] SCION-SOURCE-INGEST-R903.3 Wiring.
+- [ ] T265 [US1] SCION-SOURCE-INGEST-R903.4 Refusal.
+- [ ] T266 [US1] SCION-SOURCE-INGEST-R903.5 Evidence.
+- [ ] T267 [US1] SCION-SOURCE-INGEST-R903.6 Hot-path proof.
+- [ ] T268 [US1] SCION-SOURCE-INGEST-R904 Paper retrieval stages papers for admission.
+- [ ] T269 [US1] SCION-SOURCE-INGEST-R905 SQL sources send a column profile.
+- [ ] T270 [US1] SCION-SOURCE-INGEST-R906 Data-prep kernel reads the engine declaration.
+- [x] T271 [US1] SCION-SOURCE-INGEST-R907 Sync scheduler submits ingest jobs through the engine queue.
+- [ ] T272 [US1] SCION-SOURCE-INGEST-R908 Runner provides an OCR extractor for scanned images.
+- [ ] T273 [US1] SCION-SOURCE-INGEST-R909 External graph and GraphQL discovery probe.

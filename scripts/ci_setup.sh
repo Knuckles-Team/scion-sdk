@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hosted/CI setup for the shared gates workflow: pinned Python, the locked
-# environment (epistemic-graph from its PyPI wheel), and the operator-owned
+# environment (medulla from its PyPI wheel), and the operator-owned
 # identity catalog for tracked-privacy.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."

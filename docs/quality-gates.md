@@ -41,5 +41,5 @@ test suite, the strict site build, and the wheel build. No gate depends on an
 external service such as a vulnerability database.
 
 No graph-boundary stub is allowed. SourceIngest, ConnectorPack, and WriteBack
-must use epistemic-graph's generated contracts and clients, and readiness must
+must use medulla's generated contracts and clients, and readiness must
 fail closed when required checked authority has not been injected.

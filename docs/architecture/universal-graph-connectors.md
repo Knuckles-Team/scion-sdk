@@ -2,7 +2,7 @@
 
 Agent Utilities can consume a foreign graph without treating it as a second
 operational authority. Neo4j/openCypher, Apache AGE, LadybugDB/Kuzu, remote
-epistemic-graph, and GraphQL sources use the same governed lifecycle:
+medulla, and GraphQL sources use the same governed lifecycle:
 
 1. Register a neutral connection alias whose runtime transport is an encrypted
    `connection_profile_ref`.
@@ -32,7 +32,7 @@ adapter, which does bounded schema discovery, producing an opaque schema
 digest and a generated mapping proposal that requires explicit approval.
 Approved mappings re-discover and fail-closed-check for drift before a
 bounded incremental read, which produces a `ChangeEnvelope`/`MutationBatch`
-(provenance, ACL, idempotency) written into the epistemic-graph authority.
+(provenance, ACL, idempotency) written into the medulla authority.
 
 </div>
 
@@ -49,7 +49,7 @@ flags, digests, and HMAC pseudonyms.
 | Neo4j/openCypher | Standard read-only schema procedures | `MATCH`/`keys`/`type` scans with hard limits | A common `id`, `uuid`, `key`, `slug`, or explicit runtime property |
 | Apache AGE | openCypher schema queries | Bounded label, relationship, and property scans | Same common stable-property rule |
 | LadybugDB/Kuzu | Catalog/table procedures | Bounded Cypher scan where supported | Required common schema property |
-| Remote epistemic-graph | Native Cypher-subset read client | Bounded native scans | Required common or explicit property |
+| Remote medulla | Native Cypher-subset read client | Bounded native scans | Required common or explicit property |
 | GraphQL | Minimal standard introspection after explicit `allow_introspection` | A secret-provided read operation that binds `$limit` or `$first`; only response field shape is retained | A stable scalar field selected by the approved structural mapping |
 
 The GraphQL schema digest covers type kinds, field and argument types, input
@@ -64,7 +64,7 @@ it cannot prove or receive an explicit stable property.
 Each catalog or scan asks for one bounded sentinel beyond its advertised limit;
 seeing that sentinel marks discovery partial and prevents proposal approval.
 
-The remote epistemic-graph adapter is a non-authoritative, role=`read` connector
+The remote medulla adapter is a non-authoritative, role=`read` connector
 client. It does not enter `GraphComputeEngine`'s process-authority singleton and
 cannot replace Arbora's routed authority client. Its separate source transport
 can be opened only by the central graph transport bootstrap, so connector feature

@@ -29,7 +29,7 @@ REQUIRED_MARKERS = (
     "Neo4j/openCypher",
     "Apache AGE",
     "LadybugDB",
-    "remote epistemic-graph",
+    "remote medulla",
     "GraphQL",
     "ChangeEnvelope",
     "mapping-policy",
