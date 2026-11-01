@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock
 
 import mcp_types
 import pytest
-from epistemic_graph.generated.connector_pack import PackAnnotations
+from medulla.generated.connector_pack import PackAnnotations
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
 from scion_sdk.artifacts.common import (

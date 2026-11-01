@@ -5,14 +5,14 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from epistemic_graph.connector_pack import (
+from medulla.connector_pack import (
     ConnectorPackClient,
     ConnectorPackWriteError,
     PackWriteErrorCode,
     pack_digest,
 )
-from epistemic_graph.generated import METHOD_IDS
-from epistemic_graph.generated.connector_pack import (
+from medulla.generated import METHOD_IDS
+from medulla.generated.connector_pack import (
     AgentLibraryMutationContext,
     McpCatalogSnapshotBinding,
     PackHeadRef,
@@ -21,7 +21,7 @@ from epistemic_graph.generated.connector_pack import (
     PackImportResultUnchanged,
     PackProducer,
 )
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
     SourceIngestStatus,

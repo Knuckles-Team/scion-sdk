@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from epistemic_graph.client import EpistemicGraphClient
+from medulla.client import MedullaClient
 
 from scion_sdk.repository.errors import RepositoryTransportError
 from scion_sdk.repository.indexing import (
@@ -75,7 +75,7 @@ async def _accept_files(
     page: RepositoryPage,
     *,
     batcher: _RepositoryBatcher,
-    client: EpistemicGraphClient,
+    client: MedullaClient,
     batches: list[RepositoryBatchReceipt],
 ) -> None:
     for item in page.files:
@@ -95,7 +95,7 @@ def _check_page(
 
 async def index_repository_snapshot(
     provider: RepositorySnapshotProvider,
-    client: EpistemicGraphClient,
+    client: MedullaClient,
     revision: RepositoryRevision,
     *,
     limits: RepositoryBatchLimits | None = None,

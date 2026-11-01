@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from epistemic_graph.connector_pack import pack_digest
-from epistemic_graph.generated.connector_pack import (
+from medulla.connector_pack import pack_digest
+from medulla.generated.connector_pack import (
     McpCatalogSnapshotBinding as PackCatalogBinding,
 )
-from epistemic_graph.generated.connector_pack import (
+from medulla.generated.connector_pack import (
     PackDispositionCounts,
     PackImportReceipt,
     PackImportResult,
@@ -16,7 +16,7 @@ from epistemic_graph.generated.connector_pack import (
     PackImportResultUnchanged,
     PackProjectionStateNone,
 )
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     RawAdmissionReceipt,
     SourceIngestionDisposition,
     SourceIngestionMode,

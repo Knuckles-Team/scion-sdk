@@ -16,7 +16,7 @@ import re
 from collections.abc import Callable, Collection
 from functools import partial
 
-from epistemic_graph.generated.connector_pack import PackAnnotations
+from medulla.generated.connector_pack import PackAnnotations
 
 from scion_sdk._turtle import AccessContractError, parse_graph
 from scion_sdk.artifacts._ontology_edits import _ImportSeparators

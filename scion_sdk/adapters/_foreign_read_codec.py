@@ -30,7 +30,7 @@ def _pack_row(
 
 
 def _pack_rows(rows: Sequence[ForeignReadRow]) -> bytearray:
-    from epistemic_graph.client import _pack_binary_msgpack
+    from medulla.client import _pack_binary_msgpack
 
     msgpack = cast(Any, importlib.import_module("msgpack"))
     # ``use_single_float`` is applied only to the typed ``ForeignReadRow.score``

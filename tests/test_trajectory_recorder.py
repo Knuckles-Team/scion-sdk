@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from epistemic_graph.generated import models
+from medulla.generated import models
 
 from scion_sdk.writeback import (
     TrajectoryRecorder,

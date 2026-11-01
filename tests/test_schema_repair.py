@@ -10,7 +10,7 @@ no activation call this test, or anything else in the SDK, could make).
 from __future__ import annotations
 
 import pytest
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
     SourceRecord,

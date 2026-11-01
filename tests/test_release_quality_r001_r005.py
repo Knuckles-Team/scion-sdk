@@ -241,7 +241,7 @@ def test_tampered_installed_native_file_fails_with_matching_pep610_hash(
     wheel = tmp_path / manifest["wheel_filename"]
     native = manifest["native_member"]
     members = {
-        "epistemic_graph/__init__.py": b"__version__ = '2.27.10'\n",
+        "medulla/__init__.py": b"__version__ = '2.27.10'\n",
         native: b"trusted native engine",
         "medulla-2.27.10.dist-info/METADATA": (
             b"Metadata-Version: 2.3\nName: medulla\nVersion: 2.27.10\n"
@@ -322,7 +322,7 @@ def _eg_lock_package(**over: object) -> dict[str, object]:
         "source": {"registry": _graph.REGISTRY},
         "wheels": [
             {
-                "url": "https://files.pythonhosted.org/x/epistemic_graph-2.27.1-cp39-abi3-manylinux_2_28_x86_64.whl",
+                "url": "https://files.pythonhosted.org/x/medulla-2.27.1-cp39-abi3-manylinux_2_28_x86_64.whl",
                 "hash": "sha256:" + "a" * 64,
             }
         ],
@@ -334,7 +334,7 @@ def _eg_lock_package(**over: object) -> dict[str, object]:
 @pytest.mark.spec("SCION-QUALITY-RELEASE-R005")
 def test_locked_eg_is_a_pypi_wheel_and_never_a_source_build() -> None:
     assert _graph._locked_wheels(_eg_lock_package()) == {
-        "epistemic_graph-2.27.1-cp39-abi3-manylinux_2_28_x86_64.whl": "a" * 64
+        "medulla-2.27.1-cp39-abi3-manylinux_2_28_x86_64.whl": "a" * 64
     }
 
 
@@ -361,7 +361,7 @@ def test_locked_eg_rejects_git_or_unhashed_sources(
 def test_locked_eg_sdist_beside_wheels_still_installs_the_wheel() -> None:
     package = _eg_lock_package(sdist={"url": "https://x/eg.tar.gz"})
     assert _graph._locked_wheels(package) == {
-        "epistemic_graph-2.27.1-cp39-abi3-manylinux_2_28_x86_64.whl": "a" * 64
+        "medulla-2.27.1-cp39-abi3-manylinux_2_28_x86_64.whl": "a" * 64
     }
 
 
@@ -407,13 +407,12 @@ def test_recorded_graph_provenance_binds_the_installed_pypi_wheel() -> None:
         item.startswith("pyoxigraph==") for item in declaration.locked_dependencies
     )
     assert {
-        "epistemic_graph.generated.query",
-        "epistemic_graph.generated.coordination",
-        "epistemic_graph.generated.source_ingestion",
+        "medulla.generated.query",
+        "medulla.generated.coordination",
+        "medulla.generated.source_ingestion",
     } <= set(declaration.consumed_modules)
     assert all(
-        path.startswith("epistemic_graph/")
-        for path in declaration.consumed_modules.values()
+        path.startswith("medulla/") for path in declaration.consumed_modules.values()
     )
     graph_names = {item.split("==", 1)[0] for item in evidence.graph}
     installed_names = {
@@ -449,9 +448,9 @@ class _Distribution:
 def test_package_overlay_beyond_the_installed_wheel_is_rejected(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    wheel = tmp_path / "site-packages" / "epistemic_graph"
+    wheel = tmp_path / "site-packages" / "medulla"
     wheel.mkdir(parents=True)
-    overlay = tmp_path / "checkout" / "epistemic_graph"
+    overlay = tmp_path / "checkout" / "medulla"
     monkeypatch.setattr(
         _graph.importlib, "import_module", lambda _: _Package(overlay, wheel)
     )
@@ -463,13 +462,13 @@ def test_package_overlay_beyond_the_installed_wheel_is_rejected(
 def test_consumed_module_outside_the_installed_wheel_is_rejected(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    wheel = tmp_path / "site-packages" / "epistemic_graph"
+    wheel = tmp_path / "site-packages" / "medulla"
     wheel.mkdir(parents=True)
     spec = type("ModuleSpec", (), {})()
-    spec.origin = str(tmp_path / "checkout" / "epistemic_graph" / "generated" / "q.py")
+    spec.origin = str(tmp_path / "checkout" / "medulla" / "generated" / "q.py")
     monkeypatch.setattr(_graph.importlib, "import_module", lambda _: _Package(wheel))
     monkeypatch.setattr(
-        _graph, "_find_sdk_imports", lambda: ["epistemic_graph.generated.query"]
+        _graph, "_find_sdk_imports", lambda: ["medulla.generated.query"]
     )
     monkeypatch.setattr(_graph.importlib.util, "find_spec", lambda _: spec)
     with pytest.raises(_graph.ImportGraphError, match="outside the installed PyPI"):
@@ -477,5 +476,5 @@ def test_consumed_module_outside_the_installed_wheel_is_rejected(
 
     spec.origin = str(wheel / "generated" / "query.py")
     assert _graph._verify_import_origins(_Distribution(wheel)) == {
-        "epistemic_graph.generated.query": "epistemic_graph/generated/query.py"
+        "medulla.generated.query": "medulla/generated/query.py"
     }

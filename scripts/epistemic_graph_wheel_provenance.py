@@ -19,7 +19,7 @@ EXPECTED = {
     "wheel_asset_id": "pypi:medulla==2.27.10",
     "wheel_url": "https://files.pythonhosted.org/packages/f1/12/38d3ee0babbc94cdd18b90db6a7f6fc0e54b360317fb3bbf14f2bde8b4dd/medulla-2.27.10-cp39-abi3-manylinux_2_28_x86_64.whl",
     "wheel_sha256": "d6b82ad4d94a4813d24c34cb312408a1587d484fafc35e5665f36c26a5d82090",
-    "native_member": "epistemic_graph/numeric.abi3.so",
+    "native_member": "medulla/numeric.abi3.so",
 }
 
 
@@ -147,7 +147,7 @@ def _verify_installed_wheel_files(
             members = [
                 name
                 for name in archive.namelist()
-                if name.startswith("epistemic_graph/")
+                if name.startswith("medulla/")
                 or (
                     name.startswith(f"medulla-{manifest['version']}.dist-info/")
                     and not name.endswith("/RECORD")

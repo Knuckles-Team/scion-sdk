@@ -1,7 +1,7 @@
 """SDK-owned connector authoring and extraction types.
 
 The durable source-ingestion contract is imported directly from
-``epistemic_graph.generated.source_ingestion`` by its consumers. This module
+``medulla.generated.source_ingestion`` by its consumers. This module
 contains only SDK-side descriptions and MCP content captured before it is mapped
 into an epistemic-graph request.
 
@@ -11,8 +11,8 @@ the generated epistemic-graph contract rather than being recomputed here.
 
 from __future__ import annotations
 
-from epistemic_graph.generated.connector_pack import PackAnnotations
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.connector_pack import PackAnnotations
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceEntityRef,
     SourceIngestionMode,

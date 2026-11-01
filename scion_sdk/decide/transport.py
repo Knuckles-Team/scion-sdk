@@ -39,16 +39,16 @@ def _generated(module: str, name: str) -> Any:
     A version of ``epistemic-graph`` that has not published ``name`` yet (or
     has retired it) costs only :class:`DecideUnavailable` -- the
     deterministic fallback -- at CALL time, never an import-time failure of
-    this whole module. ``epistemic_graph.generated.query.send_decide`` is
+    this whole module. ``medulla.generated.query.send_decide`` is
     published today; the generic per-point recording method
     (``DecisionLog.commit``/``.resolve``,
-    ``epistemic_graph.generated.coordination.send_decision_log``) is not yet
+    ``medulla.generated.coordination.send_decision_log``) is not yet
     published. This resolves both the same way, so recording starts the
     moment EG publishes it and the shared wheel is restaged, with no SDK
     code change.
     """
     try:
-        loaded = importlib.import_module(f"epistemic_graph.generated.{module}")
+        loaded = importlib.import_module(f"medulla.generated.{module}")
     except ImportError as exc:
         raise DecideUnavailable(f"EG generated module {module!r} is absent") from exc
     found = getattr(loaded, name, None)
@@ -91,7 +91,7 @@ class GeneratedTransport:
     bounded by a timeout so a slow engine can only ever cost the fallback.
 
     EG's own literal ``DecisionCommit`` method
-    (``epistemic_graph.generated.decision_commit``, already published) is a
+    (``medulla.generated.decision_commit``, already published) is a
     different, narrower thing -- the constraint-solver agent-ASSEMBLY
     decision commit (its ``DecisionQuestion`` enum has exactly one member,
     ``ASSEMBLE``); its request and record shapes (``AssemblyRequest``,

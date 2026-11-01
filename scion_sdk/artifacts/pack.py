@@ -7,12 +7,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from epistemic_graph.connector_pack import (
+from medulla.connector_pack import (
     ConnectorPackArchive,
     ConnectorPackArchiveBuilder,
     ConnectorPackEntryContent,
 )
-from epistemic_graph.generated.connector_pack import PackEntryKind
+from medulla.generated.connector_pack import PackEntryKind
 
 from scion_sdk.artifacts.common import json_object
 from scion_sdk.artifacts.ontology_imports import scope_ontology_imports

@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 
 import pytest
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     SourceChangeSet,
     WriteBackAuthorizationDecision,
     WriteBackAuthorizationMode,

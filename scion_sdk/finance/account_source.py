@@ -6,7 +6,7 @@ import hashlib
 import json
 from enum import StrEnum
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
     SourceRecord,

@@ -4,12 +4,12 @@ import asyncio
 import json
 
 import pytest
-from epistemic_graph.connector_pack import (
+from live_engine import live_ingest, scoped_client  # noqa: F401
+from medulla.connector_pack import (
     ConnectorPackArchiveBuilder,
     ConnectorPackEntryContent,
 )
-from epistemic_graph.generated.connector_pack import PackEntryKind
-from live_engine import live_ingest, scoped_client  # noqa: F401
+from medulla.generated.connector_pack import PackEntryKind
 
 from scion_sdk.artifacts.pack import CapturedConnectorPack
 from scion_sdk.sinks.epistemic_graph import (

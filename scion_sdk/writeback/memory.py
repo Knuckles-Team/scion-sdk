@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     ReconciliationObservation,
     SourceChangeSet,
     WriteBackAttempt,

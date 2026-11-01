@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint, SourceRecord
+from medulla.generated.source_ingestion import SourceCheckpoint, SourceRecord
 
 from scion_sdk.contracts import SEAM_SCHEMA_VERSION
 from scion_sdk.ports.errors import MalformedSourceDataError

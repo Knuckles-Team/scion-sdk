@@ -12,7 +12,7 @@ from ._governed_common import PATCH_FIELD, _digest, _write_back
 from .core import PROVENANCE_TAG, _require_identifier
 
 if TYPE_CHECKING:
-    from epistemic_graph.generated.write_back import (
+    from medulla.generated.write_back import (
         SourceChangeSet,
         WriteBackAuthorizationDecision,
         WriteBackAuthorizationMode,

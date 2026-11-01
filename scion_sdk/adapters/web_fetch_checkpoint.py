@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint
+from medulla.generated.source_ingestion import SourceCheckpoint
 
 from scion_sdk.ports.errors import SourceContractError
 

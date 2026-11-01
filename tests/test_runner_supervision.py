@@ -8,14 +8,6 @@ from pathlib import Path
 
 import anyio
 import pytest
-from epistemic_graph.generated.connector_pack import (
-    PackImportResult,
-    PackImportResultRejected,
-)
-from epistemic_graph.generated.source_ingestion import (
-    SourceIngestionReceipt,
-    SourceIngestionRequest,
-)
 from fleet_fixtures import (
     FakeArchiveBox,
     FakeFreshRss,
@@ -23,6 +15,14 @@ from fleet_fixtures import (
     build_enumerated_archivebox_server,
     build_enumerated_freshrss_server,
     freshrss_items,
+)
+from medulla.generated.connector_pack import (
+    PackImportResult,
+    PackImportResultRejected,
+)
+from medulla.generated.source_ingestion import (
+    SourceIngestionReceipt,
+    SourceIngestionRequest,
 )
 from runner_support import (
     FAST,

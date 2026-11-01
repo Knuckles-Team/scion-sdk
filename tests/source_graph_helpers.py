@@ -3,13 +3,13 @@
 import hashlib
 import json
 
-from epistemic_graph.connector_pack import (
+from live_engine import PRINCIPAL, TENANT
+from medulla.connector_pack import (
     ConnectorPackArchiveBuilder,
     ConnectorPackClient,
     ConnectorPackEntryContent,
 )
-from epistemic_graph.generated.connector_pack import PackEntryKind, PackProducer
-from live_engine import PRINCIPAL, TENANT
+from medulla.generated.connector_pack import PackEntryKind, PackProducer
 from test_contracts_and_sink import _catalog, _mutation_context
 
 

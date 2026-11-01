@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 from uuid import uuid4
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
 )

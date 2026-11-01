@@ -9,8 +9,8 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint
 from fastmcp import Client, FastMCP
+from medulla.generated.source_ingestion import SourceCheckpoint
 
 from scion_sdk.adapters.web_fetch import (
     WebFetchRefusalError,
