@@ -1,6 +1,6 @@
 """Tests for the R001 isolated-consumer plan and R005 import-graph reproducibility helpers.
 
-SCION-QUALITY-RELEASE-R001 and -R005 (see specs/SCION-QUALITY-RELEASE/requirements.md).
+SCION-QUALITY-RELEASE-R001 and -R005 (see specs/scion-quality-release/requirements.md).
 """
 
 from __future__ import annotations
