@@ -344,12 +344,6 @@ JSON tag-loader migration inventory binds each loader to its source and target o
 
 Data flow: inventory → parity gate → operation comparison → schema/tag/auth/refusal check → served tools/list and tools/call → backend assertions.
 
-### Visual observation transport within a run (SCION-CONNECTOR-CONTROL-R050.7)
-
-Visual observations and provenance are transported between ordered steps within the same run. Each observation carries source operation ID, frame provenance, capture time, schema revision and content reference. The next authorized step reads the same-run committed reference only. EG owns durable state storage and retention. AU owns next-step conditioning. SDK request_cache remains request-scoped only and is not cross-request memory.
-
-Data flow: source tool operation → observation envelope → EG state write → AU next-step consumer → cross-step reference read.
-
 ### Amendments
 
 ### 2026-10-12: native status and packaged resources (SCION-CONNECTOR-CONTROL-R005)
@@ -560,22 +554,6 @@ These transport hashes do not replace certification pins or R002/R003 normalizat
 ### Amendment: 2026-10-13 API-key cookie isolation (R028.3)
 
 Scope the policy to ApiKeyAuth because the SDK documents no provider cookie-session auth. Strip outbound Cookie and inbound Set-Cookie at the sync/async governed transport boundary. Preserve authentication, origin, TLS, redirect, and retry controls. Test sequential exchanges across status codes and concurrent use of one shared client with synthetic transports. Require downstream native MCP login and cross-caller acceptance against the immutable SDK revision.
-
-### Arbora producer-consumer handoff for AU disclosure-set gate (SCION-CONNECTOR-CONTROL-R055)
-
-Real served producer/consumer handoff for disclosed and undisclosed tools. Arbora authorized find (registry/discovery; intent find) returns tool facts. EG Decide ToolRelevance consumes them. AU `execute_agent` routes through factory DisclosureSet gate. The current AU plan names the ownership. Exact served cross-owner positive/negative acceptance proves the handoff.
-
-### EG and SDK tool producer compatibility decisions (SCION-CONNECTOR-CONTROL-R056)
-
-SDK tool schema authority and EG prompt authority must jointly decide nested incremental producer compatibility. Declared contract-version pin equality and source-ingest drift classification do not define that contract alone. Both producers emit compatibility decision receipts bound to host admission. Bind decision at schema-fingerprint/FleetOnboarding.onboard.
-
-### Replaceable search-grounding provider (SCION-CONNECTOR-CONTROL-R057)
-
-Search grounding provider is independently selected from reasoning model and bound to a committed route. Unavailable committed provider refuses. EG produces binding; SDK/Arbora consumer runs the exact committed provider with no alternates.
-
-### Request durability boundary (SCION-CONNECTOR-CONTROL-R058)
-
-Identify exact deployment/profile default and explicit ephemeral versus durable behavior. Embedded transport/no external service and configurable served mode are distinct requirements. Preserve sync/redb authority. Separate transport selection from durability class.
 
 ### EG capability-to-existing-method bindings (SCION-CONNECTOR-CONTROL-R059)
 
