@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- A destructive tool called by a client that did not advertise elicitation no longer
+  fails the call at the protocol level ("Elicitation not supported", surfaced by hosts
+  as "failed to connect"). Every destructive generated tool takes an explicit
+  `confirm` flag, `dispatch_async` and `ctx_confirm_destructive` take the same flag, and
+  an unconfirmed call from such a client returns a named refusal that points at
+  `confirm=true`. Works with or without authentication, on stdio and HTTP
+  (SCION-CONNECTOR-CONTROL-R026.1).
+
 ## 0.6.4
 
 ### Fixed
