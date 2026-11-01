@@ -15,7 +15,7 @@ connector's declared mappings (``connector://resources``), so each ``node_type``
 relationship must be declared there.
 
 The process's service is the one :func:`install_ingest` set, else one built
-from ``EPISTEMIC_GRAPH_*`` settings on first use
+from ``MEDULLA_*`` settings on first use
 (:mod:`scion_sdk.ingest.engine`), else ingest is unavailable and
 raises :class:`IngestUnavailableError`.
 """
@@ -152,7 +152,7 @@ def current_ingest() -> KnowledgeIngest:
             settings = EngineSettings.from_settings()
             if settings is None:
                 raise IngestUnavailableError(
-                    "knowledge ingest is not configured: set EPISTEMIC_GRAPH_ENDPOINT"
+                    "knowledge ingest is not configured: set MEDULLA_ENDPOINT"
                 )
             installed = _PROCESS[0] = connect_ingest(settings)
         return installed

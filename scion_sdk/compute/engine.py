@@ -154,7 +154,7 @@ def _connect_client(
 ) -> Any:
     resolved = settings or EngineSettings.from_settings()
     if resolved is None:
-        raise ComputeUnavailableError("EPISTEMIC_GRAPH_ENDPOINT is not configured")
+        raise ComputeUnavailableError("MEDULLA_ENDPOINT is not configured")
     secret = resolve_secret_reference(resolved.auth_secret_ref, resolver)
     address = resolved.address()
     from medulla.client import SyncMedullaClient
