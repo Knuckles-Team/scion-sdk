@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from typing import Any
+from typing import Annotated, Any
 
 from fastmcp import Context
 from mcp.types import InputRequiredResult
@@ -14,7 +14,15 @@ from pydantic_core import to_jsonable_python
 from scion_sdk.mcp._method_params import _ParamShape
 from scion_sdk.mcp.action_dispatch import parse_json_object
 from scion_sdk.mcp.concurrency import invoke_client_method
-from scion_sdk.mcp.context import ctx_confirm_destructive
+from scion_sdk.mcp.context import confirmation_refusal, ctx_confirm_destructive
+
+#: Explicit-confirmation argument of every destructive operation tool, for
+#: clients that cannot elicit (SCION-CONNECTOR-CONTROL-R026.1).
+_CONFIRM_PARAMETER = "confirm"
+_CONFIRM_DESCRIPTION = (
+    "Explicitly confirm this destructive operation. Needed only when the client "
+    "cannot answer a confirmation prompt."
+)
 
 
 def _fallback(value: Any) -> Any:
@@ -53,15 +61,19 @@ async def _invoke(
     ctx: Any,
     destructive: bool,
     coercer: Callable[[Any], Any],
+    confirm: bool = False,
 ) -> Any:
     if destructive:
         confirmation = await ctx_confirm_destructive(
-            ctx, method_name, confirmation_arguments=kwargs
+            ctx,
+            method_name,
+            confirmation_arguments=kwargs,
+            explicit_confirm=confirm,
         )
         if isinstance(confirmation, InputRequiredResult):
             return confirmation
         if confirmation is not True:
-            return {"cancelled": True, "operation": method_name}
+            return confirmation_refusal(ctx, method_name)
     client = await _resolve_client(get_client)
     result = await invoke_client_method(getattr(client, method_name), **kwargs)
     coerced = coercer(result)
@@ -81,9 +93,13 @@ def _typed_tool(
     params = shape.params
     ctx_name = _context_name(params)
     declared = {p.name for p in params}
+    with_confirm = destructive and _CONFIRM_PARAMETER not in declared
 
     async def _tool(**arguments: Any) -> Any:
         ctx = arguments.pop(ctx_name, None)
+        confirm = (
+            bool(arguments.pop(_CONFIRM_PARAMETER, False)) if with_confirm else False
+        )
         extra = parse_json_object(arguments.pop("params_json", None))
         kwargs = {
             k: v
@@ -98,6 +114,7 @@ def _typed_tool(
             ctx=ctx,
             destructive=destructive,
             coercer=coercer,
+            confirm=confirm,
         )
 
     ordered = [p for p in params if p.default is inspect.Parameter.empty] + [
@@ -110,6 +127,15 @@ def _typed_tool(
                 inspect.Parameter.KEYWORD_ONLY,
                 default="{}",
                 annotation=str,
+            )
+        )
+    if with_confirm:
+        ordered.append(
+            inspect.Parameter(
+                _CONFIRM_PARAMETER,
+                inspect.Parameter.KEYWORD_ONLY,
+                default=False,
+                annotation=Annotated[bool, Field(description=_CONFIRM_DESCRIPTION)],
             )
         )
     ordered.append(
@@ -142,6 +168,7 @@ def _untyped_tool(
         params_json: str = Field(
             default="{}", description="JSON object of arguments for this operation."
         ),
+        confirm: bool = Field(default=False, description=_CONFIRM_DESCRIPTION),
         ctx: Context | None = None,
     ) -> Any:
         kwargs = parse_json_object(params_json)
@@ -153,6 +180,13 @@ def _untyped_tool(
             ctx=ctx,
             destructive=destructive,
             coercer=coercer,
+            confirm=destructive and confirm is True,
         )
 
+    if not destructive:
+        signature = inspect.signature(_tool)
+        _tool.__signature__ = signature.replace(  # type: ignore[attr-defined]
+            parameters=[p for p in signature.parameters.values() if p.name != "confirm"]
+        )
+        _tool.__annotations__.pop("confirm", None)
     return _tool

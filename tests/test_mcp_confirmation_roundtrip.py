@@ -14,7 +14,17 @@ from fastmcp.exceptions import ToolError
 from mcp.shared.exceptions import MCPError
 
 from scion_sdk.mcp.action_dispatch import dispatch_async
-from scion_sdk.mcp.context import ctx_confirm_destructive
+from scion_sdk.mcp.confirmation import (
+    confirmation_refusal as confirmation_refusal_direct,
+)
+from scion_sdk.mcp.confirmation import (
+    elicitation_unavailable as elicitation_unavailable_direct,
+)
+from scion_sdk.mcp.context import (
+    confirmation_refusal,
+    ctx_confirm_destructive,
+    elicitation_unavailable,
+)
 from scion_sdk.mcp.method_tools import register_method_tools
 
 
@@ -231,3 +241,87 @@ async def test_legacy_boolean_guard_fails_closed_on_pending_modern_confirmation(
 
     assert elicitation_requests == []
     assert effects == []
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R026.1")
+@pytest.mark.parametrize("path", ["generated_method", "action_dispatch"])
+@pytest.mark.parametrize("mode", ["auto", "legacy"])
+@pytest.mark.parametrize("confirm", [False, True])
+async def test_client_without_elicitation_refuses_cleanly_or_confirms_explicitly(
+    path: str, mode: str, confirm: bool
+) -> None:
+    """No elicitation capability: never a protocol failure, never a silent skip."""
+    observed: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        observed.append(request.url.path)
+        return httpx.Response(204)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as provider:
+        api = _Api(provider)
+        server = FastMCP("no-elicitation-regression")
+        if path == "generated_method":
+            register_method_tools(server, _Api, lambda: api, prefix="provider")
+        else:
+
+            @server.tool(name="provider_delete_item")
+            async def delete_item(
+                item_id: str, ctx: Context, confirm: bool = False
+            ) -> Any:
+                return await dispatch_async(
+                    api, "delete_item", {"item_id": item_id}, ctx=ctx, confirm=confirm
+                )
+
+        async with Client(server, mode=mode) as mcp_client:
+            arguments: dict[str, Any] = {"item_id": "x"}
+            if confirm:
+                arguments["confirm"] = True
+            result = await mcp_client.call_tool("provider_delete_item", arguments)
+
+    if confirm:
+        assert observed == ["/items/x"]
+    else:
+        assert observed == []
+        assert result.data["cancelled"] is True
+        assert "confirm=true" in result.data["reason"]
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R026.1")
+async def test_only_destructive_method_tools_carry_the_confirm_parameter() -> None:
+    server = FastMCP("confirm-parameter-surface")
+    register_method_tools(
+        server, _Api, lambda: _Api(httpx.AsyncClient()), prefix="provider"
+    )
+    async with Client(server) as mcp_client:
+        tools = {tool.name: tool for tool in await mcp_client.list_tools()}
+    assert "confirm" in tools["provider_delete_item"].input_schema["properties"]
+    assert "confirm" not in tools["provider_get_item"].input_schema["properties"]
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R026.1")
+@pytest.mark.parametrize("elicits", [False, True])
+async def test_elicitation_unavailable_reads_the_live_client_capability(
+    elicits: bool,
+) -> None:
+    server = FastMCP("capability-probe")
+    seen: list[tuple[bool, dict[str, Any]]] = []
+
+    @server.tool(name="probe")
+    async def probe(ctx: Context) -> str:
+        assert elicitation_unavailable_direct(ctx) == elicitation_unavailable(ctx)
+        seen.append((elicitation_unavailable(ctx), confirmation_refusal(ctx, "x")))
+        assert confirmation_refusal_direct(ctx, "x") == confirmation_refusal(ctx, "x")
+        return "ok"
+
+    async def elicit(*args: Any) -> Any:
+        return {"confirmed": True}
+
+    kwargs: dict[str, Any] = {"elicitation_handler": elicit} if elicits else {}
+    async with Client(server, **kwargs) as mcp_client:
+        await mcp_client.call_tool("probe", {})
+
+    unavailable, refusal = seen[0]
+    assert unavailable is (not elicits)
+    assert ("reason" in refusal) is (not elicits)
+    assert refusal["cancelled"] is True and refusal["operation"] == "x"
+    assert elicitation_unavailable(None) is False

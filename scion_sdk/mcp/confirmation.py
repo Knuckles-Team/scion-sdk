@@ -8,7 +8,13 @@ import logging
 from collections.abc import Mapping
 from typing import Any
 
-from mcp.types import ElicitRequest, ElicitRequestFormParams, InputRequiredResult
+from mcp.types import (
+    ClientCapabilities,
+    ElicitationCapability,
+    ElicitRequest,
+    ElicitRequestFormParams,
+    InputRequiredResult,
+)
 from pydantic import BaseModel, StrictBool
 
 _logger = logging.getLogger(__name__)
@@ -115,11 +121,47 @@ async def _confirm_legacy_destructive(ctx: Any, action_description: str) -> bool
     )
 
 
+def elicitation_unavailable(ctx: Any) -> bool:
+    """True when the live client did not advertise the elicitation capability.
+
+    Such a client can neither answer a legacy elicitation nor resume a modern
+    input-required result, so asking would fail the call at the protocol level.
+    A context that exposes no capability check is not judged here.
+    """
+    session = getattr(ctx, "session", None)
+    check = getattr(session, "check_client_capability", None)
+    if not callable(check):
+        return False
+    try:
+        return not check(ClientCapabilities(elicitation=ElicitationCapability()))
+    except Exception:
+        return False
+
+
+def confirmation_refusal(
+    ctx: Any, operation: str, *, parameter: str = "confirm"
+) -> dict[str, Any]:
+    """Cancellation payload for a destructive call that was not confirmed.
+
+    When the client cannot elicit, the payload names the explicit-confirmation
+    parameter so the caller can retry deliberately instead of seeing a protocol
+    failure.
+    """
+    payload: dict[str, Any] = {"cancelled": True, "operation": operation}
+    if elicitation_unavailable(ctx):
+        payload["reason"] = (
+            "confirmation required: this client does not support elicitation; "
+            f"repeat the call with {parameter}=true to confirm explicitly"
+        )
+    return payload
+
+
 async def ctx_confirm_destructive(
     ctx: Any,
     action_description: str,
     *,
     confirmation_arguments: Mapping[str, Any] | None = None,
+    explicit_confirm: bool = False,
 ) -> bool | InputRequiredResult:
     """Require explicit confirmation in the live negotiated MCP era.
 
@@ -127,8 +169,19 @@ async def ctx_confirm_destructive(
     retries with an accepted response bound to the same action and arguments.
     Earlier protocol versions use FastMCP's elicitation request. Any missing
     context, response, or protocol identity denies by default.
+
+    ``explicit_confirm`` is the caller's own deliberate ``confirm=true`` on this
+    very call; only an exact ``True`` counts. It works with or without auth and
+    on any transport, and is the path for clients that cannot elicit. A client
+    that cannot elicit and did not confirm explicitly is refused, never sent an
+    input request it cannot answer.
     """
+    if explicit_confirm is True:
+        return True
     if not ctx:
+        return False
+    if elicitation_unavailable(ctx):
+        _logger.warning("Client cannot elicit; destructive operation denied")
         return False
     request_context = getattr(ctx, "request_context", None)
     protocol_version = getattr(request_context, "protocol_version", None)

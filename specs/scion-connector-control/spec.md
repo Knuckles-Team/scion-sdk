@@ -201,6 +201,8 @@ The current SDK tree lacks these four producers and bindings. This packet adds d
 
 **Wiring.** The shared gate is `scion_sdk/mcp/context.py::ctx_confirm_destructive`. `action_dispatch.dispatch_async` and generated method dispatch pass operation arguments to that gate. Both dispatchers propagate pending results. They call `invoke_client_method` only after explicit acceptance.
 
+**Explicit confirmation.** Every destructive generated tool takes an optional boolean `confirm` (absent when the operation already declares one), and `dispatch_async` and `ctx_confirm_destructive` take the same explicit flag. Only an exact `True` on this call confirms, with or without authentication, on stdio and HTTP alike. A client that did not advertise elicitation is never sent an input request it cannot answer. It receives `{"cancelled": true, "operation": ..., "reason": ...}`, where the reason names `confirm=true`.
+
 **Refusal.** Refuse before the connector effect when context or protocol identity is missing or capability is unsupported. Refuse false, nonboolean, and missing fields. Refuse decline, cancellation, binding mismatch, transport error, or malformed response. Nondestructive operations never ask for confirmation.
 
 **Evidence.** Record the negotiated protocol and exact FastMCP and MCP versions with served `tools/call` results. Test `tests/test_mcp_confirmation_roundtrip.py` through `HTTPX MockTransport`. Do not call a live provider. Preserve the R026 landing receipt. R026.1 starts with no landed or verified receipts.
