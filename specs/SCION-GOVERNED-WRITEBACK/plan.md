@@ -1,4 +1,41 @@
-# Implementation design: governed write-back
+# SCION-GOVERNED-WRITEBACK — Implementation plan
+
+Governing spec: [spec.md](spec.md). Rows: [requirements.md](requirements.md).
+
+## Summary
+
+This plan covers governed write-back: wallet signature verification, immutable intents with separate execution proof, and repository source effects with durable receipts. It reuses the existing owners named under Project Structure and adds no parallel store or cursor; the graph service stays the only authority for commits and checkpoints.
+
+## Technical Context
+
+- **Language/Version**: Python 3.14 (floor 3.12)
+- **Primary Dependencies**: the generated engine client, `httpx`-based governed HTTP support in `scion_sdk`
+- **Storage**: N/A (the graph service owns durable state)
+- **Testing**: pytest under `tests/`, proof levels as named per row
+- **Target Platform**: Linux, library consumed by connectors and arbora
+- **Project Type**: library
+- **Performance Goals**: N/A (bounded by per-row limits)
+- **Constraints**: no semantic store or competing cursor in the SDK; hard cutover, no shims
+- **Scale/Scope**: the rows in requirements.md
+
+## Constitution Check
+
+- Specs first, current state only: pass; rows are the requirement authority.
+- Reuse before new code: pass; existing seams are listed below.
+- No duplicate implementation across repos: pass; cross-owner behaviour is linked by row ID.
+
+## Project Structure
+
+Existing: `scion_sdk` write-back port, `GovernedWriteBack`, `DurableWritableConnector`, transport and `WriteBackLedger`. New paths are named per row in requirements.md.
+
+## Phase 0: Research
+
+No unknowns; the design below records the findings per row.
+
+## Phase 1: Design
+
+The design sections below are the architecture, data flow and failure modes for each row group.
+
 
 1. Preserve generated graph types and the current `WriteBackPort`, `GovernedWriteBack`, `DurableWritableConnector`, transport and `WriteBackLedger` composition.
 2. Bind audit reservation and deterministic approval to the exact canonical digest and source version before mutation. Keep proposal evaluation separate.
@@ -18,7 +55,7 @@ Expose the verifier through the admitted connector's authenticated operation so 
 Bind the returned fact to that caller and request; an untrusted JSON result cannot grant permission.
 
 The initial explicit profile is `ed25519_jcs`, for wallets with a trusted Ed25519 key binding.
-Its signed message is UTF-8 `SDK-WALLET-INTENT`, one zero byte, UTF-8 `1`, one zero byte, then RFC 8785 canonical JSON.
+Its signed message is UTF-8 `SCION-WALLET-INTENT`, one zero byte, UTF-8 `1`, one zero byte, then RFC 8785 canonical JSON.
 The JSON contains every WalletProofRequest field except signature; identities and digests come from authenticated or durable authority.
 The exact signed keys are `tenant_id`, `actor_id`, `connector_id`, `operation_id`, `account_id`, `wallet_id`, `network_id`, `key_id`,
 `plan_digest`, `change_set_digest`, `idempotency_key`, `scheme`, `nonce`, `issued_at` and `expires_at`.
@@ -225,3 +262,23 @@ One connector instance claims a tenant and idempotency key before lookup.
 Concurrent apply or reconcile calls for that key refuse until it releases
 the claim. The claim spans durable receipt recording. It is not a fence
 across instances or processes and does not replace durable recovery.
+
+## Phase 2: Task approach
+
+tasks.md lists one task per row, producer first; rows with no shared files run in parallel.
+
+## Complexity Tracking
+
+none
+
+## Build contract
+
+Gates: the repository pre-commit hooks (`pre-commit run --all-files -c .config/pre-commit.yaml`) and the bound tests named per row. No scanner gaming and no duplicate implementation.
+
+## Production caller chain
+
+Each row names its caller chain from the entry point to the owner and the effect boundary; obsolete paths are deleted in the same change.
+
+## Cross-repo seams
+
+none
