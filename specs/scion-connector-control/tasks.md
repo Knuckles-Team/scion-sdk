@@ -1,0 +1,290 @@
+# SCION-CONNECTOR-CONTROL — Implementation tasks
+
+Governing spec: [spec.md](spec.md). Design: [plan.md](plan.md). Rows: [requirements.md](requirements.md).
+
+Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task number and the row ID are required.
+`[P]` marks a task that may run in parallel. `[US1]` names the user story. Tasks are ordered producer first.
+
+- [x] T001 [US1] SCION-CONNECTOR-CONTROL-R001 Pack retries reuse one key.
+- [x] T002 [US1] SCION-CONNECTOR-CONTROL-R002 Contract pin travels as a claim attribute, not recomputed downstream.
+- [x] T003 [US1] SCION-CONNECTOR-CONTROL-R003 Canonical output-schema digest on every certified tool verdict.
+- [x] T004 [US1] SCION-CONNECTOR-CONTROL-R004.1 Pin conformance covers the exact live tool set.
+- [x] T005 [US1] SCION-CONNECTOR-CONTROL-R005 Pack publisher and source submission use generated graph-client types.
+- [x] T006 [US1] SCION-CONNECTOR-CONTROL-R006 Decision-service proposals for tool choice and triage stay observational.
+- [x] T007 [US1] SCION-CONNECTOR-CONTROL-R008 Closed, canonical pack annotation map across the connector fleet.
+- [x] T008 [US1] SCION-CONNECTOR-CONTROL-R009 Connector batch A-E migrates fully onto the SDK client.
+- [x] T009 [US1] SCION-CONNECTOR-CONTROL-R010 Connector batch F-J migrates fully onto the SDK client.
+- [x] T010 [US1] SCION-CONNECTOR-CONTROL-R011 Connector batch K-O migrates fully onto the SDK client.
+- [x] T011 [US1] SCION-CONNECTOR-CONTROL-R012 Connector batch P-S migrates fully onto the SDK client.
+- [x] T012 [US1] SCION-CONNECTOR-CONTROL-R013 Connector batch T-Z migrates fully onto the SDK client.
+- [x] T013 [US1] SCION-CONNECTOR-CONTROL-R014.27 Fleet migration evidence.
+- [x] T014 [US1] SCION-CONNECTOR-CONTROL-R014.28 Refuse incomplete migration scans.
+- [x] T015 [US1] SCION-CONNECTOR-CONTROL-R014.29 Inspect common dynamic imports.
+- [x] T016 [US1] SCION-CONNECTOR-CONTROL-R014.1 One reusable cross-repository import-scan call site.
+- [x] T017 [US1] SCION-CONNECTOR-CONTROL-R015.1 A duplicate-definition scan for the manifest/certify surface.
+- [x] T018 [US1] SCION-CONNECTOR-CONTROL-R016 Connector base settings live in the SDK's own config module.
+- [x] T019 [US1] SCION-CONNECTOR-CONTROL-R018 SDK source and test suite build cleanly from a fresh checkout.
+- [x] T020 [US1] SCION-CONNECTOR-CONTROL-R019.1 The SDK runs the connector server from its declared identity.
+- [x] T021 [US1] SCION-CONNECTOR-CONTROL-R019.2 A connector declares its bootstrap extras as typed hooks.
+- [x] T022 [US1] SCION-CONNECTOR-CONTROL-R019.3 Container config mounts are declared once with an SDK schema.
+- [x] T023 [US1] SCION-CONNECTOR-CONTROL-R021 Connector ontologies declare access contracts for virtual reads.
+- [x] T024 [US1] SCION-CONNECTOR-CONTROL-R022 The pack builder scopes owl:imports to the pack.
+- [x] T025 [US1] SCION-CONNECTOR-CONTROL-R023 A prompt with a required argument becomes a template.
+- [x] T026 [US1] SCION-CONNECTOR-CONTROL-R024 A prompt the server rejects for its bound placeholder still captures as a template.
+- [x] T027 [US1] SCION-CONNECTOR-CONTROL-R025.1 A local transport binds the SYSTEM actor.
+- [x] T028 [US1] SCION-CONNECTOR-CONTROL-R025.2 Authenticated HTTP binds the token's principal with inherited IdP roles and configured grants.
+- [x] T029 [US1] SCION-CONNECTOR-CONTROL-R025.3 Auth type none is a supported HTTP mode; it is the trusted local principal.
+- [x] T030 [US1] SCION-CONNECTOR-CONTROL-R025.4 Work that needs an authenticated principal refuses typed.
+- [x] T031 [US1] SCION-CONNECTOR-CONTROL-R025.5 No actor bootstrap: an unbound context resolves from the transport.
+- [x] T032 [US1] SCION-CONNECTOR-CONTROL-R025.6 The rate limiter keys on the bound actor; the trusted local principal is not throttled.
+- [x] T033 [US1] SCION-CONNECTOR-CONTROL-R025.7 Tool responses and tool errors redact secrets only.
+- [x] T034 [US1] SCION-CONNECTOR-CONTROL-R020.1 JSON tag-loader migration inventory and parity gate.
+- [x] T035 [US1] SCION-CONNECTOR-CONTROL-R020.2 A split action never duplicates or collides with an operation tool.
+- [x] T036 [US1] SCION-CONNECTOR-CONTROL-R020.3 A router tool is split, never dropped.
+- [x] T037 [US1] SCION-CONNECTOR-CONTROL-R020.5 A split tool inherits its parent's risk class and never gains read-only by inheritance.
+- [x] T038 [US1] SCION-CONNECTOR-CONTROL-R020.4 A successor release keeps every predecessor tool.
+- [x] T039 [US1] SCION-CONNECTOR-CONTROL-R027 SDK resolves the selected provider-runtime profile for a multi-backend connector.
+- [x] T040 [US1] SCION-CONNECTOR-CONTROL-R028.1 A standalone, typed SSRF egress-destination check and pinned-address transport.
+- [x] T041 [US1] SCION-CONNECTOR-CONTROL-R028.2 create_http_client wires the SSRF egress policy into construction.
+- [x] T042 [US1] SCION-CONNECTOR-CONTROL-R028.3 API-key identity stays header-based.
+- [x] T043 [US1] SCION-CONNECTOR-CONTROL-R028.4 A connector declares its outbound auth in one line and the SDK builds the governed client.
+- [x] T044 [US1] SCION-CONNECTOR-CONTROL-R028.5 Bind session cookies to their origin.
+- [x] T045 [US1] SCION-CONNECTOR-CONTROL-R028.6 Freeze retry policy controls.
+- [x] T046 [US1] SCION-CONNECTOR-CONTROL-R029 SDK exposes a structured configuration singleton, not only a flat setting() lookup.
+- [x] T047 [US1] SCION-CONNECTOR-CONTROL-R030.1 SDK owns the one GraphQL client for connectors.
+- [x] T048 [US1] SCION-CONNECTOR-CONTROL-R031 SDK's client-credentials token provider accepts a literal client secret, matching the signature connectors already call.
+- [x] T049 [US1] SCION-CONNECTOR-CONTROL-R032 Explicit additional registration.
+- [x] T050 [US1] SCION-CONNECTOR-CONTROL-R033 SDK's governed HTTP layer provides a safe_post_json helper with the same private-host allowance as its GET path.
+- [x] T051 [US1] SCION-CONNECTOR-CONTROL-R034.1 The SDK imports and runs on Windows.
+- [ ] T052 [US1] SCION-CONNECTOR-CONTROL-R035.1 Model.
+- [ ] T053 [US1] SCION-CONNECTOR-CONTROL-R035.2 Behavior.
+- [ ] T054 [US1] SCION-CONNECTOR-CONTROL-R035.3 Wiring.
+- [x] T055 [US1] SCION-CONNECTOR-CONTROL-R035.4 Refusal.
+- [ ] T056 [US1] SCION-CONNECTOR-CONTROL-R035.5 Evidence.
+- [ ] T057 [US1] SCION-CONNECTOR-CONTROL-R035.6 Hot-path proof.
+- [x] T058 [US1] SCION-CONNECTOR-CONTROL-R035.7 Keep the OpenBao token on the configured transport.
+- [x] T059 [US1] SCION-CONNECTOR-CONTROL-R035.8 Secret reference object integrity.
+- [x] T060 [US1] SCION-CONNECTOR-CONTROL-R036 SDK's identity-scoped resource entitlements cover the backend-resource catalogs these connectors manage.
+- [ ] T061 [US1] SCION-CONNECTOR-CONTROL-R037 erpnext supplier and purchase-order operation contract is typed and recorded.
+- [ ] T062 [US1] SCION-CONNECTOR-CONTROL-R038 uptime service-health operation contract is declared.
+- [ ] T063 [US1] SCION-CONNECTOR-CONTROL-R039 container-manager deployed-workload operation contract.
+- [x] T064 [US1] SCION-CONNECTOR-CONTROL-R040 SDK declares an MCP source's access contract.
+- [x] T065 [US1] SCION-CONNECTOR-CONTROL-R041 SDK declares an A2A source's access contract.
+- [x] T066 [US1] SCION-CONNECTOR-CONTROL-R042 SDK declares an API (REST) source's access contract.
+- [x] T067 [US1] SCION-CONNECTOR-CONTROL-R043 SDK declares a GraphQL source's access contract.
+- [x] T068 [US1] SCION-CONNECTOR-CONTROL-R044 SDK declares a virtual-graph access contract.
+- [x] T069 [US1] SCION-CONNECTOR-CONTROL-R045.1 Type ToolContractFacts.
+- [x] T070 [US1] SCION-CONNECTOR-CONTROL-R045.2 Close the SideEffect set.
+- [x] T071 [US1] SCION-CONNECTOR-CONTROL-R045.3 Compute schema_tokens from the existing canonical tool body.
+- [x] T072 [US1] SCION-CONNECTOR-CONTROL-R045.4 Default to the safe value when a connector declares nothing.
+- [x] T073 [US1] SCION-CONNECTOR-CONTROL-R045.5 Map MCP annotations as self-declared hints.
+- [x] T074 [US1] SCION-CONNECTOR-CONTROL-R045.6 Read side_effects from eg.annotations, and gate on the generated type.
+- [x] T075 [US1] SCION-CONNECTOR-CONTROL-R045.7 Reuse the destructive classification.
+- [ ] T076 [US1] SCION-CONNECTOR-CONTROL-R045.8 Attach the facts to the captured tool entry.
+- [x] T077 [US1] SCION-CONNECTOR-CONTROL-R045.9 Certify that a read_only tool wrote nothing in its recorded fixture.
+- [x] T078 [US1] SCION-CONNECTOR-CONTROL-R045.10 Refuse an unproven self-declared read_only.
+- [x] T079 [US1] SCION-CONNECTOR-CONTROL-R045.11 Certify checks the live declared tools and writes no file.
+- [ ] T080 [US1] SCION-CONNECTOR-CONTROL-R045.12 Operation descriptors travel in the handshake.
+- [ ] T081 [US1] SCION-CONNECTOR-CONTROL-R046.1 Model.
+- [ ] T082 [US1] SCION-CONNECTOR-CONTROL-R046.2 Behavior.
+- [ ] T083 [US1] SCION-CONNECTOR-CONTROL-R046.3 Wiring.
+- [ ] T084 [US1] SCION-CONNECTOR-CONTROL-R046.4 Refusal.
+- [ ] T085 [US1] SCION-CONNECTOR-CONTROL-R046.5 Evidence.
+- [ ] T086 [US1] SCION-CONNECTOR-CONTROL-R046.6 Hot-path proof.
+- [x] T087 [US1] SCION-CONNECTOR-CONTROL-R046.7 Loopback callback state.
+- [x] T088 [US1] SCION-CONNECTOR-CONTROL-R046.8 Legacy token-file safety.
+- [x] T089 [US1] SCION-CONNECTOR-CONTROL-R046.9 Legacy token-key isolation.
+- [x] T090 [US1] SCION-CONNECTOR-CONTROL-R046.10 Legacy manual callback binding.
+- [x] T091 [US1] SCION-CONNECTOR-CONTROL-R047.1 Model.
+- [x] T092 [US1] SCION-CONNECTOR-CONTROL-R047.2 Behavior.
+- [x] T093 [US1] SCION-CONNECTOR-CONTROL-R047.3 Wiring.
+- [x] T094 [US1] SCION-CONNECTOR-CONTROL-R047.4 Refusal.
+- [x] T095 [US1] SCION-CONNECTOR-CONTROL-R047.5 Evidence.
+- [x] T096 [US1] SCION-CONNECTOR-CONTROL-R047.6 Hot-path proof.
+- [x] T097 [US1] SCION-CONNECTOR-CONTROL-R047.7 Bounded discovery cache.
+- [x] T098 [US1] SCION-CONNECTOR-CONTROL-R047.8 Isolate cached observations.
+- [x] T099 [US1] SCION-CONNECTOR-CONTROL-R047.9 Finite card JSON.
+- [x] T100 [US1] SCION-CONNECTOR-CONTROL-R048.1 Model.
+- [x] T101 [US1] SCION-CONNECTOR-CONTROL-R048.2 Behavior.
+- [ ] T102 [US1] SCION-CONNECTOR-CONTROL-R048.3 Wiring.
+- [x] T103 [US1] SCION-CONNECTOR-CONTROL-R048.4 Refusal.
+- [x] T104 [US1] SCION-CONNECTOR-CONTROL-R048.5 Evidence.
+- [x] T105 [US1] SCION-CONNECTOR-CONTROL-R048.6 Hot-path proof.
+- [x] T106 [US1] SCION-CONNECTOR-CONTROL-R048.7 Readable score bounds.
+- [x] T107 [US1] SCION-CONNECTOR-CONTROL-R048.8 Count-based readable score.
+- [x] T108 [US1] SCION-CONNECTOR-CONTROL-R049.1 Model.
+- [x] T109 [US1] SCION-CONNECTOR-CONTROL-R049.2 Behavior.
+- [x] T110 [US1] SCION-CONNECTOR-CONTROL-R049.3 Wiring.
+- [x] T111 [US1] SCION-CONNECTOR-CONTROL-R049.4 Refusal.
+- [x] T112 [US1] SCION-CONNECTOR-CONTROL-R049.5 Evidence.
+- [ ] T113 [US1] SCION-CONNECTOR-CONTROL-R049.6 Hot-path proof.
+- [x] T114 [US1] SCION-CONNECTOR-CONTROL-R049.7 Default payment guard limits deny spending.
+- [x] T115 [US1] SCION-CONNECTOR-CONTROL-R050.1 Model.
+- [ ] T116 [US1] SCION-CONNECTOR-CONTROL-R050.2 Behavior.
+- [ ] T117 [US1] SCION-CONNECTOR-CONTROL-R050.3 Wiring.
+- [ ] T118 [US1] SCION-CONNECTOR-CONTROL-R050.4 Refusal.
+- [ ] T119 [US1] SCION-CONNECTOR-CONTROL-R050.5 Evidence.
+- [ ] T120 [US1] SCION-CONNECTOR-CONTROL-R050.6 Hot-path proof.
+- [x] T121 [US1] SCION-CONNECTOR-CONTROL-R050.8 Serialized progress primitive.
+- [x] T122 [US1] SCION-CONNECTOR-CONTROL-R050.9 Request-local cache primitive.
+- [x] T123 [US1] SCION-CONNECTOR-CONTROL-R007.1 Model.
+- [ ] T124 [US1] SCION-CONNECTOR-CONTROL-R007.2 Behavior.
+- [ ] T125 [US1] SCION-CONNECTOR-CONTROL-R007.3 Wiring.
+- [ ] T126 [US1] SCION-CONNECTOR-CONTROL-R007.4 Refusal.
+- [ ] T127 [US1] SCION-CONNECTOR-CONTROL-R007.5 Evidence.
+- [ ] T128 [US1] SCION-CONNECTOR-CONTROL-R007.6 Hot-path proof.
+- [ ] T129 [US1] SCION-CONNECTOR-CONTROL-R060 Native desktop operation port with a no-cursor, no-focus invariant.
+- [x] T130 [US1] SCION-CONNECTOR-CONTROL-R650.2 Release identity digest.
+- [x] T131 [US1] SCION-CONNECTOR-CONTROL-R650.3 Explicit release signing.
+- [x] T132 [US1] SCION-CONNECTOR-CONTROL-R650.4 Explicit release key lock.
+- [x] T133 [US1] SCION-CONNECTOR-CONTROL-R650.5 Create a release key lock.
+- [x] T134 [US1] SCION-CONNECTOR-CONTROL-R014.30 Reject unlisted shared addresses.
+- [x] T135 [US1] SCION-CONNECTOR-CONTROL-R014.31 Cancellable async DNS pinning.
+- [ ] T136 [US1] SCION-CONNECTOR-CONTROL-R051.1 Model.
+- [ ] T137 [US1] SCION-CONNECTOR-CONTROL-R051.2 Behavior.
+- [ ] T138 [US1] SCION-CONNECTOR-CONTROL-R051.3 Wiring.
+- [ ] T139 [US1] SCION-CONNECTOR-CONTROL-R051.4 Refusal.
+- [ ] T140 [US1] SCION-CONNECTOR-CONTROL-R051.5 Evidence.
+- [ ] T141 [US1] SCION-CONNECTOR-CONTROL-R051.6 Hot-path proof.
+- [ ] T142 [US1] SCION-CONNECTOR-CONTROL-R052.1 Model.
+- [ ] T143 [US1] SCION-CONNECTOR-CONTROL-R052.2 Behavior.
+- [ ] T144 [US1] SCION-CONNECTOR-CONTROL-R052.3 Wiring.
+- [ ] T145 [US1] SCION-CONNECTOR-CONTROL-R052.4 Refusal.
+- [ ] T146 [US1] SCION-CONNECTOR-CONTROL-R052.5 Evidence.
+- [ ] T147 [US1] SCION-CONNECTOR-CONTROL-R052.6 Hot-path proof.
+- [ ] T148 [US1] SCION-CONNECTOR-CONTROL-R053.1 Model.
+- [ ] T149 [US1] SCION-CONNECTOR-CONTROL-R053.2 Behavior.
+- [ ] T150 [US1] SCION-CONNECTOR-CONTROL-R053.3 Wiring.
+- [ ] T151 [US1] SCION-CONNECTOR-CONTROL-R053.4 Refusal.
+- [ ] T152 [US1] SCION-CONNECTOR-CONTROL-R053.5 Evidence.
+- [ ] T153 [US1] SCION-CONNECTOR-CONTROL-R053.6 Hot-path proof.
+- [x] T154 [US1] SCION-CONNECTOR-CONTROL-R054.1 Model.
+- [x] T155 [US1] SCION-CONNECTOR-CONTROL-R054.2 Behavior.
+- [ ] T156 [US1] SCION-CONNECTOR-CONTROL-R054.3 Wiring.
+- [ ] T157 [US1] SCION-CONNECTOR-CONTROL-R054.4 Refusal.
+- [ ] T158 [US1] SCION-CONNECTOR-CONTROL-R054.5 Evidence.
+- [ ] T159 [US1] SCION-CONNECTOR-CONTROL-R054.6 Hot-path proof.
+- [x] T160 [US1] SCION-CONNECTOR-CONTROL-R065.1 Model.
+- [x] T161 [US1] SCION-CONNECTOR-CONTROL-R065.2 Behavior.
+- [ ] T162 [US1] SCION-CONNECTOR-CONTROL-R065.3 Wiring.
+- [ ] T163 [US1] SCION-CONNECTOR-CONTROL-R065.4 Refusal.
+- [ ] T164 [US1] SCION-CONNECTOR-CONTROL-R065.5 Evidence.
+- [ ] T165 [US1] SCION-CONNECTOR-CONTROL-R065.6 Hot-path proof.
+- [x] T166 [US1] SCION-CONNECTOR-CONTROL-R026.1 Require explicit destructive confirmation across both supported MCP eras.
+- [x] T167 [US1] SCION-CONNECTOR-CONTROL-R026.2 A manifest field named after a Python keyword keeps its wire name in the schema.
+- [x] T168 [US1] SCION-CONNECTOR-CONTROL-R014.2 Cross-platform advisory file locks.
+- [x] T169 [US1] SCION-CONNECTOR-CONTROL-R014.3 Tool version metadata.
+- [x] T170 [US1] SCION-CONNECTOR-CONTROL-R014.4 Reference-only CLI secrets.
+- [x] T171 [US1] SCION-CONNECTOR-CONTROL-R014.5 Operator base-URL egress guard.
+- [x] T172 [US1] SCION-CONNECTOR-CONTROL-R014.6 PII sanitizer.
+- [x] T173 [US1] SCION-CONNECTOR-CONTROL-R014.7 Connector state directories.
+- [x] T174 [US1] SCION-CONNECTOR-CONTROL-R014.8 Delegated-token helpers.
+- [x] T175 [US1] SCION-CONNECTOR-CONTROL-R014.9 Keyless credential sentinel.
+- [x] T176 [US1] SCION-CONNECTOR-CONTROL-R014.10 Class-based API client base and auth strategies.
+- [x] T177 [US1] SCION-CONNECTOR-CONTROL-R014.11 Browser OAuth (PKCE) login.
+- [x] T178 [US1] SCION-CONNECTOR-CONTROL-R014.12 GraphQL schema discovery over a connector executor.
+- [x] T179 [US1] SCION-CONNECTOR-CONTROL-R014.13 Per-record external access descriptor.
+- [x] T180 [US1] SCION-CONNECTOR-CONTROL-R014.14 Connector env-var drift check.
+- [x] T181 [US1] SCION-CONNECTOR-CONTROL-R014.15 External ACL sync into ingested documents.
+- [x] T182 [US1] SCION-CONNECTOR-CONTROL-R014.16 DNS-pinned egress on the governed client.
+- [x] T183 [US1] SCION-CONNECTOR-CONTROL-R014.17 MCP-free base install.
+- [x] T184 [US1] SCION-CONNECTOR-CONTROL-R014.18 Default fail-closed served security profile.
+- [x] T185 [US1] SCION-CONNECTOR-CONTROL-R014.19 Selected-provider credential profile.
+- [x] T186 [US1] SCION-CONNECTOR-CONTROL-R014.20 Plugin entry-point groups use the SDK namespace.
+- [x] T187 [US1] SCION-CONNECTOR-CONTROL-R014.22 External embedding API client.
+- [x] T188 [US1] SCION-CONNECTOR-CONTROL-R014.23 Typed medulla compute adapter.
+- [x] T189 [US1] SCION-CONNECTOR-CONTROL-R014.24 Engine audience from the environment.
+- [x] T190 [US1] SCION-CONNECTOR-CONTROL-R014.25 SDK-consumed env vars are never drift.
+- [x] T191 [US1] SCION-CONNECTOR-CONTROL-R014.26 Server parser settings are never drift.
+- [ ] T192 [US1] SCION-CONNECTOR-CONTROL-R068.1 Model.
+- [ ] T193 [US1] SCION-CONNECTOR-CONTROL-R068.2 Behavior.
+- [ ] T194 [US1] SCION-CONNECTOR-CONTROL-R068.3 Wiring.
+- [ ] T195 [US1] SCION-CONNECTOR-CONTROL-R068.4 Refusal.
+- [ ] T196 [US1] SCION-CONNECTOR-CONTROL-R068.5 Evidence.
+- [ ] T197 [US1] SCION-CONNECTOR-CONTROL-R068.6 Hot-path proof.
+- [x] T198 [US1] SCION-CONNECTOR-CONTROL-R069.1 Model.
+- [x] T199 [US1] SCION-CONNECTOR-CONTROL-R069.2 Behavior.
+- [x] T200 [US1] SCION-CONNECTOR-CONTROL-R069.3 Wiring.
+- [x] T201 [US1] SCION-CONNECTOR-CONTROL-R069.4 Refusal.
+- [x] T202 [US1] SCION-CONNECTOR-CONTROL-R069.5 Evidence.
+- [ ] T203 [US1] SCION-CONNECTOR-CONTROL-R069.6 Hot-path proof.
+- [x] T204 [US1] SCION-CONNECTOR-CONTROL-R014.21.1 Bound response reads.
+- [x] T205 [US1] SCION-CONNECTOR-CONTROL-R014.21.3 Correlated A2A responses.
+- [x] T206 [US1] SCION-CONNECTOR-CONTROL-R014.21.2 Prove the optional server composition.
+- [ ] T207 [US1] SCION-CONNECTOR-CONTROL-R017.1 Load the enterprise root bundle in the shared TLS profile.
+- [x] T208 [US1] SCION-CONNECTOR-CONTROL-R700 Declared semantic coverage refusal.
+- [x] T209 [US1] SCION-CONNECTOR-CONTROL-R900.1 Model.
+- [x] T210 [US1] SCION-CONNECTOR-CONTROL-R900.2 Behavior.
+- [x] T211 [US1] SCION-CONNECTOR-CONTROL-R900.3 Wiring.
+- [x] T212 [US1] SCION-CONNECTOR-CONTROL-R900.4 Refusal.
+- [x] T213 [US1] SCION-CONNECTOR-CONTROL-R900.5 Evidence.
+- [x] T214 [US1] SCION-CONNECTOR-CONTROL-R900.6 Hot-path proof.
+- [x] T215 [US1] SCION-CONNECTOR-CONTROL-R901.1 Model.
+- [x] T216 [US1] SCION-CONNECTOR-CONTROL-R901.2 Behavior.
+- [x] T217 [US1] SCION-CONNECTOR-CONTROL-R901.3 Wiring.
+- [x] T218 [US1] SCION-CONNECTOR-CONTROL-R901.4 Refusal.
+- [x] T219 [US1] SCION-CONNECTOR-CONTROL-R901.5 Evidence.
+- [x] T220 [US1] SCION-CONNECTOR-CONTROL-R901.6 Hot-path proof.
+- [ ] T221 [US1] SCION-CONNECTOR-CONTROL-R902.1 Model.
+- [ ] T222 [US1] SCION-CONNECTOR-CONTROL-R902.2 Behavior.
+- [ ] T223 [US1] SCION-CONNECTOR-CONTROL-R902.3 Wiring.
+- [ ] T224 [US1] SCION-CONNECTOR-CONTROL-R902.4 Refusal.
+- [ ] T225 [US1] SCION-CONNECTOR-CONTROL-R902.5 Evidence.
+- [ ] T226 [US1] SCION-CONNECTOR-CONTROL-R902.6 Hot-path proof.
+- [x] T227 [US1] SCION-CONNECTOR-CONTROL-R067.1 Model.
+- [ ] T228 [US1] SCION-CONNECTOR-CONTROL-R067.2 Behavior.
+- [x] T229 [US1] SCION-CONNECTOR-CONTROL-R067.3 Behavior.
+- [ ] T230 [US1] SCION-CONNECTOR-CONTROL-R067.4 Behavior.
+- [ ] T231 [US1] SCION-CONNECTOR-CONTROL-R067.5 Wiring.
+- [x] T232 [US1] SCION-CONNECTOR-CONTROL-R067.6 Refusal.
+- [x] T233 [US1] SCION-CONNECTOR-CONTROL-R067.7 Evidence.
+- [ ] T234 [US1] SCION-CONNECTOR-CONTROL-R067.8 Hot-path proof.
+- [x] T235 [US1] SCION-CONNECTOR-CONTROL-R780.1 Actor type.
+- [x] T236 [US1] SCION-CONNECTOR-CONTROL-R780.2 Exceptions.
+- [x] T237 [US1] SCION-CONNECTOR-CONTROL-R780.3 Governed HTTP client and retry.
+- [x] T238 [US1] SCION-CONNECTOR-CONTROL-R780.4 TLS profile resolution.
+- [x] T239 [US1] SCION-CONNECTOR-CONTROL-R780.5 Value helpers and configuration projection.
+- [x] T240 [US1] SCION-CONNECTOR-CONTROL-R780.7 Air-gap transport guard.
+- [x] T241 [US1] SCION-CONNECTOR-CONTROL-R780.8 Standard HTTP request headers.
+- [x] T242 [US1] SCION-CONNECTOR-CONTROL-R780.10 Async callable retry.
+- [x] T243 [US1] SCION-CONNECTOR-CONTROL-R780.9 Requests session factory.
+- [x] T244 [US1] SCION-CONNECTOR-CONTROL-R780.13 Explicit TLS selector settings.
+- [x] T245 [US1] SCION-CONNECTOR-CONTROL-R780.11 Synchronous callable retry.
+- [x] T246 [US1] SCION-CONNECTOR-CONTROL-R780.12 Explicit value expansion.
+- [x] T247 [US1] SCION-CONNECTOR-CONTROL-R070 Current-plan boundary models.
+- [x] T248 [US1] SCION-CONNECTOR-CONTROL-R071.1 Content is found by convention.
+- [x] T249 [US1] SCION-CONNECTOR-CONTROL-R071.2 The version is read from package metadata only.
+- [x] T250 [US1] SCION-CONNECTOR-CONTROL-R072 Certify names the connector from its declaration.
+- [x] T251 [US1] SCION-CONNECTOR-CONTROL-R073 The server factory serves all five connector surfaces and keeps the parent link.
+- [x] T252 [US1] SCION-CONNECTOR-CONTROL-R074.1 Model.
+- [x] T253 [US1] SCION-CONNECTOR-CONTROL-R074.2 Prompt role.
+- [ ] T254 [US1] SCION-CONNECTOR-CONTROL-R074.3 Behavior.
+- [ ] T255 [US1] SCION-CONNECTOR-CONTROL-R074.4 Wiring.
+- [x] T256 [US1] SCION-CONNECTOR-CONTROL-R074.5 Refusal.
+- [x] T257 [US1] SCION-CONNECTOR-CONTROL-R074.6 Hot-path proof.
+- [x] T258 [US1] SCION-CONNECTOR-CONTROL-R074.7 Default declarations.
+- [x] T259 [US1] SCION-CONNECTOR-CONTROL-R075.1 No file fallback.
+- [x] T260 [US1] SCION-CONNECTOR-CONTROL-R075.2 Data sources are declared in code and served live.
+- [x] T261 [US1] SCION-CONNECTOR-CONTROL-R075.3 The runner and certification read the live declaration.
+- [x] T262 [US1] SCION-CONNECTOR-CONTROL-R075.4 Prompts serve their own directive and carry their metadata over native MCP.
+- [x] T263 [US1] SCION-CONNECTOR-CONTROL-R075.5 Skills, ontology and shapes stay on fastmcp.
+- [x] T264 [US1] SCION-CONNECTOR-CONTROL-R075.6 Mapping references name the declaration.
+- [x] T265 [US1] SCION-CONNECTOR-CONTROL-R075.7 The declaration entry carries its content schema.
+- [ ] T266 [US1] SCION-CONNECTOR-CONTROL-R650.1.1 Release evidence resource.
+- [ ] T267 [US1] SCION-CONNECTOR-CONTROL-R650.1.2 Signing command.
+- [ ] T268 [US1] SCION-CONNECTOR-CONTROL-R650.1.3 Verification in the runner.
+- [ ] T269 [US1] SCION-CONNECTOR-CONTROL-R650.1.4 Trust configuration.
+- [ ] T270 [US1] SCION-CONNECTOR-CONTROL-R650.1.5 Hot-path proof.
+- [x] T271 [US1] SCION-CONNECTOR-CONTROL-R781.1 Route trajectory and training calls.
+- [ ] T272 [US1] SCION-CONNECTOR-CONTROL-R904.1 Ranked order.
+- [ ] T273 [US1] SCION-CONNECTOR-CONTROL-R904.2 Attempt outcome reporting.
+- [ ] T274 [US1] SCION-CONNECTOR-CONTROL-R904.3 Hot-path proof.
+- [ ] T275 [US1] SCION-CONNECTOR-CONTROL-R905 Offline teacher score producer.
+- [ ] T276 [US1] SCION-CONNECTOR-CONTROL-R906 SDK provisioner: allocate and reconcile instances with actual receipts.
+- [ ] T277 [US1] SCION-CONNECTOR-CONTROL-R907 Connector pack carries a seed graph resource.
+- [ ] T278 [US1] SCION-CONNECTOR-CONTROL-R908 Export the connector environment declarations.
+- [ ] T279 [US1] SCION-CONNECTOR-CONTROL-R909 Define the native desktop action port.
+- [ ] T280 [US1] SCION-CONNECTOR-CONTROL-R910 Define the typed observation producer contract.
+- [ ] T281 [US1] SCION-CONNECTOR-CONTROL-R911 Tool declaration of a resource protocol.
+- [ ] T282 [US1] SCION-CONNECTOR-CONTROL-R912 Virtual-graph SQL and document dialect declaration.
+- [ ] T283 [US1] SCION-CONNECTOR-CONTROL-R913 One capability contract unifies a skill resource and a tool, and a frontend contribution declares its read model.

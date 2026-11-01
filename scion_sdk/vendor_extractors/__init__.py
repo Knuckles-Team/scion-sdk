@@ -10,7 +10,7 @@ records instead of agent-utilities' ``ExtractionBatch`` of
 :func:`~scion_sdk.vendor_extractors.contract.register_vendor_extractor`,
 so porting one vendor touches no shared hub file.
 
-``specs/SCION-SOURCE-INGEST/requirements.md`` tracks one child requirement
+``specs/scion-source-ingest/requirements.md`` tracks one child requirement
 (``SCION-SOURCE-INGEST-R006.<n>``) per vendor module; ``uptime_kuma`` is the
 first ported (``R006.1``), alongside this contract.
 """
