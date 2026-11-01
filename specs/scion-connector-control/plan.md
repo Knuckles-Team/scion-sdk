@@ -997,4 +997,4 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 
 ## Cross-repo seams
 
-none. Dependencies on other repositories are `Depends on:` rows that cite the owner row ID; this spec adds no new wire contract.
+- Connector SDK import boundary with meristem (`SCION-CONNECTOR-CONTROL-R067`, consumer `MERISTEM-RUN-R016`): counterpart contract [meristem specs/run/contracts/scion-sdk.md](https://github.com/Knuckles-Team/meristem/blob/main/specs/run/contracts/scion-sdk.md); local document `contracts/meristem.md`.
