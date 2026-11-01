@@ -9,14 +9,14 @@ pages leaks environment topology that has no business being public.
 
 This is the SDK's own instance of a check that already exists, independently,
 in agent-utilities (``tests/gates/test_public_example_privacy.py``) and
-epistemic-graph (``tests/test_documentation_privacy.py``): each of the four
+medulla (``tests/test_documentation_privacy.py``): each of the four
 core repos scans its own public surface rather than sharing one gate, so a
 regex change in one repo can't silently disable another's coverage. The
-pattern *shapes* below are deliberately kept equivalent to epistemic-graph's
+pattern *shapes* below are deliberately kept equivalent to medulla's
 (same four categories, same alias vocabulary) but are composed from
 repo-local sub-patterns rather than copied as one literal block, so a
 fleet-wide clone scanner (dupehound/jscpd) sees this as this repo's own
-check, not a duplicate of epistemic-graph's.
+check, not a duplicate of medulla's.
 
 Usage: ``python3 scripts/check_documentation_privacy.py [--root REPO]``.
 Exit 0 = clean, 1 = findings, 2 = the gate could not establish its universe.
@@ -50,7 +50,7 @@ ENVIRONMENT_DNS = re.compile(
 )
 
 # Short internal host-alias vocabulary this fleet actually uses (matches the
-# strength of epistemic-graph's tests/test_documentation_privacy.py, which
+# strength of medulla's tests/test_documentation_privacy.py, which
 # itself widened to this same set after finding that "gr"-prefixed hosts
 # went uncaught).
 _HOST_ALIAS_PREFIXES = ("rw?", "gr", "host")

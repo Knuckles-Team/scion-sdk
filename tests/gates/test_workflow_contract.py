@@ -29,7 +29,7 @@ CI_SETUP = ROOT / "scripts" / "ci_setup.sh"
 PAGES = ROOT / ".github" / "workflows" / "pages.yml"
 PRE_COMMIT = ROOT / ".config" / "pre-commit.yaml"
 BOOTSTRAP = ROOT / "scripts" / "bootstrap.sh"
-CONTRACT = ROOT / "scripts" / "bootstrap_epistemic_graph_contract.sh"
+CONTRACT = ROOT / "scripts" / "bootstrap_engine_contract.sh"
 SCANNERS = ROOT / "scripts" / "install_scanners.sh"
 ADVISORY = ROOT / ".github" / "workflows" / "advisory.yml"
 DEPRECATED_SCANNER_HOOKS = {
@@ -193,7 +193,7 @@ def test_bootstrap_installs_eg_from_its_pypi_wheel_only() -> None:
     bootstrap = BOOTSTRAP.read_text(encoding="utf-8")
     contract = CONTRACT.read_text(encoding="utf-8")
     assert "uv sync --frozen" in bootstrap
-    assert "bash scripts/bootstrap_epistemic_graph_contract.sh" in bootstrap
+    assert "bash scripts/bootstrap_engine_contract.sh" in bootstrap
     for text in (bootstrap, contract, PRE_COMMIT.read_text(encoding="utf-8")):
         assert "--no-install-package epistemic-graph" not in text
         assert ".ci/epistemic-graph" not in text

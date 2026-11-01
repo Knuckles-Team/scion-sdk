@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 # The base install has the MCP protocol types (mcp-types, pydantic only) and the
-# epistemic-graph client. The MCP server/client stack is the "mcp" extra.
+# medulla client. The MCP server/client stack is the "mcp" extra.
 # It must never depend on the agent control plane.
 dependencies = [
     "medulla>=2.27.10,<3.0.0",
@@ -121,7 +121,7 @@ security_audit = "scion_sdk.adapters.event_feed_bindings:security_audit_source_a
 ci_cd = "scion_sdk.adapters.event_feed_bindings:ci_cd_source_adapter"
 
 # Expose this SDK's development skill to the same provider federation
-# epistemic-graph and agent-webui use. This is metadata only: consumers
+# medulla and agent-webui use. This is metadata only: consumers
 # discover the entry point when a skill-provider host is installed, without
 # imposing it as an scion-sdk runtime dependency.
 [project.entry-points."scion_sdk.skill_providers"]
@@ -168,7 +168,7 @@ typecheck = [
 
 [tool.uv]
 default-groups = ["test"]
-# epistemic-graph installs from PyPI only, as a published wheel: never from
+# medulla installs from PyPI only, as a published wheel: never from
 # source, so no Rust toolchain is ever invoked.
 no-build-package = ["medulla"]
 

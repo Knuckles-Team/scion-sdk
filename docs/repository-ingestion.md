@@ -4,7 +4,7 @@ Repository ingestion has one ownership path. A connector-owned provider client
 authenticates to its Git forge and implements `RepositorySnapshotProvider`. The
 SDK validates that the provider, authentication evidence, and requested
 immutable revision agree; pages source blobs and tombstones; and submits bounded
-source batches through the public epistemic-graph client. Epistemic-graph alone
+source batches through the public medulla client. Medulla alone
 parses files, resolves cross-file symbols, and owns every semantic or durable
 graph effect.
 
@@ -47,7 +47,7 @@ Provider cursors are ephemeral to this fetch. Repeated cursors, revision drift,
 duplicate paths across pages, oversized files, or mismatched authentication stop
 the run before another engine call. Durable repository admission, watermarks,
 acknowledgements, reconciliation, parsing, cross-file linking, RDF/OWL/SHACL, and
-projection receipts remain epistemic-graph responsibilities.
+projection receipts remain medulla responsibilities.
 
 ## The ref-walk phase
 

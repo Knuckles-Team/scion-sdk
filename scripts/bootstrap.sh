@@ -54,7 +54,7 @@ uv_is_current || { echo "bootstrap.sh: uv >= $uv_minimum is required" >&2; exit 
 python_version=$(tr -d '[:space:]' < .python-version)
 uv python install "$python_version"
 
-# epistemic-graph comes from PyPI only: uv.lock pins its registry wheels by
+# medulla comes from PyPI only: uv.lock pins its registry wheels by
 # hash and [tool.uv] no-build-package forbids a source (Rust) build, so this
 # sync installs the published wheel or fails.
 uv sync --frozen \
@@ -64,7 +64,7 @@ uv sync --frozen \
   --python "$python_version"
 
 # Prove the generated contracts import from that installed wheel.
-bash scripts/bootstrap_epistemic_graph_contract.sh
+bash scripts/bootstrap_engine_contract.sh
 
 # Git hooks are a contributor convenience; hosted CI runs the stages directly.
 if [ -z "${CI:-}" ]; then

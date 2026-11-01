@@ -98,13 +98,13 @@ repos:
   - id: mypy
     stages: [pre-push]
     name: mypy (strict, project environment)
-    entry: bash -c 'bash scripts/bootstrap_epistemic_graph_contract.sh && uv run --frozen --no-sync python -m mypy scion_sdk'
+    entry: bash -c 'bash scripts/bootstrap_engine_contract.sh && uv run --frozen --no-sync python -m mypy scion_sdk'
     language: system
     pass_filenames: false
     files: ^(scion_sdk/.*\.py|pyproject\.toml|uv\.lock)$
   - id: pytest
     name: pytest (full suite)
-    entry: bash -c 'bash scripts/bootstrap_epistemic_graph_contract.sh && uv run --frozen --no-sync python -m pytest -q'
+    entry: bash -c 'bash scripts/bootstrap_engine_contract.sh && uv run --frozen --no-sync python -m pytest -q'
     language: system
     pass_filenames: false
     always_run: true

@@ -49,14 +49,14 @@ jobs:
           set -euo pipefail
           uv build --sdist --out-dir dist
           python3 -c "from pathlib import Path; w=sorted(Path('dist').glob('*.whl')); s=sorted(Path('dist').glob('*.tar.gz')); assert len(w)==1 and len(s)==1, (w, s); ver=w[0].name.split('-')[1]; assert s[0].name.endswith(f'-{ver}.tar.gz'), (w, s); print('sdist', s[0].name)"
-      # The pinned engine wheel from PyPI (scripts/epistemic_graph_release.json). The
+      # The pinned engine wheel from PyPI (scripts/engine_release.json). The
       # rolling engine-main release replaces its asset on every engine main build.
-      - name: Download the pinned epistemic-graph engine wheel (PyPI)
+      - name: Download the pinned medulla engine wheel (PyPI)
         run: |
           set -euo pipefail
           mkdir -p dist-engine
-          url=$(python3 -c "import json; print(json.load(open('scripts/epistemic_graph_release.json'))['wheel_url'])")
-          sha=$(python3 -c "import json; print(json.load(open('scripts/epistemic_graph_release.json'))['wheel_sha256'])")
+          url=$(python3 -c "import json; print(json.load(open('scripts/engine_release.json'))['wheel_url'])")
+          sha=$(python3 -c "import json; print(json.load(open('scripts/engine_release.json'))['wheel_sha256'])")
           curl --fail --silent --show-error --location --retry 3 --output "dist-engine/$(basename "$url")" "$url"
           echo "$sha  dist-engine/$(basename "$url")" | sha256sum -c -
       - name: Verify the installed wheel against the published graph-client (SCION-QUALITY-RELEASE-R001)

@@ -1,7 +1,7 @@
 # Privacy-safe external graph ingestion
 
 GraphQL APIs, Neo4j/openCypher, Apache AGE, LadybugDB, and remote
-epistemic-graph instances enter through one governed external-source lifecycle.
+medulla instances enter through one governed external-source lifecycle.
 Durable `AgentConfig` contains neutral aliases, bounded policy values, and
 secret references only. Endpoints, credentials, queries, variables, TLS
 material, and customized source ontologies remain outside the repository.
@@ -12,7 +12,7 @@ material, and customized source ontologies remain outside the repository.
 A reference-only `AgentConfig` flows through a runtime reference resolver,
 bounded read-only schema discovery, an opaque mapping proposal, a
 digest-bound approval, and `ChangeEnvelope` ingestion into the
-epistemic-graph authority. Schema drift detected at the discovery step
+medulla authority. Schema drift detected at the discovery step
 feeds back into a new mapping proposal.
 
 </div>
@@ -99,7 +99,7 @@ they are not inferred from one environment.
 ## Property-graph transport rules
 
 Neo4j/openCypher over Bolt, Apache AGE/openCypher, LadybugDB/Kuzu-compatible,
-and remote epistemic-graph adapters discover labels/types, properties,
+and remote medulla adapters discover labels/types, properties,
 relationships, and supported capabilities through backend-specific read-only
 adapters. Generated mapping proposals select privacy-safe property allowlists
 and ontology candidates.

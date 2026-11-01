@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--engine-wheel",
         default=None,
-        help="epistemic-graph engine wheel file to install instead of the PyPI requirement",
+        help="medulla engine wheel file to install instead of the PyPI requirement",
     )
     args = parser.parse_args(argv)
     engine_wheel = Path(args.engine_wheel) if args.engine_wheel else None
