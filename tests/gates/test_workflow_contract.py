@@ -198,7 +198,7 @@ def test_bootstrap_installs_eg_from_its_pypi_wheel_only() -> None:
         assert "--no-install-package epistemic-graph" not in text
         assert ".ci/epistemic-graph" not in text
         assert "PYTHONPATH=" not in text
-    assert "epistemic_graph.generated.source_ingestion" in contract
+    assert "medulla.generated.source_ingestion" in contract
     assert "https://pypi.org/" in contract
 
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))

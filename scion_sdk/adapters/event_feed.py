@@ -25,7 +25,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
     SourceRecord,

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     SourceChangeSet,
     WriteBackAttemptKind,
     WriteBackEffectStatus,

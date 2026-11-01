@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from functools import partial
 from typing import Self
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
     SourceIngestionReceipt,

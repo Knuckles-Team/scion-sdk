@@ -5,9 +5,9 @@ import json
 from dataclasses import replace
 
 import pytest
-from epistemic_graph.generated.source_ingestion import SourceIngestionMode
 from fastmcp import FastMCP
 from finance_source_support import record_server, served_session, sync_page
+from medulla.generated.source_ingestion import SourceIngestionMode
 from test_finance_csv_import import _CONTEXT, _CSV, _MAPPING
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter

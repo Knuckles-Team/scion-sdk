@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint
+from medulla.generated.source_ingestion import SourceCheckpoint
 
 from scion_sdk.adapters.event_envelope import (
     EventEnvelope,

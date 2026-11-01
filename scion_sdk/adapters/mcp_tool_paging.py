@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from epistemic_graph.generated.source_ingestion import SourceCheckpoint, SourceRecord
+from medulla.generated.source_ingestion import SourceCheckpoint, SourceRecord
 from pydantic import JsonValue
 
 from scion_sdk.adapters.mcp_cursor import _require_cursor_progress

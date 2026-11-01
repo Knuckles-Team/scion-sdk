@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from epistemic_graph.generated.connector_pack import PackAnnotations
+from medulla.generated.connector_pack import PackAnnotations
 from pydantic import ValidationError
 
 from scion_sdk.manifest.tool_schema import read_field

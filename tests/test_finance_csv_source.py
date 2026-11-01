@@ -8,14 +8,14 @@ import json
 from dataclasses import replace
 
 import pytest
-from epistemic_graph.connector_pack import (
+from fastmcp import FastMCP
+from live_engine import PRINCIPAL, TENANT, live_ingest, scoped_client  # noqa: F401
+from medulla.connector_pack import (
     ConnectorPackArchiveBuilder,
     ConnectorPackClient,
     ConnectorPackEntryContent,
 )
-from epistemic_graph.generated.connector_pack import PackEntryKind, PackProducer
-from fastmcp import FastMCP
-from live_engine import PRINCIPAL, TENANT, live_ingest, scoped_client  # noqa: F401
+from medulla.generated.connector_pack import PackEntryKind, PackProducer
 from test_contracts_and_sink import _catalog, _mutation_context
 from test_event_feeds import CONNECTOR
 from test_finance_csv_import import _CONTEXT, _CSV, _MAPPING

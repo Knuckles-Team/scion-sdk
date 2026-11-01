@@ -112,7 +112,7 @@ async def test_generated_foreign_read_adapter_uses_published_eg_client_sender() 
     """Exercise the generated sender against the canonical client's ``_send`` seam."""
 
     try:
-        import epistemic_graph.generated.query as generated_query
+        import medulla.generated.query as generated_query
     except ImportError:
         pytest.skip("epistemic-graph generated query module is unavailable")
     if not hasattr(generated_query, "send_foreign_read_open"):
@@ -186,7 +186,7 @@ async def test_generated_foreign_read_adapter_uses_published_eg_client_sender() 
 
 
 def test_foreign_read_rows_use_the_eg_msgpack_golden_fixture() -> None:
-    from epistemic_graph.client import _pack_binary_msgpack
+    from medulla.client import _pack_binary_msgpack
 
     rows = [
         ForeignReadRow(

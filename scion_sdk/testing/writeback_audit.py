@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from epistemic_graph.generated.write_back import SourceChangeSet
+from medulla.generated.write_back import SourceChangeSet
 
 from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.writeback.errors import AuditReservationUnavailableError

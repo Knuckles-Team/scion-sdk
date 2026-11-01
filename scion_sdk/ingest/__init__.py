@@ -25,7 +25,7 @@ from __future__ import annotations
 import threading
 
 import anyio
-from epistemic_graph.generated.source_ingestion import SourceIngestionReceipt
+from medulla.generated.source_ingestion import SourceIngestionReceipt
 
 from scion_sdk.ingest.contract import (
     AcceptedContract,

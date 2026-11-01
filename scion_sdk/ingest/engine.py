@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
 
-from epistemic_graph.client import EpistemicGraphClient
+from medulla.client import MedullaClient
 
 from scion_sdk.config import setting
 from scion_sdk.credentials.resolution import resolve_secret_reference
@@ -156,7 +156,7 @@ def connect_ingest(
     except Exception as exc:
         raise IngestUnavailableError("epistemic-graph ingest is misconfigured") from exc
     loop = _engine_loop()
-    connecting = EpistemicGraphClient.connect(
+    connecting = MedullaClient.connect(
         auth_secret=secret,
         graph_name=settings.graph,
         verified_context=settings.verified_context(),

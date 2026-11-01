@@ -45,8 +45,8 @@ REGISTRY = "https://pypi.org/simple"
 EVIDENCE_KIND = "pypi-registry-wheel"
 # These imports are deliberately dynamic in DecideTransport._generated.
 DYNAMIC_SDK_IMPORTS = (
-    "epistemic_graph.generated.query",
-    "epistemic_graph.generated.coordination",
+    "medulla.generated.query",
+    "medulla.generated.coordination",
 )
 
 
@@ -267,37 +267,33 @@ def _find_sdk_imports() -> list[str]:
                 modules.update(
                     alias.name
                     for alias in node.names
-                    if alias.name == "epistemic_graph"
-                    or alias.name.startswith("epistemic_graph.")
+                    if alias.name == "medulla" or alias.name.startswith("medulla.")
                 )
             elif (
                 isinstance(node, ast.ImportFrom)
                 and node.module
-                and (
-                    node.module == "epistemic_graph"
-                    or node.module.startswith("epistemic_graph.")
-                )
+                and (node.module == "medulla" or node.module.startswith("medulla."))
             ):
                 modules.add(node.module)
     modules.update(DYNAMIC_SDK_IMPORTS)
-    modules.add("epistemic_graph")
+    modules.add("medulla")
     return sorted(modules)
 
 
 def _verify_import_origins(installed: metadata.Distribution) -> Mapping[str, str]:
     """Every SDK-consumed EG module resolves inside the installed wheel only."""
-    wheel_package = Path(str(installed.locate_file("epistemic_graph"))).resolve()
+    wheel_package = Path(str(installed.locate_file("medulla"))).resolve()
     site_root = wheel_package.parent
     try:
-        package = importlib.import_module("epistemic_graph")
+        package = importlib.import_module("medulla")
     except Exception as exc:
-        _raise(f"cannot import the installed epistemic_graph wheel: {exc}")
+        _raise(f"cannot import the installed medulla wheel: {exc}")
     package_paths = {
         Path(str(path)).resolve() for path in getattr(package, "__path__", ())
     }
     if package_paths != {wheel_package}:
         _raise(
-            "epistemic_graph exposes a package overlay beyond the installed wheel: "
+            "medulla exposes a package overlay beyond the installed wheel: "
             f"{sorted(str(path) for path in package_paths)}"
         )
     origins: dict[str, str] = {}

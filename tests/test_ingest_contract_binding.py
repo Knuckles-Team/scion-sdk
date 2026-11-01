@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
-from epistemic_graph.generated.source_ingestion import (
+from ingest_fakes import SinkBackedEngine
+from medulla.generated.source_ingestion import (
     SourceMappingKind,
     SourceMappingReceipt,
 )
-from ingest_fakes import SinkBackedEngine
 
 from scion_sdk.ingest import (
     AcceptedContract,
@@ -140,7 +140,7 @@ async def test_report_matches_engine_receipt() -> None:
 
 
 def _catalog():  # type: ignore[no-untyped-def]
-    from epistemic_graph.generated._shared import McpCatalogSnapshotBinding
+    from medulla.generated._shared import McpCatalogSnapshotBinding
 
     return McpCatalogSnapshotBinding(
         authorization_scope_digest="e" * 64,

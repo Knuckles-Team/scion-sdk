@@ -30,20 +30,20 @@
   "registry_declarations": [
     {
       "consumed_modules": {
-        "epistemic_graph": "epistemic_graph/__init__.py",
-        "epistemic_graph.client": "epistemic_graph/client.py",
-        "epistemic_graph.connector_pack": "epistemic_graph/connector_pack.py",
-        "epistemic_graph.generated": "epistemic_graph/generated/__init__.py",
-        "epistemic_graph.generated.connector_pack": "epistemic_graph/generated/connector_pack.py",
-        "epistemic_graph.generated.coordination": "epistemic_graph/generated/coordination.py",
-        "epistemic_graph.generated.index_repository": "epistemic_graph/generated/index_repository.py",
-        "epistemic_graph.generated.ingestion": "epistemic_graph/generated/ingestion.py",
-        "epistemic_graph.generated.models": "epistemic_graph/generated/models.py",
-        "epistemic_graph.generated.query": "epistemic_graph/generated/query.py",
-        "epistemic_graph.generated.security": "epistemic_graph/generated/security.py",
-        "epistemic_graph.generated.source_ingestion": "epistemic_graph/generated/source_ingestion.py",
-        "epistemic_graph.generated.storage": "epistemic_graph/generated/storage.py",
-        "epistemic_graph.generated.write_back": "epistemic_graph/generated/write_back.py"
+        "medulla": "medulla/__init__.py",
+        "medulla.client": "medulla/client.py",
+        "medulla.connector_pack": "medulla/connector_pack.py",
+        "medulla.generated": "medulla/generated/__init__.py",
+        "medulla.generated.connector_pack": "medulla/generated/connector_pack.py",
+        "medulla.generated.coordination": "medulla/generated/coordination.py",
+        "medulla.generated.index_repository": "medulla/generated/index_repository.py",
+        "medulla.generated.ingestion": "medulla/generated/ingestion.py",
+        "medulla.generated.models": "medulla/generated/models.py",
+        "medulla.generated.query": "medulla/generated/query.py",
+        "medulla.generated.security": "medulla/generated/security.py",
+        "medulla.generated.source_ingestion": "medulla/generated/source_ingestion.py",
+        "medulla.generated.storage": "medulla/generated/storage.py",
+        "medulla.generated.write_back": "medulla/generated/write_back.py"
       },
       "declared_dependencies": [
         "httpx>=0.28.1",

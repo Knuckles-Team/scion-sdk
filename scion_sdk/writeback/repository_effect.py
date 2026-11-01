@@ -9,7 +9,7 @@ import json
 import re
 from typing import Literal
 
-from epistemic_graph.generated.write_back import SourceChangeSet
+from medulla.generated.write_back import SourceChangeSet
 from pydantic import (
     BaseModel,
     ConfigDict,

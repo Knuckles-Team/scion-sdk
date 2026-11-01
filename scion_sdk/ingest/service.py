@@ -16,7 +16,7 @@ import asyncio
 import concurrent.futures
 from typing import TypeVar
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestStatus,
 )

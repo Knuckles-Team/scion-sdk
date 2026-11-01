@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from epistemic_graph.client import EpistemicGraphClient
-from epistemic_graph.generated.index_repository import IndexResult
+from medulla.client import MedullaClient
+from medulla.generated.index_repository import IndexResult
 
 from scion_sdk.repository.errors import RepositoryTransportError
 from scion_sdk.repository.models import RepositoryBatchLimits, RepositoryFile
@@ -95,7 +95,7 @@ def _validate_outcomes(result: IndexResult, files: tuple[RepositoryFile, ...]) -
 
 
 async def submit_repository_batch(
-    client: EpistemicGraphClient, files: tuple[RepositoryFile, ...]
+    client: MedullaClient, files: tuple[RepositoryFile, ...]
 ) -> RepositoryBatchReceipt:
     """Make the sole high-level EG call for one batch and validate outcomes."""
     payload = [(item.path, item.content) for item in files]

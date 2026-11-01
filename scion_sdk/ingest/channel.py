@@ -9,12 +9,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from epistemic_graph.generated.ingestion import (
+from medulla.generated.ingestion import (
     SourceIngestStatusRequest,
     send_source_ingest,
     send_source_ingest_status,
 )
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
     SourceIngestStatus,

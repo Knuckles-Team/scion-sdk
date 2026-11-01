@@ -8,7 +8,7 @@ from enum import StrEnum
 from typing import cast
 
 import pytest
-from epistemic_graph.client import EpistemicGraphClient
+from medulla.client import MedullaClient
 
 from scion_sdk.repository import (
     RepositoryAuthentication,
@@ -85,8 +85,8 @@ class _Client:
     graph: object
 
 
-def _client(graph: object) -> EpistemicGraphClient:
-    return cast(EpistemicGraphClient, _Client(graph))
+def _client(graph: object) -> MedullaClient:
+    return cast(MedullaClient, _Client(graph))
 
 
 class _Provider:
