@@ -1,16 +1,16 @@
 """Connect a connector process to epistemic-graph for knowledge ingest.
 
-Opt-in by configuration only: nothing connects unless ``EPISTEMIC_GRAPH_ENDPOINT``
+Opt-in by configuration only: nothing connects unless ``MEDULLA_ENDPOINT``
 is set. Settings:
 
 ================================== =============================================
-``EPISTEMIC_GRAPH_ENDPOINT``       ``tls://host:port``, ``tcp://host:port``
+``MEDULLA_ENDPOINT``       ``tls://host:port``, ``tcp://host:port``
                                    (loopback only) or ``unix:///path``
-``EPISTEMIC_GRAPH_AUTH_SECRET_REF`` secret reference to the engine auth secret
-``EPISTEMIC_GRAPH_TENANT``         tenant the connector ingests into
-``EPISTEMIC_GRAPH_GRAPH``          target graph
-``EPISTEMIC_GRAPH_PRINCIPAL``      service principal (default ``service:connector``)
-``EPISTEMIC_GRAPH_POLICY_VERSION`` policy version claim (default ``policy:current``)
+``MEDULLA_AUTH_SECRET_REF`` secret reference to the engine auth secret
+``MEDULLA_TENANT``         tenant the connector ingests into
+``MEDULLA_GRAPH``          target graph
+``MEDULLA_PRINCIPAL``      service principal (default ``service:connector``)
+``MEDULLA_POLICY_VERSION`` policy version claim (default ``policy:current``)
 ================================== =============================================
 
 TLS material comes from the ``epistemic-graph`` TLS profile
@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
 
-from epistemic_graph.client import EpistemicGraphClient
+from medulla.client import MedullaClient
 
 from scion_sdk.config import setting
 from scion_sdk.credentials.resolution import resolve_secret_reference
@@ -61,27 +61,27 @@ class EngineSettings:
         missing = [name for name in _REQUIRED if not getattr(self, name)]
         if missing:
             raise IngestUnavailableError(
-                "EPISTEMIC_GRAPH_ENDPOINT is set but "
-                + ", ".join(f"EPISTEMIC_GRAPH_{name.upper()}" for name in missing)
+                "MEDULLA_ENDPOINT is set but "
+                + ", ".join(f"MEDULLA_{name.upper()}" for name in missing)
                 + " is not"
             )
 
     @classmethod
     def from_settings(cls) -> EngineSettings | None:
         """The configured settings, or ``None`` when no endpoint is configured."""
-        endpoint = str(setting("EPISTEMIC_GRAPH_ENDPOINT", "")).strip()
+        endpoint = str(setting("MEDULLA_ENDPOINT", "")).strip()
         if not endpoint:
             return None
         return cls(
             endpoint=endpoint,
-            auth_secret_ref=str(setting("EPISTEMIC_GRAPH_AUTH_SECRET_REF", "")),
-            tenant=str(setting("EPISTEMIC_GRAPH_TENANT", "")),
-            graph=str(setting("EPISTEMIC_GRAPH_GRAPH", "")),
-            principal=str(setting("EPISTEMIC_GRAPH_PRINCIPAL", "service:connector")),
+            auth_secret_ref=str(setting("MEDULLA_AUTH_SECRET_REF", "")),
+            tenant=str(setting("MEDULLA_TENANT", "")),
+            graph=str(setting("MEDULLA_GRAPH", "")),
+            principal=str(setting("MEDULLA_PRINCIPAL", "service:connector")),
             policy_version=str(
-                setting("EPISTEMIC_GRAPH_POLICY_VERSION", "policy:current")
+                setting("MEDULLA_POLICY_VERSION", "policy:current")
             ),
-            audience=str(setting("EPISTEMIC_GRAPH_AUDIENCE", "epistemic-graph")),
+            audience=str(setting("MEDULLA_AUDIENCE", "epistemic-graph")),
         )
 
     def verified_context(
@@ -115,7 +115,7 @@ class EngineSettings:
             return {"socket_path": parts.path}
         if parts.scheme not in {"tls", "tcp"} or not parts.hostname or not parts.port:
             raise IngestUnavailableError(
-                "EPISTEMIC_GRAPH_ENDPOINT is not a valid endpoint"
+                "MEDULLA_ENDPOINT is not a valid endpoint"
             )
         if parts.scheme == "tcp" and not is_loopback_host(parts.hostname):
             raise IngestUnavailableError(
@@ -156,7 +156,7 @@ def connect_ingest(
     except Exception as exc:
         raise IngestUnavailableError("epistemic-graph ingest is misconfigured") from exc
     loop = _engine_loop()
-    connecting = EpistemicGraphClient.connect(
+    connecting = MedullaClient.connect(
         auth_secret=secret,
         graph_name=settings.graph,
         verified_context=settings.verified_context(),

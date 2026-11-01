@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from epistemic_graph.generated.write_back import (
+from medulla.generated.write_back import (
     ReconciliationObservation,
     SourceChangeSet,
     WriteBackAttempt,

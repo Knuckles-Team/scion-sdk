@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from epistemic_graph.generated.source_ingestion import SourceIngestionMode
+from medulla.generated.source_ingestion import SourceIngestionMode
 
 __all__ = [
     "ChangeSet",

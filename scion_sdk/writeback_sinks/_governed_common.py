@@ -16,7 +16,7 @@ def _write_back() -> Any:
 
     The engine is optional at import time, so collection works without it.
     """
-    return importlib.import_module("epistemic_graph.generated.write_back")
+    return importlib.import_module("medulla.generated.write_back")
 
 
 def _digest(value: Any) -> str:

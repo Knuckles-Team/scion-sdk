@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import anyio
-from epistemic_graph.generated import storage
+from medulla.generated import storage
 
 from scion_sdk.adapters.paper_quota_policy import PaperQuotaPolicy
 from scion_sdk.adapters.paper_quota_values import (

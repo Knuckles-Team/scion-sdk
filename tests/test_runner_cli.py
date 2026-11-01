@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from epistemic_graph.generated.connector_pack import (
+from medulla.generated.connector_pack import (
     AgentLibraryMutationContext,
     McpCatalogSnapshotBinding,
 )

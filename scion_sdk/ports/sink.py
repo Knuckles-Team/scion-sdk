@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from epistemic_graph.generated.connector_pack import PackImportResult
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.connector_pack import PackImportResult
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
     SourceIngestStatus,

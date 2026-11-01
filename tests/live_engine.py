@@ -1,6 +1,6 @@
 """A real, ephemeral epistemic-graph server for live-path tests.
 
-Starts the ``epistemic-graph-server`` binary from the ``epistemic-graph[server]``
+Starts the ``medulla-server`` binary from the ``medulla[server]``
 extra on a private Unix socket with test-only credentials, enrolls the test
 signer, creates one graph, and returns a connected
 :class:`~scion_sdk.ingest.service.KnowledgeIngest`. Tests skip when
@@ -52,9 +52,9 @@ _LIVE: dict[str, Path] = {}
 
 async def scoped_client(scopes: list[str]) -> Any:
     """Another client on the live engine's graph with ``scopes``."""
-    from epistemic_graph import EpistemicGraphClient
+    from medulla import MedullaClient
 
-    return await EpistemicGraphClient.connect(
+    return await MedullaClient.connect(
         socket_path=str(_LIVE["socket"]),
         auth_secret=_SECRET,
         graph_name=GRAPH,
@@ -66,17 +66,17 @@ def _wait_for(socket_path: Path, proc: subprocess.Popen[bytes]) -> None:
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            raise RuntimeError("epistemic-graph-server exited during startup")
+            raise RuntimeError("medulla-server exited during startup")
         if socket_path.exists():
             return
         time.sleep(0.05)
-    raise RuntimeError("epistemic-graph-server did not open its socket")
+    raise RuntimeError("medulla-server did not open its socket")
 
 
 def _bootstrap(socket_path: Path) -> None:
-    from epistemic_graph.client import SyncEpistemicGraphClient
+    from medulla.client import SyncMedullaClient
 
-    client = SyncEpistemicGraphClient.connect(
+    client = SyncMedullaClient.connect(
         socket_path=str(socket_path),
         auth_secret=_SECRET,
         verified_context=_context([], ["security:bootstrap"]),
@@ -87,7 +87,7 @@ def _bootstrap(socket_path: Path) -> None:
         )
     finally:
         client.close()
-    client = SyncEpistemicGraphClient.connect(
+    client = SyncMedullaClient.connect(
         socket_path=str(socket_path),
         auth_secret=_SECRET,
         verified_context=_context(["test"], ["*"]),
@@ -103,7 +103,7 @@ def live_ingest(
     tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[KnowledgeIngest]:
     """A knowledge-ingest service connected to a fresh real engine."""
-    from epistemic_graph.server_binary import (
+    from medulla.server_binary import (
         ServerBinaryNotFoundError,
         resolve_server_binary,
     )
@@ -111,19 +111,19 @@ def live_ingest(
     try:
         binary = resolve_server_binary()
     except ServerBinaryNotFoundError:
-        pytest.skip("epistemic-graph[server] is not installed")
+        pytest.skip("medulla[server] is not installed")
     root = Path(tmp_path_factory.mktemp("eg"))
     socket_path = root / "eg.sock"
     (root / "security").mkdir()
     env = {
         **os.environ,
         "GRAPH_SERVICE_AUTH_SECRET": _SECRET,
-        "EPISTEMIC_GRAPH_AUDIENCE": AUDIENCE,
-        "EPISTEMIC_GRAPH_TENANT": TENANT,
-        "EPISTEMIC_GRAPH_POLICY_VERSION": POLICY,
-        "EPISTEMIC_GRAPH_REQUIRE_OIDC": "false",
-        "EPISTEMIC_GRAPH_SECURITY_STATE_DIR": str(root / "security"),
-        "EPISTEMIC_GRAPH_SIGNER_KEYS_JSON": json.dumps(
+        "MEDULLA_AUDIENCE": AUDIENCE,
+        "MEDULLA_TENANT": TENANT,
+        "MEDULLA_POLICY_VERSION": POLICY,
+        "MEDULLA_REQUIRE_OIDC": "false",
+        "MEDULLA_SECURITY_STATE_DIR": str(root / "security"),
+        "MEDULLA_SIGNER_KEYS_JSON": json.dumps(
             {
                 PRINCIPAL: {
                     "key": _SIGNER_KEY,
@@ -132,7 +132,7 @@ def live_ingest(
                 }
             }
         ),
-        "EPISTEMIC_GRAPH_ENCRYPTION_KEY": _DATA_KEY,
+        "MEDULLA_ENCRYPTION_KEY": _DATA_KEY,
     }
     with (root / "engine.log").open("wb") as log:
         proc = subprocess.Popen(  # nosec B603 - fixed argv

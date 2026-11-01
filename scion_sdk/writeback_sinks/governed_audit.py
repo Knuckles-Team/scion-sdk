@@ -14,7 +14,7 @@ from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.writeback.errors import AuditReservationUnavailableError
 
 if TYPE_CHECKING:
-    from epistemic_graph.generated.write_back import SourceChangeSet
+    from medulla.generated.write_back import SourceChangeSet
 
 __all__ = ["FileAuditReservation"]
 

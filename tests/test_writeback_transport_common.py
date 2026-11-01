@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from epistemic_graph.generated.write_back import WriteBackEffectStatus
+from medulla.generated.write_back import WriteBackEffectStatus
 
 from scion_sdk.testing.writeback import make_writeback_fixture
 from scion_sdk.writeback._transport_common import (

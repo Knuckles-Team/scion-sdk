@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import NamedTuple
 
-from epistemic_graph.generated.write_back import SourceChangeSet
+from medulla.generated.write_back import SourceChangeSet
 
 from scion_sdk.writeback.errors import ChangeSetValidationError
 from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot

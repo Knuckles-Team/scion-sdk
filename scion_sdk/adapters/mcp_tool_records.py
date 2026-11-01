@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import anyio
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceRecord,
     SourceRecordProvenance,
 )

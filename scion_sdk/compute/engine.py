@@ -154,12 +154,12 @@ def _connect_client(
 ) -> Any:
     resolved = settings or EngineSettings.from_settings()
     if resolved is None:
-        raise ComputeUnavailableError("EPISTEMIC_GRAPH_ENDPOINT is not configured")
+        raise ComputeUnavailableError("MEDULLA_ENDPOINT is not configured")
     secret = resolve_secret_reference(resolved.auth_secret_ref, resolver)
     address = resolved.address()
-    from epistemic_graph.client import SyncEpistemicGraphClient
+    from medulla.client import SyncMedullaClient
 
-    return SyncEpistemicGraphClient.connect(
+    return SyncMedullaClient.connect(
         auth_secret=secret,
         graph_name=resolved.graph,
         verified_context=resolved.verified_context(scopes),

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, cast, runtime_checkable
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
     SourceIngestStatus,
@@ -60,7 +60,7 @@ class EpistemicGraphIngestTransport:
 
     async def accepted_contract(self, connector: str) -> AcceptedContract | None:
         """The connector pack head the engine accepted, from ``ConnectorPack.Status``."""
-        from epistemic_graph.connector_pack import ConnectorPackClient
+        from medulla.connector_pack import ConnectorPackClient
 
         if not self._tenant_id:
             raise IngestError("a contract check needs the transport's tenant_id")

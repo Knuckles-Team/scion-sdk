@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from epistemic_graph.generated.write_back import WriteBackEffectStatus
+from medulla.generated.write_back import WriteBackEffectStatus
 
 from scion_sdk.testing.writeback import make_writeback_fixture
 from scion_sdk.testing.writeback_audit import InMemoryAuditReservation

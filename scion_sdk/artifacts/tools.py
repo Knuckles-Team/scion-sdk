@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from epistemic_graph.generated.connector_pack import PackAnnotations, ToolSideEffects
+from medulla.generated.connector_pack import PackAnnotations, ToolSideEffects
 
 from scion_sdk.artifacts.annotations import _annotations_from_mcp
 from scion_sdk.artifacts.common import (

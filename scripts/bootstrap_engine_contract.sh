@@ -11,8 +11,8 @@ import tomllib
 from importlib import metadata
 from pathlib import Path
 
-import epistemic_graph
-import epistemic_graph.generated.source_ingestion as source
+import medulla
+import medulla.generated.source_ingestion as source
 
 lock = tomllib.loads(Path("uv.lock").read_text(encoding="utf-8"))
 (locked,) = [p for p in lock["package"] if p["name"] == "medulla"]
@@ -26,10 +26,10 @@ if not locked.get("wheels"):
 dist = metadata.distribution("medulla")
 if dist.version != locked["version"]:
     raise SystemExit(f"installed medulla {dist.version} != uv.lock {locked['version']}")
-package = Path(str(dist.locate_file("epistemic_graph"))).resolve()
-paths = {Path(p).resolve() for p in epistemic_graph.__path__}
+package = Path(str(dist.locate_file("medulla"))).resolve()
+paths = {Path(p).resolve() for p in medulla.__path__}
 if paths != {package}:
-    raise SystemExit(f"epistemic_graph has a package overlay: {sorted(map(str, paths))}")
+    raise SystemExit(f"medulla has a package overlay: {sorted(map(str, paths))}")
 if not Path(source.__file__).resolve().is_relative_to(package):
     raise SystemExit(f"generated contract resolves outside the wheel: {source.__file__}")
 print(f"medulla {dist.version} contract: installed PyPI wheel at {package}")

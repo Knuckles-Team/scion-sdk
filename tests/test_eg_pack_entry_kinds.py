@@ -14,7 +14,7 @@ from importlib import metadata
 from pathlib import Path
 
 import pytest
-from epistemic_graph.generated.connector_pack import PackEntryKind
+from medulla.generated.connector_pack import PackEntryKind
 from packaging.requirements import Requirement
 from packaging.version import Version
 

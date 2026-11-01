@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from epistemic_graph.generated.storage import send_write_back
-from epistemic_graph.generated.write_back import (
+from medulla.generated.storage import send_write_back
+from medulla.generated.write_back import (
     ReconciliationObservation,
     ReconciliationReceipt,
     SourceChangeSet,

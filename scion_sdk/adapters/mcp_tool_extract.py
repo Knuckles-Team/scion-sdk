@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceRecord,
     SourceRelationship,

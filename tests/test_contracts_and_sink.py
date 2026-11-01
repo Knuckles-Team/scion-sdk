@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import pytest
-from epistemic_graph.connector_pack import (
+from medulla.connector_pack import (
     ConnectorPackArchiveBuilder,
     ConnectorPackEntryContent,
     pack_digest,
 )
-from epistemic_graph.generated.connector_pack import (
+from medulla.generated.connector_pack import (
     AgentLibraryMutationContext,
     McpCatalogSnapshotBinding,
     PackEntryKind,
     PackImportResultRejected,
     PackImportResultUnchanged,
 )
-from epistemic_graph.generated.source_ingestion import (
+from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionDisposition,
     SourceIngestionMode,

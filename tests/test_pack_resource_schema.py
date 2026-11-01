@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
-from epistemic_graph.generated.connector_pack import PackEntryKind
+from medulla.generated.connector_pack import PackEntryKind
 
 from scion_sdk.artifacts.pack import build_content_pack
 from scion_sdk.artifacts.prompts import PromptArtifactKind
