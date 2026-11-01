@@ -324,20 +324,20 @@ async def test_blocking_submission_refuses_the_engine_thread() -> None:
 def test_unconfigured_process_has_no_ingest(
     uninstalled: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("EPISTEMIC_GRAPH_ENDPOINT", raising=False)
+    monkeypatch.delenv("MEDULLA_ENDPOINT", raising=False)
     assert EngineSettings.from_settings() is None
-    with pytest.raises(IngestUnavailableError, match="EPISTEMIC_GRAPH_ENDPOINT"):
+    with pytest.raises(IngestUnavailableError, match="MEDULLA_ENDPOINT"):
         ingest_changes(BINDING, _changes())
 
 
 def test_engine_settings_are_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("EPISTEMIC_GRAPH_ENDPOINT", "tcp://graph.example:9100")
+    monkeypatch.setenv("MEDULLA_ENDPOINT", "tcp://graph.example:9100")
     with pytest.raises(IngestUnavailableError, match="TENANT"):
         EngineSettings.from_settings()
     for key, value in {
-        "EPISTEMIC_GRAPH_AUTH_SECRET_REF": "env://EG_SECRET",
-        "EPISTEMIC_GRAPH_TENANT": "tenant-a",
-        "EPISTEMIC_GRAPH_GRAPH": "kg",
+        "MEDULLA_AUTH_SECRET_REF": "env://EG_SECRET",
+        "MEDULLA_TENANT": "tenant-a",
+        "MEDULLA_GRAPH": "kg",
     }.items():
         monkeypatch.setenv(key, value)
     settings = EngineSettings.from_settings()
