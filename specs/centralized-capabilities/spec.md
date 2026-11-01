@@ -10,9 +10,9 @@ A connector author must know which capabilities the SDK provides and which code 
 ## Requirements and acceptance
 
 - FR-001: Each row `SCION-CENTRALIZED-CAPABILITIES-R001` to `SCION-CENTRALIZED-CAPABILITIES-R040` says connectors use one SDK capability and ship no copy.
-- FR-002: The index in `plan.md` names the owner row, the module or extra, and the conformance method of each row. A missing method reads "unchecked".
-- SC-001: Every module path in the index exists in the package, and every owner row ID exists in a `requirements.md` file.
-- SC-002: Every key in `[project.optional-dependencies]` appears in at least one row.
+- FR-002: The index in `plan.md` names the owner row, the module or extra, and the conformance method of each row. A missing method reads "unchecked". Rows: `SCION-CENTRALIZED-CAPABILITIES-R001`.
+- SC-001: Every module path in the index exists in the package, and every owner row ID exists in a `requirements.md` file. Rows: `SCION-CENTRALIZED-CAPABILITIES-R001`.
+- SC-002: Every key in `[project.optional-dependencies]` appears in at least one row. Rows: `SCION-CENTRALIZED-CAPABILITIES-R040`.
 
 ## Why a new spec
 
@@ -32,6 +32,35 @@ Non-goals: a fleet-wide scan. Row `SCION-CENTRALIZED-CAPABILITIES-R025` adds the
 | FR-002 | plan.md Capability index | CC-01 to CC-40 |  |
 | SC-001 | plan.md Live integration path | CC-01 to CC-40 |  |
 | SC-002 | plan.md Interfaces and data model | CC-40, CC-41 |  |
+
+## User Scenarios & Testing
+
+### User Story 1 - Find the capability before writing code (Priority: P1)
+
+A connector author looks up a capability in the index and reuses the SDK module.
+
+**Acceptance Scenarios**:
+
+1. **Given** a connector that needs paging, **When** the author reads the index, **Then** the row names the SDK iterator and the rule that the connector ships no copy.
+
+### User Story 2 - Review a connector against the index (Priority: P2)
+
+A reviewer checks that a connector ships no copy of a capability.
+
+**Acceptance Scenarios**:
+
+1. **Given** a connector that builds its own HTTP session, **When** `sdk-conformance` runs, **Then** it reports a finding that cites row `SCION-CENTRALIZED-CAPABILITIES-R001`.
+
+### Edge Cases
+
+- A row whose conformance method is unchecked reads "unchecked" and is not silently passed.
+- An owner row that no `requirements.md` defines fails the index test.
+- A module path that moves fails the index test until the row follows.
+
+## Assumptions
+
+- Owner rows keep the contracts; this spec holds only the connector-facing rule.
+- The `sdk-conformance` gate checks rows R001, R008, R009, R016 and R040 today.
 
 ## Open questions
 

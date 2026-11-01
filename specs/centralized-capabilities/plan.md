@@ -1,14 +1,64 @@
-# SCION-CENTRALIZED-CAPABILITIES — Design and implementation plan
+# SCION-CENTRALIZED-CAPABILITIES — Implementation plan
+
+Governing spec: [spec.md](spec.md). Rows: [requirements.md](requirements.md).
+
+## Summary
+
+This spec indexes every capability the SDK centralizes for connectors and states the rule that a connector ships no copy. The owner rows keep the contracts. The live callers are connector entry points that call the SDK server factory, runner and governed client. The reuse candidates are the modules named in each row. The spec adds the `RateLimiter`, the `next_url` pagination mode and the `vector` extras.
+
+## Technical Context
+
+- **Language/Version**: Python >=3.12 (environment 3.14)
+- **Primary Dependencies**: httpx, pydantic, optional extras declared in pyproject.toml (`mcp`, `a2a`, `feeds`, `dataprep`, `db`, `mssql`, `graphql`, `market`, `stream`, `vector`, `vector-chroma`, `integrity`, `workspace`)
+- **Storage**: N/A (the index is a table in plan.md)
+- **Testing**: pytest with asyncio mode auto; the index test needs no network
+- **Target Platform**: Linux, macOS and Windows runtimes of connectors
+- **Project Type**: library
+- **Performance Goals**: N/A
+- **Constraints**: A connector depends on the SDK only; the base install carries no MCP runtime
+- **Scale/Scope**: 41 capability rows and 40 index entries
+
+## Constitution Check
+
+- I One owner per concept: pass. Each row names one owning module.
+- II Extend before you create: pass. Each `Shape:` sentence names the helper to reuse.
+- XI Code stays small: pass. Changes stay inside the KISS limits in the Build contract.
+- XXIV Complete rows: pass. Every active row holds a caller chain, a shape and a test reference.
+- R-I The SDK owns connector contracts and transports: pass. Each capability lives once in the SDK.
+- R-II The public API is tested and reachable: pass. `check-orphan-modules` and `check-public-api-tested` run on commit.
+- R-III The engine graph contract is external: pass. The engine contract is read from the published package.
+
+## Project Structure
+
+Existing paths this spec indexes:
+
+```text
+scion_sdk/http/                 existing  governed client, egress, retry, pagination
+scion_sdk/httpsupport/          existing  pagination iterators, rate limits, auth strategies
+scion_sdk/mcp/                  existing  server factory, tool surface, GraphQL helpers
+scion_sdk/a2a/                  existing  agent cards, client, server app
+scion_sdk/testing/              existing  conformance kit and plugin
+scion_sdk/certify/              existing  connector-certify command
+tests/test_centralized_capability_index.py  existing  index test
+tests/test_a2a_protocol.py      existing  gains the R017.1 and R017.2 tests
+tests/test_conformance_plugin.py existing gains the R006.2 test
+```
+
+## Phase 0: Research
+
+No unknowns. Each module path in the index exists in the package and the index test checks it on every run.
+
+## Phase 1: Design
 
 Governing spec: [spec.md](spec.md).
 
-## Existing system and reuse
+### Existing system and reuse
 
 The SDK already owns each capability below in an earlier row. This spec adds the `RateLimiter` class in `httpsupport/rate_limit.py`, the `next_url` pagination mode in `httpsupport/pagination.py`, and two extras, `vector` and `vector-chroma`. It indexes the capabilities and states the rule for connectors in one row each. Owner rows keep their contracts. Rows marked "this spec" had no earlier owner.
 
 Search method: `grep -rn` over `specs/` for the module name and the capability term, then a read of each hit's row. The rows cited in the table are the result.
 
-## Capability index
+### Capability index
 
 | Row | Capability | Owner row | Module or extra | Conformance |
 |---|---|---|---|---|
@@ -53,11 +103,11 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 | `SCION-CENTRALIZED-CAPABILITIES-R039` | Domain record models | `SCION-SOURCE-INGEST-R009`, `SCION-SOURCE-INGEST-R804`, this spec | `taxonomy/`, `earth_observations/`, `voice_supply_chain/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R040` | Optional dependencies come from SDK extras | `SCION-CENTRALIZED-CAPABILITIES-R040` | `pyproject.toml` `[project.optional-dependencies]` | pipelines `sdk-conformance` (`PIPE-GATES-R013`): a direct pin of a package an SDK extra carries. Warns; `--strict` blocks. SDK test `test_every_extra_has_a_row`. |
 
-## Architecture
+### Architecture
 
 A connector depends on the SDK only. The SDK modules sit between the connector and the engine, the secret store, and the network. A connector that ships its own copy of a capability splits the policy. The SDK then enforces its egress, redaction, and retry rules on only part of the fleet.
 
-## Interfaces and data model
+### Interfaces and data model
 
 Each module's interface stays in its owner row. This spec adds three interfaces.
 
@@ -67,19 +117,19 @@ Each module's interface stays in its owner row. This spec adds three interfaces.
 
 The `vector` extra carries the vector-store clients `qdrant-client`, `psycopg[binary,pool]`, and `pymongo`. The `vector-chroma` extra carries the embedded-index store client `chromadb` and its index adapter `llama-index-vector-stores-chroma`. The `psycopg` and `pymongo` floors equal the `db` floors. `test_vector_extras_share_db_floors` checks this.
 
-## Live integration path
+### Live integration path
 
 The connector entry point calls the server factory, the runner, and the governed client. Each owner row names its own call site. The index test in `test-spec.md` checks that each module path and owner row exists.
 
-## Conformance state
+### Conformance state
 
 The pipelines gate `sdk-conformance` (`PIPE-GATES-R013`) scans a connector for an SDK capability it reimplements. It checks rows R001, R008, R009, R016, and R040, and each finding cites its row. It warns by default and blocks under `--strict`. A connector turns strict on once it is migrated. The warn-mode findings across the fleet are the migration backlog. The SDK unit tests also check `R004`, `R005`, and `R040` inside the SDK. The other rows have no automated check. The SDK also ships three scans: `testing/fleet_migration.py`, `testing/duplicate_symbol_scan.py`, and the TLS scan in `SCION-CONNECTOR-CONTROL-R017`. Each connector or a test run must call them.
 
-## Quality and release gates
+### Quality and release gates
 
 Run `pipelines-hook spec-standard`, `pipelines-hook spec-status`, and `ste-staged` on the spec directory. The index test needs no network.
 
-## Risks, alternatives, and decisions
+### Risks, alternatives, and decisions
 
 Decision: one index spec with one row per capability, not one spec per capability. A second spec for an owned capability is a defect under the spec standard. Decision: the SDK declares the vector-store clients as two extras, `vector` and `vector-chroma`. The vector connector selects one store per deployment. The `qdrant-client`, `psycopg`, and `pymongo` clients are small, so they share the `vector` extra. The embedded-index store client and its index adapter pull a large native stack and the index framework. They install apart, as `mssql` installs apart from `db`. One extra per store adds names without benefit, because three of the four stores are small. The `vector` extra lists `psycopg` and `pymongo` with the `db` floors and does not depend on `db`. The `db` extra also pulls the MySQL and Oracle drivers, which a vector store does not need.
 
@@ -89,14 +139,14 @@ Decision: the shared `RateLimiter` lives in `httpsupport/rate_limit.py`, next to
 
 Risk: the index drifts from the modules. The index test closes this risk once it lands.
 
-## Amendment 2026-10-27: credential-bearing URLs
+### Amendment 2026-10-27: credential-bearing URLs
 
 The first and followed URLs must have an HTTP(S) origin without userinfo.
 Malformed origins and URLs with userinfo raise `PaginationOriginError` before
 fetching. Explicit port zero remains distinct from the default port. The
 problem detail is static and does not echo any URL.
 
-## Amendment 2026-10-27: bind Link pagination
+### Amendment 2026-10-27: bind Link pagination
 
 Link mode requires an absolute endpoint or `base_url`, so it can bind the
 first origin before making a request. Resolve each next link against the
@@ -107,37 +157,37 @@ For SCION-CENTRALIZED-CAPABILITIES-R011, token requests must not follow redirect
 Reject a redirect response even when it contains a token. This prevents a
 redirect target from receiving credentials or a delegated subject token.
 
-## Linear Link parsing (R004.3)
+### Linear Link parsing (R004.3)
 
 Scan Link targets and next relations once in header order. Preserve the prior
 first-match grammar. The existing origin guard still admits every followed URL.
 
-## Partial-page cursor safety (R004.5)
+### Partial-page cursor safety (R004.5)
 
 When the item budget cuts a page, its provider cursor points past unseen
 records. Return no cursor for that partial page. Keep `truncated` true. A cap
 on a full page can return the provider cursor. Exact mid-page resume remains
 open work.
 
-## Continuation cycles (R004.8)
+### Continuation cycles (R004.8)
 
 Cursor and since-ID walks retain fixed-size fingerprints of issued tokens.
 The page budget bounds their count.
 A repeated token stops the walk and marks it truncated. The cyclic token is
 not a resume cursor. This guard does not deduplicate records already returned.
-## Pagination consumer isolation (R004.7)
+### Pagination consumer isolation (R004.7)
 
 An iterator owns one mutable walk and budget. It refuses another active
 consumer. Exhaustion, fetch failure or explicit close releases the claim.
 A caller that stops early must close the active generator before reuse.
-## Malformed page refusal (R004.6)
+### Malformed page refusal (R004.6)
 
 The declared records path must resolve to a list. A missing or non-list value
 raises a typed error without echoing response data. A valid empty list remains
 a page. A malformed page cannot advance the continuation.
 
 
-## Governed response error boundary
+### Governed response error boundary
 
 R006.1 keeps upstream problem body fields out of governed public exceptions. The low-level parser remains available for callers that explicitly trust the upstream body.
 
@@ -145,12 +195,43 @@ R006.3 limits governed diagnostics to the origin. The public URL redactor remain
 
 R006.4 keeps GraphQL exception content out of public results and logs. Diagnostics retain the exception class and a correlation ID.
 
-## North star
+### North star
 
 Every connector that connects through arbora onboards itself. Its ontology extends the core ontology. Its prompts become system-prompt candidates. Its skills, tools and resources appear as virtual graph entries in the engine. One engine, medulla, holds all facts. There is no second database and no sync. External stores are virtual-graph sources reached through connectors.
 
-## Delivery phase
+### Delivery phase
 
 No new rows. The open rows serve P2, where one SDK ingest connector proves the loop.
 
 Fleet migration: most connectors use the central SDK pattern and the rest migrate one by one. A connector counts as migrated when it passes the SDK conformance gate (`PIPE-GATES-R013`). One connector waits on an SDK capability gap. The gap is recorded here and closed before that connector moves. A connector must not roll to a new release until every consumer runs an SDK version that accepts its source declarations.
+
+## Phase 2: Task approach
+
+Order the work producer first. Rows that extend the A2A server (R017.1, R017.2) and the certify submission (R041) wait for their provider rows in the Arbora and Medulla specs. Index rows need no task order. Each task line in tasks.md names one row.
+
+## Complexity Tracking
+
+none. The constitution check passed.
+
+## Build contract
+
+The change must meet these gate thresholds from the organization constitution table.
+
+- Cyclomatic complexity 10 and cognitive complexity 15 per function (`pipelines_hooks/complexity`).
+- Words per sentence 20 (`ste`).
+- Clone similarity 0.85 blocking at 40 tokens (`dupehound`).
+- KISS limits from `.config/kiss.toml`: 35 statements, 15 locals, 20 calls, 3 positional arguments, 4 indentation levels, 300 lines and 10 functions per file.
+- Pre-land fast set: `format`, `hygiene`, `secrets`, `types`, `tests-fast`; post-land set: `spec`, `tests`, `supply-chain`.
+
+Repository commands: `pre-commit run --all-files`, then `uv run pytest tests`. Ruff line length is 88 with rules E, F, I, UP, B, SIM, RUF (pyproject.toml); `check-orphan-modules` and `check-public-api-tested` run from `scripts/check_wiring.py`.
+
+No scanner gaming, no suppression and no duplicate implementation: a row reuses the helper named in its `Shape:` sentence.
+
+## Production caller chain
+
+Entry point: a connector's console script starts its server module, which calls `create_mcp_server` (scion_sdk/mcp/server.py:101) and the governed client factories (scion_sdk/http/client.py:243, :276). Sync runs start through `connector-sync` → `main` (scion_sdk/runner/cli.py:153). Certification starts through `connector-certify` → `main` (scion_sdk/certify/cli.py:204). Each row names its own chain. Obsolete paths to delete: any connector copy of a row's capability, found by `sdk-conformance`.
+
+## Cross-repo seams
+
+- Arbora served agent: `ARBORA-A2A-R001.3` consumes rows `SCION-CENTRALIZED-CAPABILITIES-R017.1` and `SCION-CENTRALIZED-CAPABILITIES-R017.2`; see [contracts/a2a-storage.md](contracts/a2a-storage.md).
+- Engine conformance evidence: `MEDULLA-TYPED-PACKS-R807` receives the record of `SCION-CENTRALIZED-CAPABILITIES-R041`; see [contracts/conformance-evidence.md](contracts/conformance-evidence.md).
