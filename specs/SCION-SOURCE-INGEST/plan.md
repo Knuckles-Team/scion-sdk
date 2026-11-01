@@ -1,4 +1,41 @@
-# Implementation design: source sync
+# SCION-SOURCE-INGEST — Implementation plan
+
+Governing spec: [spec.md](spec.md). Rows: [requirements.md](requirements.md).
+
+## Summary
+
+This plan covers source sync: runner, drift quarantine, paper and repository sources, and adapter migration through the generated `SourceIngest` client. It reuses the existing owners named under Project Structure and adds no parallel store or cursor; the graph service stays the only authority for commits and checkpoints.
+
+## Technical Context
+
+- **Language/Version**: Python 3.14 (floor 3.12)
+- **Primary Dependencies**: the generated engine client, `httpx`-based governed HTTP support in `scion_sdk`
+- **Storage**: N/A (the graph service owns durable state)
+- **Testing**: pytest under `tests/`, proof levels as named per row
+- **Target Platform**: Linux, library consumed by connectors and arbora
+- **Project Type**: library
+- **Performance Goals**: N/A (bounded by per-row limits)
+- **Constraints**: no semantic store or competing cursor in the SDK; hard cutover, no shims
+- **Scale/Scope**: the rows in requirements.md
+
+## Constitution Check
+
+- Specs first, current state only: pass; rows are the requirement authority.
+- Reuse before new code: pass; existing seams are listed below.
+- No duplicate implementation across repos: pass; cross-owner behaviour is linked by row ID.
+
+## Project Structure
+
+Existing: `scion_sdk/runner/`, `scion_sdk/ports/source_adapter.py`, `scion_sdk/sinks/`, `scion_sdk/adapters/`. New paths are named per row in requirements.md.
+
+## Phase 0: Research
+
+No unknowns; the design below records the findings per row.
+
+## Phase 1: Design
+
+The design sections below are the architecture, data flow and failure modes for each row group.
+
 
 1. Define normalized stream/manifest identity and checkpoint invariants in existing manifest and runner types. Keep generated `SourceCheckpoint` as the sole cursor type.
 2. Add deterministic drift classification before the sink call and a typed quarantine report. Separate pure classification from I/O so adversarial fixtures run offline.
@@ -348,7 +385,7 @@ A file failure yields an explicit per-file outcome; mixed results remain partial
 Each file uses its own generated source stream for ingestion so one failure cannot advance another file's progress token.
 The result order follows the request's normalized path list while runtime traces prove actual overlapping reads.
 Decision: reuse dispatch and source ingestion with bounded local parsers.
-Rejected alternative: AU-owned source schemas, a duplicate progress token store or sequential execution labelled as parallel.
+Rejected alternative: Meristem-owned source schemas, a duplicate progress token store or sequential execution labelled as parallel.
 
 ### Enterprise operation interchange: R006.32 through R006.37
 
@@ -395,7 +432,7 @@ The SQL receiver above remains SQL-specific. The generic connector path uses the
 same SDK owner boundary but a separate `ForeignReadClient` in
 `scion_sdk/adapters/foreign_read.py`. Its typed port matches the EG
 `ForeignReadOpen`, `ForeignReadChunk`, `ForeignReadComplete` and
-`ForeignReadAbort` request/result shapes. The EG-owned approval record remains
+`ForeignReadAbort` request/result shapes. The Medulla-owned approval record remains
 opaque. `NativeRequestResponseAdapter` resolves the published generated EG
 sender lazily and sends each method through the existing authenticated client.
 If the sender is unpublished, the adapter refuses that call. Each method sends one wrapped
@@ -1033,3 +1070,23 @@ without a cursor. A cursor alone cannot establish that a legacy stream is empty.
 The status read does not move a checkpoint or authorize an identity transition.
 The migration owner must fence concurrent legacy writes before relying on the
 observation. It must account for existing source records and checkpoints.
+
+## Phase 2: Task approach
+
+tasks.md lists one task per row, producer first; rows with no shared files run in parallel.
+
+## Complexity Tracking
+
+none
+
+## Build contract
+
+Gates: the repository pre-commit hooks (`pre-commit run --all-files -c .config/pre-commit.yaml`) and the bound tests named per row. No scanner gaming and no duplicate implementation.
+
+## Production caller chain
+
+Each row names its caller chain from the entry point to the owner and the effect boundary; obsolete paths are deleted in the same change.
+
+## Cross-repo seams
+
+none
