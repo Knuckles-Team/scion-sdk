@@ -36,7 +36,12 @@ specs/scion-connector-control/   existing spec files
 
 ## Phase 0: Research
 
-no unknowns
+Unknowns settled in [research.md](research.md) for the upstream registry (`SCION-CONNECTOR-CONTROL-R914`):
+
+- Process lifecycle for stdio upstreams under a long-lived HTTP server: pooled, keyed by upstream and scope.
+- Default visibility of a large upstream tool set: hidden until a session activates the namespace.
+- Where a user prompt from an upstream goes: forwarded once to the front client, never gated twice.
+- How a changed upstream tool list shows up: a fingerprint per upstream, reported, never pinned by certification.
 
 ## Phase 1: Design
 
@@ -951,6 +956,24 @@ requires an integer attempt count and boolean jitter. A caller cannot change
 the admitted retry methods by mutating a set after validation.
 
 
+### Upstream MCP registry (R914)
+
+The registry is a generic SDK capability. A connector declares upstream MCP servers as data, and the SDK mounts them behind the connector's own server. The SDK names no vendor. Connectors do not reimplement the loader, the lifecycle, the health report or the drift check.
+
+Live path: `run` calls `build_server`, which builds the server and the local tool surface, then calls `_serve_hooks`. `_serve_hooks` runs `attach_upstreams` when the `Connector` has `upstreams` or the overlay setting names a file. The loader validates each declaration, merges the overlay, and builds one transport per upstream. It adds one proxy provider per upstream to an aggregate provider with the namespace transform and the `ns:<namespace>` tag. Then it adds the aggregate provider to the server.
+
+Reuse inventory: the framework's proxy, aggregate, namespace and visibility classes (verified in the locked framework version); `parse_secret_reference`, `resolve_tls_profile`, `validate_base_url_resolved`, `compatibility_fingerprint`, `elicitation_unavailable`, `serve_readiness`. New code is the `scion_sdk/mcp/upstreams/` package: `model`, `loader`, `overlay`, `stdio`, `http`, `bridge`, `tagging`, `gate`, `activation`, `pool`, `health`, `elicitation`, `drift`.
+
+Decision, lifecycle: stdio upstreams are pooled per upstream and pool key, with `keep_alive` on the transport. A process per session would multiply processes by sessions and by upstreams. The upstream application keeps open-document state in its process, so the key includes the principal under authenticated HTTP. Idle reaping, a restart limit and a circuit bound the cost.
+
+Decision, activation default: an upstream is `lazy` unless the setting `SCION_UPSTREAM_ACTIVATION` says `active`. A lazy start lists the local tools and four registry tools. A suite of 400 tools would swamp a model's context, and an unused upstream would hold a process. A gateway deployment sets `active`, because session-scoped activation may not survive a gateway that opens a new upstream session for each call.
+
+Decision, namespacing: `<namespace>_<tool>` with a lowercase alphanumeric namespace, so the first underscore splits the name. Resource URIs carry the namespace as the first path segment.
+
+Decision, confirmation: the registry is a pass-through. The upstream owns its own prompts, and a fleet gateway owns policy. A second gate in the middle would ask twice or hide a refusal.
+
+Risk: a hidden provider still answers list calls in the framework. The gate subclass returns empty lists while no session has the namespace active, and `test_activation_is_per_session_lazy_and_capped` proves no process starts.
+
 ## Phase 2: Task approach
 
 tasks.md holds one task line per active row, ordered producer first; rows that share no file are marked parallel by their order.
@@ -976,3 +999,4 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 ## Cross-repo seams
 
 - Connector SDK import boundary with meristem (`SCION-CONNECTOR-CONTROL-R067`, consumer `MERISTEM-RUN-R016`): counterpart contract [meristem specs/run/contracts/scion-sdk.md](https://github.com/Knuckles-Team/meristem/blob/main/specs/run/contracts/scion-sdk.md); local document `contracts/meristem.md`.
+- Connector consumer of the upstream registry: `SCION-CONNECTOR-CONTROL-R914`, consumer `CONN-CRAFT-SUITE-API-APPS-R002`; see [contracts/upstream-registry.md](contracts/upstream-registry.md).
