@@ -329,6 +329,19 @@ A connector author or host integrator relies on the SDK for this capability: A c
 - **FR-080**: Tool declaration of a resource protocol. Rows: SCION-CONNECTOR-CONTROL-R911.
 - **FR-081**: Virtual-graph SQL and document dialect declaration. Rows: SCION-CONNECTOR-CONTROL-R912.
 - **FR-082**: One capability contract unifies a skill resource and a tool, and a frontend contribution declares its read model. Rows: SCION-CONNECTOR-CONTROL-R913.
+- **FR-083**: The SDK serves a declarative registry of upstream MCP servers behind one connector server (rollup). Rows: SCION-CONNECTOR-CONTROL-R914.
+- **FR-084**: Model: the upstream declaration. Rows: SCION-CONNECTOR-CONTROL-R914.1.
+- **FR-085**: Refusal: a stdio upstream declares its filesystem roots or it does not start. Rows: SCION-CONNECTOR-CONTROL-R914.2.
+- **FR-086**: Behavior: credentials, environment and TLS arrive by reference only. Rows: SCION-CONNECTOR-CONTROL-R914.3.
+- **FR-087**: Behavior: bridge mode attaches the proxy to a running desktop application. Rows: SCION-CONNECTOR-CONTROL-R914.4.
+- **FR-088**: Wiring: the loader turns declarations into namespaced providers on the connector server. Rows: SCION-CONNECTOR-CONTROL-R914.5.
+- **FR-089**: Behavior: per-upstream toggles and the provider error strategy. Rows: SCION-CONNECTOR-CONTROL-R914.6.
+- **FR-090**: Behavior: namespaces start hidden, and activation tools reveal them per session. Rows: SCION-CONNECTOR-CONTROL-R914.7.
+- **FR-091**: Behavior: stdio upstreams run in a shared pool, not one process per session. Rows: SCION-CONNECTOR-CONTROL-R914.8.
+- **FR-092**: Evidence: health and readiness per upstream. Rows: SCION-CONNECTOR-CONTROL-R914.9.
+- **FR-093**: Behavior: elicitation and confirmation pass through once, with no second gate. Rows: SCION-CONNECTOR-CONTROL-R914.10.
+- **FR-094**: Behavior: schema-fingerprint drift is detected and reported. Rows: SCION-CONNECTOR-CONTROL-R914.11.
+- **FR-095**: Behavior: certification treats upstream tools as declared and unpinned. Rows: SCION-CONNECTOR-CONTROL-R914.12.
 
 ## Success Criteria
 

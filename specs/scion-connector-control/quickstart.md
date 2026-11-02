@@ -14,3 +14,16 @@ Run the served proof of the rows below from a fresh checkout after `uv sync`. Ea
 - SCION-CONNECTOR-CONTROL-R010: `PYTHONNOUSERSITE=1 uv run pytest tests/test_fleet_migration_scan.py::test_batch_census_is_clean -q`
 - SCION-CONNECTOR-CONTROL-R011: `PYTHONNOUSERSITE=1 uv run pytest tests/test_fleet_migration_scan.py::test_batch_census_is_clean -q`
 - SCION-CONNECTOR-CONTROL-R012: `PYTHONNOUSERSITE=1 uv run pytest tests/test_fleet_migration_scan.py::test_batch_census_is_clean -q`
+- SCION-CONNECTOR-CONTROL-R914: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_registry_served.py::test_two_stdio_upstreams_are_namespaced_and_lazy -q`
+- SCION-CONNECTOR-CONTROL-R914.1: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_decl_model.py::test_decl_round_trips_and_refuses_wrong_kind_fields -q`
+- SCION-CONNECTOR-CONTROL-R914.2: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_stdio_roots.py::test_missing_roots_refuse_and_empty_roots_pass_no_flag -q`
+- SCION-CONNECTOR-CONTROL-R914.3: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_upstream_credentials.py::test_secrets_never_reach_logs_or_status_and_literals_refuse -q`
+- SCION-CONNECTOR-CONTROL-R914.4: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_bridge_mode.py::test_token_file_is_private_and_removed_and_remote_address_refuses -q`
+- SCION-CONNECTOR-CONTROL-R914.5: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_loader_wiring.py::test_namespaced_names_tags_and_collision_refusal -q`
+- SCION-CONNECTOR-CONTROL-R914.6: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_toggles_and_strategy.py::test_disabled_skips_and_warn_isolates_a_failing_upstream -q`
+- SCION-CONNECTOR-CONTROL-R914.7: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_activation.py::test_activation_is_per_session_lazy_and_capped -q`
+- SCION-CONNECTOR-CONTROL-R914.8: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_pool_lifecycle.py::test_one_process_serves_many_sessions_and_restart_and_idle_reap -q`
+- SCION-CONNECTOR-CONTROL-R914.9: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_upstream_health.py::test_inactive_is_not_failure_and_strategy_controls_readiness -q`
+- SCION-CONNECTOR-CONTROL-R914.10: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_elicitation_passthrough.py::test_single_prompt_forwarded_and_decline_when_client_cannot_elicit -q`
+- SCION-CONNECTOR-CONTROL-R914.11: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_drift.py::test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace -q`
+- SCION-CONNECTOR-CONTROL-R914.12: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_certify_upstreams.py::test_certify_excludes_proxied_tools_from_pins -q`
