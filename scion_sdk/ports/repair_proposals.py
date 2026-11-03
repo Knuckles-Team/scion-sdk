@@ -2,7 +2,7 @@
 
 Recording and pause-reading are the entire boundary: no method here
 constructs a candidate graph schema, validates instances, performs a shadow
-ingest, or activates a repair -- those are epistemic-graph's authority alone
+ingest, or activates a repair -- those are medulla's authority alone
 (SCION-SOURCE-INGEST-R003).
 """
 

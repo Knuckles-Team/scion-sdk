@@ -11,7 +11,7 @@ With no runner installed (no engine reachable from this process), :func:`choose`
 is exactly the fallback, reason ``no_runner``. A process that also holds a
 verified EG session may :func:`install_runner` a real
 :class:`~scion_sdk.ports.decide_runner.DecisionRunner` --
-:class:`~scion_sdk.decide.epistemic_graph.EpistemicGraphDecisionRunner`
+:class:`~scion_sdk.decide.medulla.MedullaDecisionRunner`
 is the SDK's own Medulla-backed one, installed at the connector-sync composition
 root (:func:`scion_sdk.runner.composition.default_services`) when
 this process was given a tenant to decide as; tests install fakes. This

@@ -1,4 +1,4 @@
-"""In-memory conformance sink for generated epistemic-graph contracts."""
+"""In-memory conformance sink for generated medulla contracts."""
 
 from __future__ import annotations
 

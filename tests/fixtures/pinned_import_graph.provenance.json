@@ -1,5 +1,5 @@
 {
-  "graph_sha256": "99d147570bcbbb94418cc55e2319fd7819f8d8b61286a77bfda097f1fcea001a",
+  "graph_sha256": "901041f03ce98ea6c6fca8ec4d897a255fcfe7c07116c00ac8e8e8b2e33cb109",
   "installed_distributions": [
     "annotated-types==0.8.0",
     "anyio==4.15.1",
@@ -14,7 +14,7 @@
     "httpx==0.28.1",
     "idna==3.20",
     "mcp-types==2.3.0",
-    "medulla==2.27.10",
+    "medulla==3.0.0",
     "msgpack==1.2.3",
     "pycparser==3.11",
     "pydantic-core==2.50.1",
@@ -49,7 +49,7 @@
         "httpx>=0.28.1",
         "httpx>=0.28.1 ; extra == 'lmcache'",
         "maturin>=1.15.0,<2.0 ; extra == 'test'",
-        "medulla-stem==2.27.10 ; extra == 'server'",
+        "medulla-stem==3.0.0 ; extra == 'server'",
         "msgpack>=1.2.3",
         "pydantic>=2.14.1,<3",
         "pyoxigraph>=0.5.11",
@@ -69,16 +69,16 @@
         "pyoxigraph==0.5.11"
       ],
       "locked_wheels": {
-        "medulla-2.27.10-cp39-abi3-macosx_11_0_arm64.whl": "6a2464440aa022b096f4c5e2cff529f6bca32853d933b87d18e4902b943f88c1",
-        "medulla-2.27.10-cp39-abi3-manylinux_2_28_aarch64.whl": "4ae475226934aa1f5449c82cf1983d99a9ea7943f8fa2d2e22c6ef364e2e1391",
-        "medulla-2.27.10-cp39-abi3-manylinux_2_28_x86_64.whl": "d6b82ad4d94a4813d24c34cb312408a1587d484fafc35e5665f36c26a5d82090",
-        "medulla-2.27.10-cp39-abi3-win_amd64.whl": "01200899b0ab872fb7ccb9b1cab7035de851a5dc961ad17b38842769482a9e43"
+        "medulla-3.0.0-cp39-abi3-macosx_11_0_arm64.whl": "90e90bb572b05aad3fc0ebd94bf09b3e896574f9e75a8a7cbb5fd51acf211f88",
+        "medulla-3.0.0-cp39-abi3-manylinux_2_28_aarch64.whl": "13d453dc34784495a94fe558d785d703a42b93c98b52dd8a6e0f422a78c6ddba",
+        "medulla-3.0.0-cp39-abi3-manylinux_2_28_x86_64.whl": "c364f21c77878836e245568531da32059a750e9b99febdc5f87e2679020986b9",
+        "medulla-3.0.0-cp39-abi3-win_amd64.whl": "84a510acc15bd77babd146057a1243a3097cd37b2b46f6562ad1a1b6bbfc95f0"
       },
       "name": "medulla",
       "registry": "https://pypi.org/simple",
-      "release_wheel_filename": "medulla-2.27.10-cp39-abi3-manylinux_2_28_x86_64.whl",
-      "release_wheel_sha256": "d6b82ad4d94a4813d24c34cb312408a1587d484fafc35e5665f36c26a5d82090",
-      "version": "2.27.10"
+      "release_wheel_filename": "medulla-3.0.0-cp39-abi3-manylinux_2_28_x86_64.whl",
+      "release_wheel_sha256": "c364f21c77878836e245568531da32059a750e9b99febdc5f87e2679020986b9",
+      "version": "3.0.0"
     }
   ],
   "schema_version": 2

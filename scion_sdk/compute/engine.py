@@ -1,6 +1,6 @@
-"""Call epistemic-graph compute methods and ontology-driven algorithm selection.
+"""Call medulla compute methods and ontology-driven algorithm selection.
 
-:class:`EngineCompute` wraps one connected synchronous epistemic-graph client.
+:class:`EngineCompute` wraps one connected synchronous medulla client.
 :meth:`EngineCompute.select_algorithms` reads, by SPARQL over the connector's
 imported ontology pack, which algorithms apply to an analysis and which served
 method runs each one. :meth:`EngineCompute.run` calls that method. Any method
@@ -51,7 +51,7 @@ class MethodNotServedError(LookupError):
         self.method = method
         self.handoff = handoff
         detail = f" (handoff: {handoff})" if handoff else ""
-        super().__init__(f"epistemic-graph does not serve {method}{detail}")
+        super().__init__(f"medulla does not serve {method}{detail}")
 
 
 @dataclass(frozen=True)
@@ -70,7 +70,7 @@ class AlgorithmBinding:
 
 
 class EngineCompute:
-    """Typed calls into one connected epistemic-graph client."""
+    """Typed calls into one connected medulla client."""
 
     def __init__(self, client: Any) -> None:
         self._client = client
@@ -173,7 +173,7 @@ def connect_compute(
     scopes: tuple[str, ...] = COMPUTE_SCOPES,
     resolver: CredentialResolver | None = None,
 ) -> EngineCompute:
-    """Connect to epistemic-graph from :class:`EngineSettings` for compute calls.
+    """Connect to medulla from :class:`EngineSettings` for compute calls.
 
     Raises:
         ComputeUnavailableError: no endpoint is configured, or the endpoint,
@@ -184,5 +184,5 @@ def connect_compute(
     except ComputeUnavailableError:
         raise
     except Exception as exc:
-        raise ComputeUnavailableError("epistemic-graph compute is unavailable") from exc
+        raise ComputeUnavailableError("medulla compute is unavailable") from exc
     return EngineCompute(client)

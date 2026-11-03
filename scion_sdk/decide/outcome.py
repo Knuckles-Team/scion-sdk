@@ -2,7 +2,7 @@
 
 The ``Reading``/``read_batch``/``request_for``/``sampled`` halves are ported
 (not imported) from ``agent_utilities.decide.outcome``'s identical contract:
-nothing here performs I/O, so :class:`~scion_sdk.decide.epistemic_graph.EpistemicGraphDecisionRunner`'s
+nothing here performs I/O, so :class:`~scion_sdk.decide.medulla.MedullaDecisionRunner`'s
 sync and async paths share it byte for byte. The reading enforces the one
 safety rule this package owns: EG may only pick an option the caller
 offered. Anything else -- an unknown option, an advisory score, an

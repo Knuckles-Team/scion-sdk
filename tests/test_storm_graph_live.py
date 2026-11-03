@@ -21,7 +21,7 @@ from scion_sdk.manifest.model import (
     SchemaMapping,
 )
 from scion_sdk.manifest.presets import ToolPreset
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 
 
 async def exercise(root: Path, compressed: bytes):
@@ -112,7 +112,7 @@ async def exercise(root: Path, compressed: bytes):
                 resources=resources,
             )
 
-        sink = EpistemicGraphSink(engine, authority)
+        sink = MedullaSink(engine, authority)
         path = root / "source.csv.gz"
         first, before, failed, second, repeated = await sync_failure_cycle(
             server,

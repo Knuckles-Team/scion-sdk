@@ -11,7 +11,7 @@ from test_event_feeds import CONNECTOR
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.taxonomy.provider import TaxonomyProvider
 from scion_sdk.taxonomy.stream import register_taxonomy_stream
 
@@ -76,7 +76,7 @@ async def exercise(url, provider_name):
                 mapping_reference=f"connector:{CONNECTOR}#mappings/Taxon",
             )
 
-        sink = EpistemicGraphSink(engine, authority)
+        sink = MedullaSink(engine, authority)
         return await graph_helpers.collect_source_cycle(
             engine, server, sink, CONNECTOR, "taxa", adapter
         )

@@ -1,7 +1,7 @@
 """A connector's one declared identity: its fleet name.
 
 The fleet name (for example ``searxng-mcp``) is the name arbora onboards the
-connector under and the name epistemic-graph files its content pack, manifest
+connector under and the name medulla files its content pack, manifest
 and ingest under. It is declared once, in package metadata, as the single
 entry point of the ``scion_sdk.connector`` group::
 

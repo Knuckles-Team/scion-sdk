@@ -1,6 +1,6 @@
 """EG's generated ``Decide``/decision-log senders behind one small transport port.
 
-Split from :mod:`scion_sdk.decide.epistemic_graph` (the runner) so the
+Split from :mod:`scion_sdk.decide.medulla` (the runner) so the
 wire half -- dynamic sender lookup, the transport protocol, and the
 engine-loop bridging for sync call sites -- stays one focused module.
 """
@@ -36,7 +36,7 @@ class DecideUnavailable(RuntimeError):
 def _generated(module: str, name: str) -> Any:
     """One generated EG sender, resolved dynamically.
 
-    A version of ``epistemic-graph`` that has not published ``name`` yet (or
+    A version of ``medulla`` that has not published ``name`` yet (or
     has retired it) costs only :class:`DecideUnavailable` -- the
     deterministic fallback -- at CALL time, never an import-time failure of
     this whole module. ``medulla.generated.query.send_decide`` is

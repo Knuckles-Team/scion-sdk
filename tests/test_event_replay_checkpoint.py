@@ -27,7 +27,7 @@ from test_event_feeds import (
 
 from scion_sdk.adapters.event_feed_bindings import rum_source_adapter
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.testing.sinks import InMemorySink
 
 
@@ -123,7 +123,7 @@ async def _exercise_graph():
         async def authority(_connector):
             return _catalog(), context
 
-        sink = EpistemicGraphSink(client, authority)
+        sink = MedullaSink(client, authority)
         first = _rum_event("first", tenant_id=TENANT)
         other = _rum_event("other", tenant_id=TENANT)
         initial = await _sync(sink, first)

@@ -12,8 +12,8 @@ from medulla.connector_pack import (
 from medulla.generated.connector_pack import PackEntryKind
 
 from scion_sdk.artifacts.pack import CapturedConnectorPack
-from scion_sdk.sinks.epistemic_graph import (
-    EpistemicGraphSink,
+from scion_sdk.sinks.medulla import (
+    MedullaSink,
     _require_supported_mapping_contract,
 )
 
@@ -55,7 +55,7 @@ async def _unexpected_authority(connector):
 @pytest.mark.parametrize("datatypes", [{"time": "xsd:dateTime"}, []])
 async def test_typed_or_malformed_mapping_refused_before_pack_authority(datatypes):
     pack = _pack(datatypes)
-    sink = EpistemicGraphSink(object(), _unexpected_authority)
+    sink = MedullaSink(object(), _unexpected_authority)
     with pytest.raises(ValueError, match="engine capability negotiation"):
         await sink.import_pack(pack)
 
@@ -70,7 +70,7 @@ async def test_duplicate_nested_datatypes_refused_before_pack_authority():
         b'{"connector":"typed-test","schema_mappings":{"Observation":'
         b'{"datatypes":{"time":"xsd:dateTime"},"datatypes":{}}}}'
     )
-    sink = EpistemicGraphSink(object(), _unexpected_authority)
+    sink = MedullaSink(object(), _unexpected_authority)
     with pytest.raises(ValueError, match="connector resource declaration is invalid"):
         await sink.import_pack(_pack(None, declaration=declaration))
 
@@ -80,7 +80,7 @@ def test_real_engine_refuses_typed_pack_before_authority(live_ingest):  # noqa: 
         client = await scoped_client(["*"])
         try:
             await client.query.cypher_read("MATCH (n) RETURN n LIMIT 1")
-            sink = EpistemicGraphSink(client, _unexpected_authority)
+            sink = MedullaSink(client, _unexpected_authority)
             with pytest.raises(ValueError, match="engine capability negotiation"):
                 await sink.import_pack(_pack({"time": "xsd:dateTime"}))
         finally:

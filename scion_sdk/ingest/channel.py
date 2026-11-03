@@ -1,7 +1,7 @@
 """The one generated ``SourceIngest`` channel.
 
 Sends an exact generated request, checks that the receipt binds it, and reads
-the durable ``SourceIngestStatus``. The bundled epistemic-graph sink and the
+the durable ``SourceIngestStatus``. The bundled medulla sink and the
 knowledge-ingest transport both use it.
 """
 

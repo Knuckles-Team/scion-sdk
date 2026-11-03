@@ -4,7 +4,7 @@ filesystem polling, governed ingest and external ACL sync.
 Functional tests commit through :class:`KnowledgeIngest` into the SDK's
 :class:`InMemorySink`, which validates every generated ``SourceIngest`` request
 and keeps the durable checkpoint with compare-and-set semantics. The
-governance-failure test also runs against a real epistemic-graph server.
+governance-failure test also runs against a real medulla server.
 """
 
 from __future__ import annotations

@@ -184,7 +184,7 @@ def test_ci_setup_bootstraps_the_contract_and_identity_catalog() -> None:
 
     assert "scripts/bootstrap.sh" in script
     assert "PYTHONPATH" not in script
-    assert ".ci/epistemic-graph" not in script
+    assert ".ci/medulla" not in script
     assert "PROHIBITED_IDENTITY_CATALOG" in script
 
 
@@ -195,8 +195,8 @@ def test_bootstrap_installs_eg_from_its_pypi_wheel_only() -> None:
     assert "uv sync --frozen" in bootstrap
     assert "bash scripts/bootstrap_engine_contract.sh" in bootstrap
     for text in (bootstrap, contract, PRE_COMMIT.read_text(encoding="utf-8")):
-        assert "--no-install-package epistemic-graph" not in text
-        assert ".ci/epistemic-graph" not in text
+        assert "--no-install-package medulla" not in text
+        assert ".ci/medulla" not in text
         assert "PYTHONPATH=" not in text
     assert "medulla.generated.source_ingestion" in contract
     assert "https://pypi.org/" in contract

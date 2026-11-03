@@ -7,7 +7,7 @@ from pathlib import Path
 
 from scion_sdk import decide
 from scion_sdk.credentials.resolution import default_credential_resolver
-from scion_sdk.decide.epistemic_graph import EpistemicGraphDecisionRunner
+from scion_sdk.decide.medulla import MedullaDecisionRunner
 from scion_sdk.decide.points import Bindings
 from scion_sdk.decide.transport import GeneratedTransport
 from scion_sdk.discovery import (
@@ -28,7 +28,7 @@ from scion_sdk.runner.descriptors import RunnerSettings
 from scion_sdk.runner.endpoints import CredentialEndpoints
 from scion_sdk.runner.health_state import RunnerHealth
 from scion_sdk.runner.services import RunnerServices
-from scion_sdk.sinks.epistemic_graph import PackImportAuthorityResolver
+from scion_sdk.sinks.medulla import PackImportAuthorityResolver
 
 __all__ = ["default_services", "extension_instance"]
 
@@ -61,16 +61,15 @@ def _sink_arguments(
     pack_import_authority: PackImportAuthorityResolver | None,
 ) -> dict[str, object]:
     supplied = sink_client is not None or pack_import_authority is not None
-    if sink_name != "epistemic_graph":
+    if sink_name != "medulla":
         if supplied:
             raise ExtensionDiscoveryError(
-                "sink_client and pack_import_authority apply only to the "
-                "epistemic_graph sink"
+                "sink_client and pack_import_authority apply only to the medulla sink"
             )
         return {}
     if sink_client is None or pack_import_authority is None:
         raise ExtensionDiscoveryError(
-            "the epistemic_graph sink requires an injected verified client "
+            "the medulla sink requires an injected verified client "
             "and pack import authority resolver"
         )
     return {
@@ -112,11 +111,11 @@ def _decide_runner(
     without connector decisions configured is unremarkable; a client with no
     tenant to decide as is a configuration gap). Never invents a tenant.
     """
-    if sink_name != "epistemic_graph" or sink_client is None:
+    if sink_name != "medulla" or sink_client is None:
         return None
     if decide_tenant is None:
         _logger.warning(
-            "epistemic_graph sink has a verified client but no decide_tenant "
+            "medulla sink has a verified client but no decide_tenant "
             "(no RUNNER_DECIDE_TENANT override and none was derived from the "
             "verified session) -- connector-side decisions stay their "
             "deterministic fallback; not installing a decision runner"
@@ -124,8 +123,8 @@ def _decide_runner(
         return None
     transport = GeneratedTransport(client=sink_client)
     if decide_bindings is None:
-        return EpistemicGraphDecisionRunner(transport=transport, tenant=decide_tenant)
-    return EpistemicGraphDecisionRunner(
+        return MedullaDecisionRunner(transport=transport, tenant=decide_tenant)
+    return MedullaDecisionRunner(
         transport=transport, tenant=decide_tenant, bindings=decide_bindings
     )
 
@@ -155,12 +154,12 @@ def default_services(
     """Services from certified entry points and credential resolution.
 
     Every artifact kind declared in ``scion_sdk.artifact_kinds`` is
-    provisioned. An epistemic-graph deployment must inject the already verified
+    provisioned. An medulla deployment must inject the already verified
     generated client. The SDK never discovers an engine endpoint, reads a token,
     or mints request identity at this boundary.
 
     With ``decide_tenant`` also given, the Medulla-backed connector decision
-    runner (:class:`~scion_sdk.decide.epistemic_graph.EpistemicGraphDecisionRunner`)
+    runner (:class:`~scion_sdk.decide.medulla.MedullaDecisionRunner`)
     is built over the SAME verified ``sink_client`` and installed process-wide
     (:func:`scion_sdk.decide.install_runner`) -- one composition
     root, one EG session, both consumers. ``decide_tenant`` is the caller's

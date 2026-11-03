@@ -5,7 +5,7 @@ SchemaDriftReport` with the field mapping a decision service proposes to resolve
 it. Building and recording one is the whole of this module's and
 :mod:`scion_sdk.ports.repair_proposals`'s job (SCION-SOURCE-INGEST-R003):
 a candidate graph schema, instance validation, a shadow ingest and activation are
-epistemic-graph's authority alone, never constructed, run or called from here.
+medulla's authority alone, never constructed, run or called from here.
 """
 
 from __future__ import annotations

@@ -323,7 +323,7 @@ lands in **one ontology** and is reasoned over together:
 
 See also: [KG as Bidirectional ETL Hub](etl-hub.md),
 [Content-Aware Ingestion](content-aware-ingestion.md),
-[Code Intelligence](https://knuckles-team.github.io/epistemic-graph/architecture/code-intelligence/),
+[Code Intelligence](https://knuckles-team.github.io/medulla/architecture/code-intelligence/),
 [Vendor-Neutral Enterprise Ontology](https://knuckles-team.github.io/agent-utilities/architecture/vendor_neutral_enterprise_ontology/),
 [Camunda + ARIS ↔ KG](camunda-aris-integration.md).
 

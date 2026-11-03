@@ -30,7 +30,7 @@ from scion_sdk.runner.static_registry import (
     load_runner_config,
 )
 from scion_sdk.runner.supervisor import ConnectorSyncRunner
-from scion_sdk.sinks.epistemic_graph import PackImportAuthorityResolver
+from scion_sdk.sinks.medulla import PackImportAuthorityResolver
 
 __all__ = ["build_parser", "default_state_dir", "main"]
 
@@ -61,7 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--state-dir", type=Path, default=None, help="reserved process-state directory"
     )
-    parser.add_argument("--sink", default="epistemic_graph", help="sink extension")
+    parser.add_argument("--sink", default="medulla", help="sink extension")
     parser.add_argument("--once", action="store_true", help="one cycle, then exit")
     parser.add_argument("--log-format", choices=("json", "text"), default="json")
     parser.add_argument(
@@ -159,7 +159,7 @@ def main(
 ) -> int:
     """Run the connector-sync runner; returns the process exit code.
 
-    ``sink_client``/``pack_import_authority`` are the ``epistemic_graph``
+    ``sink_client``/``pack_import_authority`` are the ``medulla``
     sink's own required inputs (see
     ``runner/composition.py::default_services``); ``decide_tenant`` is the
     SAME verified session's tenant, for the connector decision runner

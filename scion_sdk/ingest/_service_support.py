@@ -48,5 +48,5 @@ async def _guard[T](call: Awaitable[T]) -> T:
     except Exception as exc:
         detail = (str(exc).splitlines() or [type(exc).__name__])[0]
         raise IngestError(
-            "epistemic-graph did not commit the change set: " + detail[:_MESSAGE_LIMIT]
+            "medulla did not commit the change set: " + detail[:_MESSAGE_LIMIT]
         ) from exc

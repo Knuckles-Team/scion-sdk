@@ -1,4 +1,4 @@
-"""Check that a connector ontology rolls up to the epistemic-graph core namespace.
+"""Check that a connector ontology rolls up to the medulla core namespace.
 
 Every class a connector's ``ontology/*.ttl`` declares must reach a class of the
 core namespace through ``rdfs:subClassOf``, directly or through other declared

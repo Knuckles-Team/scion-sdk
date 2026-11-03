@@ -1,6 +1,6 @@
 """Shared typed profiling and read-only engine-client seams.
 
-The Arrow kernel and a future epistemic-graph analytics client return the same
+The Arrow kernel and a future medulla analytics client return the same
 ``ProfileResult``.  This module owns only result validation, stable digest
 calculation and the explicitly authorized evidence-reference seam.  It never
 writes, caches, persists or imports a dataframe/numeric runtime.
@@ -105,7 +105,7 @@ def validate_engine_profile(
         result = ProfileResult.model_validate(result.model_dump(mode="python"))
     except (ValidationError, TypeError, ValueError) as exc:
         raise ProfileProtocolError("profile client returned an invalid result") from exc
-    if result.algorithm != "epistemic-graph-profile":
+    if result.algorithm != "medulla-profile":
         raise ProfileProtocolError("profile client returned the wrong authority")
     if result.target != request.target:
         raise ProfileProtocolError("profile target does not match the request")

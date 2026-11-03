@@ -15,7 +15,7 @@ from scion_sdk.earth_observations.weather_stream import (
     register_weather_stream,
 )
 from scion_sdk.manifest.presets import ToolPreset
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
 
 
@@ -88,7 +88,7 @@ async def exercise(url, provider_name):
                 preset, CONNECTOR, f"connector:{CONNECTOR}#mappings/WeatherObservation"
             )
 
-        sink = EpistemicGraphSink(engine, authority)
+        sink = MedullaSink(engine, authority)
         first, before, failed, repeated, _ = await graph_helpers.sync_failure_cycle(
             server, sink, CONNECTOR, "weather", "weather", adapter
         )

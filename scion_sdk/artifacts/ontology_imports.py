@@ -1,6 +1,6 @@
 """Scope ``owl:imports`` in captured ontologies to the pack that ships them.
 
-epistemic-graph accepts an ``owl:imports`` only when it names an ontology
+medulla accepts an ``owl:imports`` only when it names an ontology
 entry of the same ConnectorPack. Fleet ontologies import shared hub
 ontologies, such as ``http://knuckles.team/kg``. The tenant schema composes
 every attached pack, so those imports are redundant at pack scope. The pack

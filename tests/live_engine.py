@@ -1,4 +1,4 @@
-"""A real, ephemeral epistemic-graph server for live-path tests.
+"""A real, ephemeral medulla server for live-path tests.
 
 Starts the ``medulla-server`` binary from the ``medulla[server]``
 extra on a private Unix socket with test-only credentials, enrolls the test
@@ -22,7 +22,7 @@ import pytest
 from scion_sdk.ingest.engine import EngineSettings, connect_ingest
 from scion_sdk.ingest.service import KnowledgeIngest
 
-AUDIENCE = "epistemic-graph"
+AUDIENCE = "medulla"
 TENANT = "tenant:sdk-test"
 POLICY = "policy:current"
 PRINCIPAL = "service:connector"

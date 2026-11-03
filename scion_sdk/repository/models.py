@@ -2,7 +2,7 @@
 
 These models describe provider transport only. They deliberately do not model
 symbols, semantic edges, graph mutations, parse diagnostics, or durable cursors;
-epistemic-graph owns those contracts and effects.
+medulla owns those contracts and effects.
 """
 
 from __future__ import annotations
@@ -149,7 +149,7 @@ class RepositoryPage(_PathsPage):
 
 
 class RepositoryBatchLimits(_Frozen):
-    """Bounds for one epistemic-graph repository-resolution call."""
+    """Bounds for one medulla repository-resolution call."""
 
     max_files: int = Field(default=4096, ge=1, le=100_000)
     max_bytes: int = Field(default=32 * 1024 * 1024, ge=1, le=256 * 1024 * 1024)

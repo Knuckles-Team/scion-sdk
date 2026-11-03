@@ -1,4 +1,4 @@
-"""Connect a connector process to epistemic-graph for knowledge ingest.
+"""Connect a connector process to medulla for knowledge ingest.
 
 Opt-in by configuration only: nothing connects unless ``MEDULLA_ENDPOINT``
 is set. Settings:
@@ -13,7 +13,7 @@ is set. Settings:
 ``MEDULLA_POLICY_VERSION`` policy version claim (default ``policy:current``)
 ================================== =============================================
 
-TLS material comes from the ``epistemic-graph`` TLS profile
+TLS material comes from the ``medulla`` TLS profile
 (:func:`scion_sdk.tls.resolve.resolve_tls_profile`). The client runs
 on one daemon event-loop thread owned by this module.
 """
@@ -34,7 +34,7 @@ from scion_sdk.credentials.resolver import CredentialResolver
 from scion_sdk.exposure import is_loopback_host
 from scion_sdk.ingest.errors import IngestUnavailableError
 from scion_sdk.ingest.service import KnowledgeIngest
-from scion_sdk.ingest.transport import EpistemicGraphIngestTransport
+from scion_sdk.ingest.transport import MedullaIngestTransport
 from scion_sdk.tls.resolve import resolve_tls_profile
 
 __all__ = ["INGEST_SCOPES", "EngineSettings", "connect_ingest"]
@@ -47,7 +47,7 @@ _REQUIRED = ("auth_secret_ref", "tenant", "graph")
 
 @dataclass(frozen=True)
 class EngineSettings:
-    """How this process reaches epistemic-graph; credentials only by reference."""
+    """How this process reaches medulla; credentials only by reference."""
 
     endpoint: str
     auth_secret_ref: str
@@ -55,7 +55,7 @@ class EngineSettings:
     graph: str
     principal: str = "service:connector"
     policy_version: str = "policy:current"
-    audience: str = "epistemic-graph"
+    audience: str = "medulla"
 
     def __post_init__(self) -> None:
         missing = [name for name in _REQUIRED if not getattr(self, name)]
@@ -78,10 +78,8 @@ class EngineSettings:
             tenant=str(setting("MEDULLA_TENANT", "")),
             graph=str(setting("MEDULLA_GRAPH", "")),
             principal=str(setting("MEDULLA_PRINCIPAL", "service:connector")),
-            policy_version=str(
-                setting("MEDULLA_POLICY_VERSION", "policy:current")
-            ),
-            audience=str(setting("MEDULLA_AUDIENCE", "epistemic-graph")),
+            policy_version=str(setting("MEDULLA_POLICY_VERSION", "policy:current")),
+            audience=str(setting("MEDULLA_AUDIENCE", "medulla")),
         )
 
     def verified_context(
@@ -114,16 +112,12 @@ class EngineSettings:
         if parts.scheme == "unix" and parts.path:
             return {"socket_path": parts.path}
         if parts.scheme not in {"tls", "tcp"} or not parts.hostname or not parts.port:
-            raise IngestUnavailableError(
-                "MEDULLA_ENDPOINT is not a valid endpoint"
-            )
+            raise IngestUnavailableError("MEDULLA_ENDPOINT is not a valid endpoint")
         if parts.scheme == "tcp" and not is_loopback_host(parts.hostname):
-            raise IngestUnavailableError(
-                "plaintext epistemic-graph TCP is loopback-only"
-            )
+            raise IngestUnavailableError("plaintext medulla TCP is loopback-only")
         address: dict[str, Any] = {"tcp_addr": f"{parts.hostname}:{parts.port}"}
         if parts.scheme == "tls":
-            address["tls"] = resolve_tls_profile("epistemic-graph").ssl_context
+            address["tls"] = resolve_tls_profile("medulla").ssl_context
             address["tls_server_hostname"] = parts.hostname
         return address
 
@@ -143,7 +137,7 @@ def connect_ingest(
     resolver: CredentialResolver | None = None,
     timeout_s: float = _CONNECT_TIMEOUT_S,
 ) -> KnowledgeIngest:
-    """Connect to epistemic-graph and return an ingest service bound to its loop.
+    """Connect to medulla and return an ingest service bound to its loop.
 
     Raises:
         IngestUnavailableError: the endpoint, secret or connection is unavailable.
@@ -154,7 +148,7 @@ def connect_ingest(
     except IngestUnavailableError:
         raise
     except Exception as exc:
-        raise IngestUnavailableError("epistemic-graph ingest is misconfigured") from exc
+        raise IngestUnavailableError("medulla ingest is misconfigured") from exc
     loop = _engine_loop()
     connecting = MedullaClient.connect(
         auth_secret=secret,
@@ -166,5 +160,5 @@ def connect_ingest(
         client = asyncio.run_coroutine_threadsafe(connecting, loop).result(timeout_s)
     except Exception as exc:
         loop.call_soon_threadsafe(loop.stop)
-        raise IngestUnavailableError("epistemic-graph is unreachable") from exc
-    return KnowledgeIngest(EpistemicGraphIngestTransport(client), loop=loop)
+        raise IngestUnavailableError("medulla is unreachable") from exc
+    return KnowledgeIngest(MedullaIngestTransport(client), loop=loop)

@@ -26,7 +26,7 @@ from scion_sdk.manifest.model import (
     SchemaMapping,
 )
 from scion_sdk.manifest.presets import ToolPreset
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.taxonomy.graph_stream import register_taxonomy_graph_stream
 from scion_sdk.taxonomy.provider import TaxonomyProvider
 from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
@@ -164,7 +164,7 @@ async def _exercise(url, provider_name):
                 resources=resources,
             )
 
-        sink = EpistemicGraphSink(engine, authority)
+        sink = MedullaSink(engine, authority)
         cycle = await sync_failure_cycle(
             server, sink, CONNECTOR, "taxa", "taxa", adapter, repeat=True
         )

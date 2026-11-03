@@ -78,7 +78,7 @@ Owned: the typed source client and its local bounded blob cache
 (SCION-SCM-R001); the sparse virtual workspace mount and its pending changeset
 (SCION-SCM-R002); the change-proposal records, the normalizer protocol, the
 shared verifier and the owner-approval flag (SCION-SCM-R003). Not owned: the served `source.*` operations and their
-admission. Epistemic-graph owns changeset storage, lock-free acceptance,
+admission. Medulla owns changeset storage, lock-free acceptance,
 and derived history indexes. Agent-utilities owns the in-run development
 loop. Pipelines owns gate policy around landing. The client consumes the served
 operations as they are published. A reimplementation of a served operation in

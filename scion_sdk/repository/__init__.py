@@ -1,4 +1,4 @@
-"""Authenticated repository snapshot transport into epistemic-graph."""
+"""Authenticated repository snapshot transport into medulla."""
 
 from scion_sdk.repository.errors import RepositoryTransportError
 from scion_sdk.repository.indexing import RepositoryBatchReceipt

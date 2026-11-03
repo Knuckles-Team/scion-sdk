@@ -1,4 +1,4 @@
-"""Map MCP declarations into epistemic-graph's generated pack annotations."""
+"""Map MCP declarations into medulla's generated pack annotations."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ _TOOL_HINTS = {
     "openWorldHint": "open_world_hint",
 }
 # Three-letter uppercase currency code (ISO-4217 alphabetic form). The
-# generated ``DeclaredCost.currency`` field is a bare ``str``; epistemic-graph
+# generated ``DeclaredCost.currency`` field is a bare ``str``; medulla
 # stores whatever it is given and never validates it, so the SDK's strict
 # declaration layer is the one place a malformed currency code is caught.
 _ISO_4217_RE = re.compile(r"^[A-Z]{3}$")
@@ -58,7 +58,7 @@ def _check_declared_bounds(annotations: PackAnnotations) -> None:
     """Fail closed on declared facts the generated schema cannot itself check.
 
     ``PackAnnotations`` validates presence, type and non-negativity, but
-    epistemic-graph never re-derives or second-guesses a declared fact -- it
+    medulla never re-derives or second-guesses a declared fact -- it
     only stores what it is told. Currency-code format and latency-band
     ordering are declaration-quality checks that belong here, in the SDK's
     strict layer, so a connector cannot publish a claim that is not even

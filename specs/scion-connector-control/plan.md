@@ -280,7 +280,7 @@ No established producer operation or SDK adapter for that mapping is identified 
 Until those producer requirements and their SDK binding exist, reconnect recovery must return `recovery_unavailable`.
 It must not synthesize a result, reconstruct one from transient progress or repeat a source effect.
 
-Existing effect recovery is narrower: `EpistemicGraphWriteBackLedger.get` and `receipts`
+Existing effect recovery is narrower: `MedullaWriteBackLedger.get` and `receipts`
 in `scion_sdk/writeback/medulla.py:43` and line 73 read generated EG records.
 `DurableWritableConnector.apply` at `scion_sdk/writeback/connector.py:75`
 uses those records to prevent repeated effects. Its `reconcile` method at line 96

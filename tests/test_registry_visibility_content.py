@@ -30,7 +30,7 @@ from scion_sdk.mcp.middleware import (
 from scion_sdk.mcp.registry import (
     DEFAULT_LEASE_TTL_SECONDS,
     MIN_LEASE_TTL_SECONDS,
-    EpistemicGraphServerRegistry,
+    MedullaServerRegistry,
     ServerRegistry,
     ServerRegistryUnavailableError,
     endpoint_reference,
@@ -71,17 +71,17 @@ class RecordingRegistry:
 @pytest.mark.parametrize(
     "client", [object(), SimpleNamespace(server_registry=SimpleNamespace())]
 )
-def test_epistemic_graph_registry_requires_register_server(client: object) -> None:
+def test_medulla_registry_requires_register_server(client: object) -> None:
     with pytest.raises(
         ServerRegistryUnavailableError,
-        match=r"^this epistemic-graph client does not expose RegisterServer$",
+        match=r"^this medulla client does not expose RegisterServer$",
     ):
-        EpistemicGraphServerRegistry(client)
+        MedullaServerRegistry(client)
 
 
-def test_epistemic_graph_registry_uses_register_server() -> None:
+def test_medulla_registry_uses_register_server() -> None:
     recorder = RecordingRegistry([True])
-    registry: ServerRegistry = EpistemicGraphServerRegistry(
+    registry: ServerRegistry = MedullaServerRegistry(
         SimpleNamespace(server_registry=recorder)
     )
     assert asyncio.run(
@@ -90,7 +90,7 @@ def test_epistemic_graph_registry_uses_register_server() -> None:
     assert recorder.calls == [("demo", "stdio://demo", 60)]
 
 
-def test_epistemic_graph_dependency_declares_first_compatible_floor() -> None:
+def test_medulla_dependency_declares_first_compatible_floor() -> None:
     pyproject_path = Path(__file__).parents[1] / "pyproject.toml"
     project = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))["project"]
 

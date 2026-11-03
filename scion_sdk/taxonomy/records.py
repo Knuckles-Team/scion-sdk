@@ -4,7 +4,7 @@
 Taxonomy and GBIF backbone taxa as ``kg:Taxon`` individuals carrying rank,
 parent, scientific name, NCBI and GBIF identifiers, and a term CURIE,
 validated against the world_model-v1 ``TaxonShape``
-(``epistemic-graph/crates/eg-core/ontology/world_model-v1.shapes.ttl``).
+(``medulla/crates/eg-core/ontology/world_model-v1.shapes.ttl``).
 ``TaxonRecord`` mirrors that shape's cardinalities at the SDK boundary:
 exactly one ``scientific_name`` and one ``term_curie``, at most one
 ``taxon_rank`` and one ``parent_term_curie``, and an ``ncbi_taxon_id`` that is

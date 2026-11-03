@@ -28,13 +28,13 @@ from scion_sdk.testing.writeback_audit import InMemoryAuditReservation
 from scion_sdk.writeback._transport_common import receipt_page
 from scion_sdk.writeback.authorization import DurableAuthorizationResolver
 from scion_sdk.writeback.connector import DurableWritableConnector
-from scion_sdk.writeback.epistemic_graph import (
-    EpistemicGraphWriteBackLedger,
-)
 from scion_sdk.writeback.errors import (
     AuthorizationDeniedError,
     ReconciliationRequiredError,
     WriteBackPersistenceError,
+)
+from scion_sdk.writeback.medulla import (
+    MedullaWriteBackLedger,
 )
 from scion_sdk.writeback.memory import FixtureUncertainty
 
@@ -152,7 +152,7 @@ async def test_generated_eg_adapter_uses_typed_ops_and_idempotency_keys() -> Non
             page.model_dump(mode="json"),
         ]
     )
-    ledger = EpistemicGraphWriteBackLedger(client, graph="graph:fixture")
+    ledger = MedullaWriteBackLedger(client, graph="graph:fixture")
 
     assert await ledger.create(change_set) == change_set
     assert (

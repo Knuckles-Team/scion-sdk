@@ -2,7 +2,7 @@
 
 A static configuration file implements it today
 (:class:`~scion_sdk.runner.static_registry.StaticConfigRegistry`).
-epistemic-graph's server registry, where connector servers self-register with a
+medulla's server registry, where connector servers self-register with a
 lease, implements the same port once it is published (RF-ADR-009 W1); the
 runner re-reads the registry periodically, so a new or changed registration
 starts or restarts that connector's worker.

@@ -1,7 +1,7 @@
 """Conformance kit for source adapters and artifact kinds (RF-ADR-009 2.2.1).
 
 Every adapter and artifact kind must pass the same checks before it may be
-activated, the way epistemic-graph modality runtimes must pass the modality
+activated, the way medulla modality runtimes must pass the modality
 TCK before they may be served.
 
 * :mod:`~scion_sdk.testing.source_adapters`: capability descriptor,

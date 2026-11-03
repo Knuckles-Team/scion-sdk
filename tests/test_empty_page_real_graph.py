@@ -16,7 +16,7 @@ from scion_sdk.ingest import (
     RecordMap,
     SourceStream,
 )
-from scion_sdk.ingest.transport import EpistemicGraphIngestTransport
+from scion_sdk.ingest.transport import MedullaIngestTransport
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.33")
@@ -28,7 +28,7 @@ def test_empty_page_checkpoint_on_real_graph(live_ingest: Any) -> None:  # noqa:
         client = await scoped_client(["*"])
         try:
             await _import_mapping(client)
-            service = KnowledgeIngest(EpistemicGraphIngestTransport(client))
+            service = KnowledgeIngest(MedullaIngestTransport(client))
 
             async def fetch(
                 cursor: str | None,

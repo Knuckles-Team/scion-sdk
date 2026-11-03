@@ -1,7 +1,7 @@
 """Typed operation and result contracts for enterprise connector interchange.
 
 These models do not authenticate callers, select a backend, or execute writes.
-Effecting requests and results use epistemic-graph's generated write-back types.
+Effecting requests and results use medulla's generated write-back types.
 """
 
 from __future__ import annotations

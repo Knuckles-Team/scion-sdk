@@ -48,7 +48,7 @@ from scion_sdk.ports.decide_runner import Fallback
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["EpistemicGraphDecisionRunner"]
+__all__ = ["MedullaDecisionRunner"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,7 +79,7 @@ def _settle(reading: Reading, fallback: Fallback) -> Choice:
 
 
 @dataclass
-class EpistemicGraphDecisionRunner:
+class MedullaDecisionRunner:
     """Decide connector points through EG's generated ``Decide``, recording
     the outcome via the decision log when bound and loggable; otherwise
     exactly the deterministic fallback -- the same contract

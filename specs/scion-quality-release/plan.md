@@ -74,7 +74,7 @@ during storage stalls.
 ### 2026-10-28: local Medulla dependency migration candidate
 
 R001 and R005 retain their released-wheel qualification gates. The local
-candidate requires `medulla>=2.27.10,<3.0.0` instead of the retired distribution.
+candidate requires `medulla>=3.0.0,<4.0.0` instead of the retired distribution.
 Imports remain `medulla`. Candidate-wheel experiments must not install
 both distributions into that shared namespace. The exact hosted Medulla wheel
 is prerelease evidence here, not a published-release claim. Fresh lock, release

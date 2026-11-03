@@ -22,10 +22,10 @@ from pydantic import BaseModel, ValidationError
 
 from scion_sdk.writeback.errors import WriteBackPersistenceError
 
-__all__ = ["EpistemicGraphWriteBackLedger"]
+__all__ = ["MedullaWriteBackLedger"]
 
 
-class EpistemicGraphWriteBackLedger:
+class MedullaWriteBackLedger:
     """Use only generated EG operations and DTOs for durable write-back state."""
 
     def __init__(self, client: Any, *, graph: str | None = None) -> None:

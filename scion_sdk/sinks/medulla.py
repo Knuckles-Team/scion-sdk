@@ -1,4 +1,4 @@
-"""The epistemic-graph sink using generated SourceIngest and ConnectorPack."""
+"""The medulla sink using generated SourceIngest and ConnectorPack."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ from scion_sdk.ports.sink import SinkReadiness
 from scion_sdk.sinks._pack_contract import _require_supported_mapping_contract
 
 __all__ = [
-    "EpistemicGraphSink",
+    "MedullaSink",
     "PackImportAuthorityResolver",
 ]
 
@@ -47,11 +47,9 @@ def _require_pack_authority(
     client: object, resolver: PackImportAuthorityResolver | None
 ) -> PackImportAuthorityResolver:
     if client is None:
-        raise ValueError("epistemic-graph sink requires a verified client")
+        raise ValueError("medulla sink requires a verified client")
     if resolver is None:
-        raise ValueError(
-            "epistemic-graph sink requires a pack import authority resolver"
-        )
+        raise ValueError("medulla sink requires a pack import authority resolver")
     return resolver
 
 
@@ -89,8 +87,8 @@ async def _probe_commit_capabilities(client: Any) -> SinkReadiness:
     return SinkReadiness(ready=True)
 
 
-class EpistemicGraphSink:
-    """Submits batches and packs to epistemic-graph through its Python client."""
+class MedullaSink:
+    """Submits batches and packs to medulla through its Python client."""
 
     def __init__(
         self,

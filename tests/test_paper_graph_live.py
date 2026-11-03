@@ -20,7 +20,7 @@ from scion_sdk.adapters.paper_search import (
     ProviderBinding,
 )
 from scion_sdk.manifest.presets import ToolPreset
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
 
 
@@ -96,7 +96,7 @@ async def exercise(url):
                 mapping_reference=f"connector:{CONNECTOR}#mappings/Event",
             )
 
-        sink = EpistemicGraphSink(engine, authority)
+        sink = MedullaSink(engine, authority)
         first, before, failed, second, _ = await sync_failure_cycle(
             server, sink, CONNECTOR, "paper-arxiv", "paper_arxiv_ingest", adapter
         )

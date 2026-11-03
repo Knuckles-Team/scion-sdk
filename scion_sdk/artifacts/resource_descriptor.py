@@ -2,7 +2,7 @@
 
 A :class:`ResourceDescriptor` states how one record type of the source is read
 live: the ontology class, the field-to-property pairs, the access method, the
-record identity field and the pagination form. epistemic-graph federates the
+record identity field and the pagination form. medulla federates the
 rows at query time from this declaration. The SDK never copies source rows.
 
 A mapping is ``declared`` when the connector wrote it and ``proposed`` when

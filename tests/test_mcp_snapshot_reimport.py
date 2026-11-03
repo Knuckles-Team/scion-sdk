@@ -14,7 +14,7 @@ from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
 from scion_sdk.manifest.presets import ToolPreset
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.transports.mcp import McpTransport
 
 
@@ -45,9 +45,7 @@ async def _exercise():
             connector=CONNECTOR,
             mapping_reference=f"connector:{CONNECTOR}#mappings/Event",
         )
-        target = SyncTarget(
-            CONNECTOR, EpistemicGraphSink(client, authority), max_pages=1
-        )
+        target = SyncTarget(CONNECTOR, MedullaSink(client, authority), max_pages=1)
         async with McpTransport().session(
             TransportEndpoint(in_process=server)
         ) as session:

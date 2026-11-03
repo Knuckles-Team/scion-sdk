@@ -1,4 +1,4 @@
-"""A connector's typed path to epistemic-graph compute and algorithm selection.
+"""A connector's typed path to medulla compute and algorithm selection.
 
 The connector does not hold analytics or choose algorithms. It asks the graph
 service which algorithms its ontology binds to an analysis, then asks the

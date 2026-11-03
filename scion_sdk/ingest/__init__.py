@@ -1,4 +1,4 @@
-"""Knowledge ingest: connectors push typed change sets into epistemic-graph.
+"""Knowledge ingest: connectors push typed change sets into medulla.
 
 A connector describes what it observed as a :class:`ChangeSet` and submits it
 with its :class:`IngestBinding`::
@@ -8,9 +8,9 @@ with its :class:`IngestBinding`::
     BINDING = IngestBinding(connector="demo-mcp", stream="demo")
     receipt = ingest_changes(BINDING, ChangeSet(entities=(Entity("demo:1", "Item"),)))
 
-The SDK maps the change set to one generated epistemic-graph ``SourceIngest``
+The SDK maps the change set to one generated medulla ``SourceIngest``
 request against the stream's durable checkpoint and returns the generated
-receipt. epistemic-graph resolves every record and relation against the
+receipt. medulla resolves every record and relation against the
 connector's declared mappings (``connector://resources``), so each ``node_type`` and
 relationship must be declared there.
 

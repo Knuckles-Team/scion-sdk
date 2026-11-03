@@ -30,8 +30,8 @@ and injects it at the public composition seam:
 services = default_services(
     settings,
     state_dir=state_dir,
-    sink_name="epistemic_graph",
-    sink_client=verified_epistemic_graph_client,
+    sink_name="medulla",
+    sink_client=verified_medulla_client,
     pack_import_authority=live_pack_import_authority,
 )
 ```
@@ -39,7 +39,7 @@ services = default_services(
 The authority resolver is called with the canonical connector id on every pack
 import and returns the current generated `McpCatalogSnapshotBinding` and
 `AgentLibraryMutationContext`. It is never cached. Omitting either injected
-dependency for the `epistemic_graph` sink fails before a runner is built;
+dependency for the `medulla` sink fails before a runner is built;
 supplying either to another sink also fails. The standalone CLI consequently
 cannot manufacture a usable EG composition; Arbora owns that authenticated
 composition boundary.
@@ -59,7 +59,7 @@ connector-sync --config runner.yml --once         # one cycle per connector
 |---|---|---|
 | `--config` | required | runner configuration (YAML or JSON) |
 | `--state-dir` | `$XDG_STATE_HOME/connector-sync` | reserved process-state directory; ingestion checkpoints remain authoritative in EG |
-| `--sink` | `epistemic_graph` | sink extension name |
+| `--sink` | `medulla` | sink extension name |
 | `--once` | off | exit `0` only when every connector succeeded, otherwise `1` |
 | `--log-format` | `json` | `json` (one object per line) or `text`, on stderr |
 | `--health-addr` | unset | `PORT` or `HOST:PORT` serving `/health` and `/health/ready` (env `RUNNER_HEALTH_ADDR`); disabled unless set, and never started for `--once` |

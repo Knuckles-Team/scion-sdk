@@ -2,7 +2,7 @@
 
 A connector that keeps vectors in an external store (Qdrant, pgvector, MongoDB
 and the like) embeds text through an OpenAI-compatible or Ollama endpoint.
-Content epistemic-graph ingests is embedded by epistemic-graph, not here.
+Content medulla ingests is embedded by medulla, not here.
 
 Configuration is read at call time:
 

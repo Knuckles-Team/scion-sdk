@@ -1,4 +1,4 @@
-"""Sync one declared connector source into epistemic-graph (SCION-SOURCE-INGEST-R004.20-R004.23).
+"""Sync one declared connector source into medulla (SCION-SOURCE-INGEST-R004.20-R004.23).
 
 :class:`SourceSyncRunner` calls a source's declared read-only tools page by
 page through a :class:`SourceSession`, maps each record to a typed
@@ -62,7 +62,7 @@ _MAX_DIGESTS = 50_000
 
 
 class SourceSyncRunner(_budget._SourceBudgetMixin, _SourceCalls):
-    """Run declared connector sources into epistemic-graph.
+    """Run declared connector sources into medulla.
 
     Args:
         connector: The connector (manifest ``connector``) the sources belong to.

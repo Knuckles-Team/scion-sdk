@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from scion_sdk.decide import Option
-from scion_sdk.decide.epistemic_graph import EpistemicGraphDecisionRunner
+from scion_sdk.decide.medulla import MedullaDecisionRunner
 from scion_sdk.decide.outcome import Reading, read_batch, request_for, sampled
 from scion_sdk.decide.points import (
     CONNECTOR_TOOL,
@@ -103,9 +103,7 @@ class FakeTransport:
         return [str(op["op"]) for op in self.ops]
 
 
-def _runner(
-    transport: FakeTransport, *, bound: bool = True
-) -> EpistemicGraphDecisionRunner:
+def _runner(transport: FakeTransport, *, bound: bool = True) -> MedullaDecisionRunner:
     bindings = StaticBindings(
         {
             "au.connector.tool": Binding(
@@ -115,7 +113,7 @@ def _runner(
         if bound
         else {}
     )
-    return EpistemicGraphDecisionRunner(
+    return MedullaDecisionRunner(
         transport=transport, tenant="tenant-t", bindings=bindings
     )
 
@@ -183,7 +181,7 @@ def test_the_writeback_point_always_logs_never_only_samples() -> None:
     bindings = StaticBindings(
         {"au.connector.writeback": Binding(feature_schema=_SCHEMA, policy={})}
     )
-    runner = EpistemicGraphDecisionRunner(
+    runner = MedullaDecisionRunner(
         transport=transport, tenant="tenant-t", bindings=bindings
     )
     runner.choose("au.connector.writeback", [Option("no_write")], lambda: "no_write")

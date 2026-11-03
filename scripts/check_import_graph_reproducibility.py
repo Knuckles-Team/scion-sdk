@@ -26,7 +26,7 @@ from importlib import metadata
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import epistemic_graph_wheel_provenance as eg_wheel
+import medulla_wheel_provenance as eg_wheel
 from packaging.markers import Marker, default_environment
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
