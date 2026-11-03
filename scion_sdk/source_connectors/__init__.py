@@ -61,7 +61,7 @@ def __getattr__(name: str) -> Any:
 
     A connector reports each document's :class:`ExternalAccess`;
     :func:`~scion_sdk.adapters.document_sources.access_properties`
-    renders it as the record properties epistemic-graph enforces. The ACL
+    renders it as the record properties medulla enforces. The ACL
     itself is written by the graph service, not by this package.
     """
     if name == "access_properties":

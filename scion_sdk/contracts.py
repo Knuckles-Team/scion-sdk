@@ -3,10 +3,10 @@
 The durable source-ingestion contract is imported directly from
 ``medulla.generated.source_ingestion`` by its consumers. This module
 contains only SDK-side descriptions and MCP content captured before it is mapped
-into an epistemic-graph request.
+into an medulla request.
 
 Every model is frozen. Canonical graph-boundary identity and digests remain in
-the generated epistemic-graph contract rather than being recomputed here.
+the generated medulla contract rather than being recomputed here.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ __all__ = [
     "default_external_access",
 ]
 
-#: Version of the SDK-side seam types. An epistemic-graph contract-generated
+#: Version of the SDK-side seam types. An medulla contract-generated
 #: replacement carries its own version; mixing the two fails closed.
 SEAM_SCHEMA_VERSION = "scion-sdk.seam/1"
 

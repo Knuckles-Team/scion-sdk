@@ -16,7 +16,7 @@ class IngestError(RuntimeError):
 
 
 class IngestUnavailableError(IngestError):
-    """No epistemic-graph ingest channel is configured or reachable here."""
+    """No medulla ingest channel is configured or reachable here."""
 
 
 class IngestConflictError(IngestError):

@@ -1,6 +1,6 @@
 """Map a typed change set to one generated ``SourceIngestionRequest``.
 
-Pure: no I/O. The previous checkpoint comes from epistemic-graph's durable
+Pure: no I/O. The previous checkpoint comes from medulla's durable
 ``SourceIngestStatus``; the next one advances its sequence and names the batch
 content, so every submission differs from the checkpoint it replaces.
 """
@@ -201,7 +201,7 @@ def build_request(
     ``extra_entities`` carries records derived outside the change set (stored
     media). Record and relationship properties pass through
     :class:`~scion_sdk.privacy.PersistencePrivacyGuard` unless the
-    binding sets ``sanitize=False``; identifiers are never rewritten. Raises :class:`IngestError` for anything epistemic-graph would
+    binding sets ``sanitize=False``; identifiers are never rewritten. Raises :class:`IngestError` for anything medulla would
     refuse structurally: missing identity, non-JSON data, an untyped
     relationship source, or a batch over the contract's bounds.
     """

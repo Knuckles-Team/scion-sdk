@@ -3,8 +3,8 @@
 Every correctness property this SDK claims for D18 write-back (RF-ADR-009
 SS2.2.2: "no retry decision is held only in memory") only means something if
 the ledger it is checked against survives the death of the SDK process that
-wrote to it. :class:`~scion_sdk.writeback.epistemic_graph.
-EpistemicGraphWriteBackLedger` is the production implementation, durable in
+wrote to it. :class:`~scion_sdk.writeback.medulla.
+MedullaWriteBackLedger` is the production implementation, durable in
 EG; this reference implementation is durable on the local filesystem
 instead, so a process-kill integration test can prove the same restart
 contract without a live EG connection -- the same relationship

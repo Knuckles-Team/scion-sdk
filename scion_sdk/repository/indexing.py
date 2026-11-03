@@ -69,25 +69,21 @@ def _validate_outcomes(result: IndexResult, files: tuple[RepositoryFile, ...]) -
         outcomes = result.file_outcomes
     except AttributeError as exc:
         raise RepositoryTransportError(
-            "epistemic-graph result lacks typed file_outcomes"
+            "medulla result lacks typed file_outcomes"
         ) from exc
     if len(outcomes) != len(files):
-        raise RepositoryTransportError(
-            "epistemic-graph returned incomplete file outcomes"
-        )
+        raise RepositoryTransportError("medulla returned incomplete file outcomes")
     for outcome, source in zip(outcomes, files, strict=True):
         if outcome.file_path != source.path:
-            raise RepositoryTransportError("epistemic-graph reordered file outcomes")
+            raise RepositoryTransportError("medulla reordered file outcomes")
         if outcome.content_digest != source.blob_digest:
-            raise RepositoryTransportError("epistemic-graph outcome digest mismatch")
+            raise RepositoryTransportError("medulla outcome digest mismatch")
         if _status_value(outcome.status) not in {
             "success",
             "unsupported",
             "error",
         }:
-            raise RepositoryTransportError(
-                "epistemic-graph returned unknown parse status"
-            )
+            raise RepositoryTransportError("medulla returned unknown parse status")
         if not _valid_digest(outcome.parser_capability_digest):
             raise RepositoryTransportError("parser capability digest is invalid")
         if not isinstance(outcome.diagnostics, list):

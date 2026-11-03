@@ -1,7 +1,7 @@
 """Serve a connector's declarative content as native MCP primitives.
 
 RF-ADR-009 section 2.1: skills, prompts, ontologies, SHACL shapes and the
-data-source declaration reach epistemic-graph through the MCP primitives the server
+data-source declaration reach medulla through the MCP primitives the server
 already serves. Registered from the connector package layout:
 
 ==================================  ==============================================

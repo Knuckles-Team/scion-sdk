@@ -36,8 +36,8 @@ from scion_sdk.contracts import (
     StreamDescriptor,
 )
 from scion_sdk.ports.sink import Sink
-from scion_sdk.sinks.epistemic_graph import (
-    EpistemicGraphSink,
+from scion_sdk.sinks.medulla import (
+    MedullaSink,
     PackImportAuthorityResolver,
 )
 from scion_sdk.testing.results import assert_conformant
@@ -394,9 +394,9 @@ def test_small_descriptors() -> None:
         SourceCheckpoint.model_validate({"stream": "s", "position": {}, "copied": True})
 
 
-async def test_epistemic_graph_sink_uses_generated_source_ingest_end_to_end() -> None:
+async def test_medulla_sink_uses_generated_source_ingest_end_to_end() -> None:
     client = _GeneratedClient()
-    sink = EpistemicGraphSink(client, _pack_authority)
+    sink = MedullaSink(client, _pack_authority)
     batch = _batch(
         _record(title="t"),
         checkpoint=SourceCheckpoint(stream="demo", position={"page": 2}),
@@ -417,20 +417,20 @@ async def test_epistemic_graph_sink_uses_generated_source_ingest_end_to_end() ->
     )
 
 
-async def test_epistemic_graph_sink_rejects_mismatched_generated_receipt() -> None:
-    sink = EpistemicGraphSink(_GeneratedClient(mismatch=True), _pack_authority)
+async def test_medulla_sink_rejects_mismatched_generated_receipt() -> None:
+    sink = MedullaSink(_GeneratedClient(mismatch=True), _pack_authority)
     batch = _batch()
     with pytest.raises(ValueError, match="does not bind"):
         await sink.submit(batch)
 
 
-async def test_epistemic_graph_sink_rejects_mismatched_status() -> None:
-    sink = EpistemicGraphSink(_GeneratedClient(status_mismatch=True), _pack_authority)
+async def test_medulla_sink_rejects_mismatched_status() -> None:
+    sink = MedullaSink(_GeneratedClient(status_mismatch=True), _pack_authority)
     with pytest.raises(ValueError, match="does not bind"):
         await sink.source_status("demo-agent", "demo")
 
 
-async def test_epistemic_graph_sink_imports_with_live_generated_authority() -> None:
+async def test_medulla_sink_imports_with_live_generated_authority() -> None:
     resolved: list[str] = []
 
     async def authority(
@@ -440,7 +440,7 @@ async def test_epistemic_graph_sink_imports_with_live_generated_authority() -> N
         return _catalog(), _mutation_context()
 
     client = _PackClient()
-    result = await EpistemicGraphSink(client, authority).import_pack(_pack())
+    result = await MedullaSink(client, authority).import_pack(_pack())
     assert isinstance(result, PackImportResultUnchanged)
     assert resolved == ["demo-agent"]
     methods = [method for method, _, _ in client.calls]
@@ -459,7 +459,7 @@ async def test_epistemic_graph_sink_imports_with_live_generated_authority() -> N
     assert import_call[2].startswith("connector-pack:demo-agent:import:")
 
 
-async def test_epistemic_graph_sink_resolves_pack_authority_for_every_import() -> None:
+async def test_medulla_sink_resolves_pack_authority_for_every_import() -> None:
     resolved: list[str] = []
 
     async def authority(
@@ -472,26 +472,24 @@ async def test_epistemic_graph_sink_resolves_pack_authority_for_every_import() -
     digest = pack_digest(
         pack.connector, _catalog(), pack.archive.server, pack.archive.entries
     )
-    sink = EpistemicGraphSink(_PackClient(head_digest=digest), authority)
+    sink = MedullaSink(_PackClient(head_digest=digest), authority)
     await sink.import_pack(pack)
     await sink.import_pack(pack)
     assert resolved == ["demo-agent", "demo-agent"]
 
 
-async def test_epistemic_graph_sink_preserves_typed_pack_rejection() -> None:
+async def test_medulla_sink_preserves_typed_pack_rejection() -> None:
     async def authority(
         _connector: str,
     ) -> tuple[McpCatalogSnapshotBinding, AgentLibraryMutationContext]:
         return _catalog(), _mutation_context()
 
-    result = await EpistemicGraphSink(_PackClient(reject=True), authority).import_pack(
-        _pack()
-    )
+    result = await MedullaSink(_PackClient(reject=True), authority).import_pack(_pack())
     assert isinstance(result, PackImportResultRejected)
     assert result.violations[0].code.value == "MALFORMED_INDEX"
 
 
-async def test_epistemic_graph_sink_replays_matching_pack_without_upload() -> None:
+async def test_medulla_sink_replays_matching_pack_without_upload() -> None:
     async def authority(
         _connector: str,
     ) -> tuple[McpCatalogSnapshotBinding, AgentLibraryMutationContext]:
@@ -502,21 +500,21 @@ async def test_epistemic_graph_sink_replays_matching_pack_without_upload() -> No
         pack.connector, _catalog(), pack.archive.server, pack.archive.entries
     )
     client = _PackClient(head_digest=digest)
-    result = await EpistemicGraphSink(client, authority).import_pack(pack)
+    result = await MedullaSink(client, authority).import_pack(pack)
     assert isinstance(result, PackImportResultUnchanged)
     assert result.pack_digest == digest and result.binding_revision == 4
     assert [method for method, _, _ in client.calls] == ["ConnectorPack"]
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R001")
-async def test_epistemic_graph_sink_retries_one_pack_head_conflict() -> None:
+async def test_medulla_sink_retries_one_pack_head_conflict() -> None:
     async def authority(
         _connector: str,
     ) -> tuple[McpCatalogSnapshotBinding, AgentLibraryMutationContext]:
         return _catalog(), _mutation_context()
 
     client = _PackClient(conflict_once=True)
-    result = await EpistemicGraphSink(client, authority).import_pack(_pack())
+    result = await MedullaSink(client, authority).import_pack(_pack())
     assert isinstance(result, PackImportResultUnchanged)
     imports = [
         call
@@ -527,16 +525,14 @@ async def test_epistemic_graph_sink_retries_one_pack_head_conflict() -> None:
     assert imports[0][2] == imports[1][2]
 
 
-async def test_epistemic_graph_sink_rejects_mismatched_pack_digest() -> None:
+async def test_medulla_sink_rejects_mismatched_pack_digest() -> None:
     async def authority(
         _connector: str,
     ) -> tuple[McpCatalogSnapshotBinding, AgentLibraryMutationContext]:
         return _catalog(), _mutation_context()
 
     with pytest.raises(ValueError, match="does not bind"):
-        await EpistemicGraphSink(_PackClient(mismatch=True), authority).import_pack(
-            _pack()
-        )
+        await MedullaSink(_PackClient(mismatch=True), authority).import_pack(_pack())
 
 
 async def test_in_memory_sink_acknowledges_once() -> None:
@@ -601,7 +597,7 @@ async def test_sink_passes_the_mass_withdrawal_decision_to_the_engine(
         return _catalog(), _mutation_context()
 
     client = _PackClient()
-    await EpistemicGraphSink(client, authority).import_pack(
+    await MedullaSink(client, authority).import_pack(
         _pack(), allow_mass_withdrawal=allow
     )
     (request,) = _import_requests(client)

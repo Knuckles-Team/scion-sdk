@@ -18,7 +18,7 @@ from scion_sdk.manifest.model import (
     ResourceSpec,
     SchemaMapping,
 )
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.taxonomy.records import TaxonRecord
 from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
 
@@ -151,7 +151,7 @@ async def exercise(url, provider_name, with_context=False):
                 resources=resources,
             )
 
-        sink = EpistemicGraphSink(engine, authority)
+        sink = MedullaSink(engine, authority)
         cycle = await graph_helpers.collect_source_cycle(
             engine, server, sink, CONNECTOR, "taxa", adapter
         )

@@ -155,7 +155,7 @@ def test_engine_client_must_return_the_same_bounded_result_contract() -> None:
     engine = ProfileResult.model_validate(
         {
             **local.model_dump(mode="json"),
-            "algorithm": "epistemic-graph-profile",
+            "algorithm": "medulla-profile",
         }
     )
     request = ProfileRequest(
@@ -253,7 +253,7 @@ def test_engine_profile_validation_rejects_the_wrong_authority_or_target() -> No
     with pytest.raises(ProfileProtocolError, match="wrong authority"):
         validate_engine_profile(local, request)
     engine = ProfileResult.model_validate(
-        {**local.model_dump(mode="json"), "algorithm": "epistemic-graph-profile"}
+        {**local.model_dump(mode="json"), "algorithm": "medulla-profile"}
     )
     assert validate_engine_profile(engine, request) == engine
     moved = ProfileRequest(
@@ -329,7 +329,7 @@ def test_engine_profile_revalidates_mutated_nested_results() -> None:
         pa.table({"value": [1, 1, 2, 2]}), _plan().profile, target_ref="engine:table"
     )
     engine = ProfileResult.model_validate(
-        {**local.model_dump(mode="python"), "algorithm": "epistemic-graph-profile"}
+        {**local.model_dump(mode="python"), "algorithm": "medulla-profile"}
     )
     request = ProfileRequest(schema_version="data-prep-profile.v1", target=local.target)
     engine.column_profiles[0].top_k.append(TopKEntry(value=987654321, count=1))

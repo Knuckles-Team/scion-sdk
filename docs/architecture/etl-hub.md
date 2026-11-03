@@ -6,7 +6,7 @@
 > `knowledge_graph/backends/sparql/stardog_backend.py` ·
 > `knowledge_graph/enrichment/{provenance,registry,materialize,writeback}` ·
 > `knowledge_graph/integrations/stardog_sync.py`
-> **Related:** [OWL/RDF Layer](https://knuckles-team.github.io/agent-utilities/architecture/owl_rdf_layer/) · [Graph Backend Architecture](https://knuckles-team.github.io/epistemic-graph/architecture/graph-backends/) ·
+> **Related:** [OWL/RDF Layer](https://knuckles-team.github.io/agent-utilities/architecture/owl_rdf_layer/) · [Graph Backend Architecture](https://knuckles-team.github.io/medulla/architecture/graph-backends/) ·
 > [Camunda + ARIS ↔ KG](camunda-aris-integration.md) · Recipe: [Stardog + pg-age](https://knuckles-team.github.io/agent-utilities/recipes/databases/)
 
 The agent-utilities Knowledge Graph is the **canonical hub** of a bidirectional ETL
@@ -139,6 +139,6 @@ graph originate?".
 ## Related
 
 - [OWL/RDF Layer](https://knuckles-team.github.io/agent-utilities/architecture/owl_rdf_layer/) — local SPARQL + promotion/reasoning over any backend.
-- [Graph Backend Architecture](https://knuckles-team.github.io/epistemic-graph/architecture/graph-backends/) — connection registry roles + fan-out mirroring.
+- [Graph Backend Architecture](https://knuckles-team.github.io/medulla/architecture/graph-backends/) — connection registry roles + fan-out mirroring.
 - [Camunda + ARIS ↔ KG](camunda-aris-integration.md) — a worked bidirectional connector.
 - Recipe: [Stardog + pg-age databases](https://knuckles-team.github.io/agent-utilities/recipes/databases/) — operational setup (Step 2b/7).

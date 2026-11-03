@@ -2,7 +2,7 @@
 
 A change set names source observations only: entity records, text documents,
 binary media and the relationships between them. Mapping, identity, raw
-admission, tombstones and the durable checkpoint belong to epistemic-graph's
+admission, tombstones and the durable checkpoint belong to medulla's
 ``SourceIngest`` contract; nothing here builds graph rows.
 """
 
@@ -164,7 +164,7 @@ class Entity:
 
 @dataclass(frozen=True)
 class Document:
-    """A text record for semantic search; epistemic-graph enriches it."""
+    """A text record for semantic search; medulla enriches it."""
 
     id: str
     text: str
@@ -176,7 +176,7 @@ class Document:
 
 @dataclass(frozen=True)
 class MediaAsset:
-    """Binary content stored in epistemic-graph Blob CAS plus its asset record.
+    """Binary content stored in medulla Blob CAS plus its asset record.
 
     ``id`` defaults to ``blob:<digest>`` once the bytes are stored.
     """

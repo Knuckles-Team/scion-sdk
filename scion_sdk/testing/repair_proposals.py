@@ -23,5 +23,5 @@ class InMemoryRepairProposalStore:
         return (source, stream) in self.proposals
 
     def resolve(self, source: str, stream: str) -> None:
-        """Test/ops helper: clear a proposal once epistemic-graph resolves it."""
+        """Test/ops helper: clear a proposal once medulla resolves it."""
         self.proposals.pop((source, stream), None)

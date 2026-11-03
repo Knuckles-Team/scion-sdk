@@ -49,7 +49,7 @@ from scion_sdk.mcp.content import ConnectorContent
 from scion_sdk.ports.artifact_kind import ArtifactKind
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.runner.provisioning import provision_connector_content
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.testing.artifact_kinds import (
     check_artifact_kind,
     check_artifact_rejects_malformed,
@@ -546,10 +546,7 @@ def test_reference_extensions_are_discoverable_and_certified() -> None:
         is McpToolSourceAdapter
     )
     assert load_extension(TRANSPORT_GROUP, "mcp", policy=policy) is McpTransport
-    assert (
-        load_extension(SINK_GROUP, "epistemic_graph", policy=policy)
-        is EpistemicGraphSink
-    )
+    assert load_extension(SINK_GROUP, "medulla", policy=policy) is MedullaSink
     for identity in kinds:
         loaded = load_extension(ARTIFACT_KIND_GROUP, identity.name, policy=policy)
         assert isinstance(loaded, type) and isinstance(loaded(), ArtifactKind)

@@ -1,4 +1,4 @@
-"""SCION-CONNECTOR-CONTROL-R014.23: typed epistemic-graph compute adapter."""
+"""SCION-CONNECTOR-CONTROL-R014.23: typed medulla compute adapter."""
 
 from __future__ import annotations
 
@@ -137,7 +137,7 @@ def test_r014_24_audience_from_environment(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.delenv("MEDULLA_AUDIENCE", raising=False)
     default = EngineSettings.from_settings()
     assert default is not None
-    assert default.verified_context()["audience"] == "epistemic-graph"
+    assert default.verified_context()["audience"] == "medulla"
     monkeypatch.setenv("MEDULLA_AUDIENCE", "agent-services")
     custom = EngineSettings.from_settings()
     assert custom is not None

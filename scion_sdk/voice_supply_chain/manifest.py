@@ -12,7 +12,7 @@ only`` per the lane contract table).
 invariants", *the EG registry is the promotion/revocation authority; the external HF
 repository is the source record only.* No such EG registry exists yet (confirmed by
 reading ``crates/eg-audio``: its ``ingress``/``asr``/``tts`` modules are frozen
-contract-and-validation code with no I/O, no `epistemic-graph-voice-worker`, and their own
+contract-and-validation code with no I/O, no `medulla-voice-worker`, and their own
 doc comments say model acquisition/licensing/manifests are GOC-36's scope, not theirs).
 So :data:`VoiceManifestStatus` in this module intentionally stops at ``VERIFIED`` — it
 never reaches ``APPROVED``/``STAGED``, because this repo has no authority to grant worker

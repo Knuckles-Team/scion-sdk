@@ -4,7 +4,7 @@ Mirrors agent-utilities' equivalent ``DecisionRunner`` shape without
 importing ``agent_utilities`` -- the SDK must never depend on the agent
 control plane (see ``pyproject.toml``'s dependency comment) or on EG beyond
 its existing generated types.
-:class:`~scion_sdk.decide.epistemic_graph.EpistemicGraphDecisionRunner`
+:class:`~scion_sdk.decide.medulla.MedullaDecisionRunner`
 is the SDK's own real implementation, calling EG's generated ``Decide``
 sender (and, once EG publishes its decision-log sender, that too) over a
 verified client -- installed at the connector-sync composition root

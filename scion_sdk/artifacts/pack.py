@@ -1,4 +1,4 @@
-"""Capture MCP content into epistemic-graph's generated ConnectorPack archive."""
+"""Capture MCP content into medulla's generated ConnectorPack archive."""
 
 from __future__ import annotations
 

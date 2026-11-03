@@ -1,6 +1,6 @@
 """The runner end to end against the freshrss-agent and archivebox-api fixtures.
 
-Everything commits into ``InMemorySink``; epistemic-graph import is wave W1.
+Everything commits into ``InMemorySink``; medulla import is wave W1.
 """
 
 from __future__ import annotations

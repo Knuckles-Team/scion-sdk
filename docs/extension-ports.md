@@ -8,7 +8,7 @@ distribution and declares an entry point; nothing in the SDK changes.
 | `SourceAdapter` | `ports.source_adapter` | `scion_sdk.source_adapters` | `mcp_tool` |
 | `ArtifactKind` | `ports.artifact_kind` | `scion_sdk.artifact_kinds` | `tools`, `skills`, `prompts`, `resources` |
 | `Transport` | `ports.transport` | `scion_sdk.transports` | `mcp` |
-| `Sink` | `ports.sink` | `scion_sdk.sinks` | `epistemic_graph` |
+| `Sink` | `ports.sink` | `scion_sdk.sinks` | `medulla` |
 | `WriteBackPort` | `ports.writeback` | generated connector binding | `GovernedWriteBack` + fixture transport |
 | `PlatformBackendFactory` | `adapters.platform_admission` | `scion_sdk.platform_backends` | connector-owned provider |
 
@@ -75,7 +75,7 @@ malformed results are rejected. Aggregate prompt capture uses the existing
 The connector-sync runner's `/health/ready` (see [Connector sync](connector-sync.md)
 "Health") calls `readiness()` directly, bounded by a short timeout, so a sink
 implementation must answer it without a side effect and should not assume it
-is ever skipped. `epistemic_graph` requires a verified client and a live
+is ever skipped. `medulla` requires a verified client and a live
 ConnectorPack authority resolver at construction; the testing kit's
 `InMemorySink` always reports ready.
 

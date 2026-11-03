@@ -1,6 +1,6 @@
 """The transport knowledge ingest commits through.
 
-``EpistemicGraphIngestTransport`` wraps the shared
+``MedullaIngestTransport`` wraps the shared
 :class:`~scion_sdk.ingest.channel.SourceIngestChannel` and marks
 checkpoint races as retryable. Media bytes are stored through the verified
 client's own ``blob`` convenience, which drives the generated chunked-upload
@@ -21,14 +21,14 @@ from scion_sdk.ingest.channel import SourceIngestChannel
 from scion_sdk.ingest.contract import AcceptedContract
 from scion_sdk.ingest.errors import IngestConflictError, IngestError
 
-__all__ = ["EpistemicGraphIngestTransport", "IngestTransport"]
+__all__ = ["IngestTransport", "MedullaIngestTransport"]
 
 _CONFLICT_MARKER = "CONFLICT"
 
 
 @runtime_checkable
 class IngestTransport(Protocol):
-    """What the ingest facade needs from epistemic-graph."""
+    """What the ingest facade needs from medulla."""
 
     async def submit(self, request: SourceIngestionRequest) -> SourceIngestionReceipt:
         """Commit one request; raise ``IngestConflictError`` on a checkpoint race."""
@@ -43,8 +43,8 @@ class IngestTransport(Protocol):
         ...
 
 
-class EpistemicGraphIngestTransport:
-    """The ingest transport over a verified epistemic-graph client.
+class MedullaIngestTransport:
+    """The ingest transport over a verified medulla client.
 
     Implements :class:`IngestTransport` for everything the generated client
     exposes -- ``submit`` and ``source_status`` over the shared

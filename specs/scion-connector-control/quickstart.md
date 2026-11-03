@@ -2,7 +2,7 @@
 
 Run the served proof of the rows below from a fresh checkout after `uv sync`. Each command is a scenario that exercises the row through its production entry point.
 
-- SCION-CONNECTOR-CONTROL-R001: `PYTHONNOUSERSITE=1 uv run pytest tests/test_contracts_and_sink.py::test_epistemic_graph_sink_retries_one_pack_head_conflict -q`
+- SCION-CONNECTOR-CONTROL-R001: `PYTHONNOUSERSITE=1 uv run pytest tests/test_contracts_and_sink.py::test_medulla_sink_retries_one_pack_head_conflict -q`
 - SCION-CONNECTOR-CONTROL-R002: `PYTHONNOUSERSITE=1 uv run pytest tests/test_artifacts_discovery.py::test_contract_pin_normalization_passes_for_a_real_tool -q`
 - SCION-CONNECTOR-CONTROL-R003: `PYTHONNOUSERSITE=1 uv run pytest tests/test_certify_missing_output.py::test_served_certification_pins_missing_output_schema -q`
 - SCION-CONNECTOR-CONTROL-R004.1: `PYTHONNOUSERSITE=1 uv run pytest tests/test_artifacts_discovery.py::test_contract_pin_normalization_rejects_incomplete_tool_sets -q`

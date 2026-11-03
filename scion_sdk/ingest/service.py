@@ -1,4 +1,4 @@
-"""Commit typed change sets through an epistemic-graph ingest transport.
+"""Commit typed change sets through an medulla ingest transport.
 
 Each submission reads the stream's durable checkpoint, builds one generated
 ``SourceIngestionRequest`` that expects exactly that checkpoint, and commits it.
@@ -50,8 +50,8 @@ class KnowledgeIngest:
     """The process's knowledge-ingest service over one transport.
 
     Args:
-        transport: The epistemic-graph transport (see
-            :class:`~scion_sdk.ingest.transport.EpistemicGraphIngestTransport`).
+        transport: The medulla transport (see
+            :class:`~scion_sdk.ingest.transport.MedullaIngestTransport`).
         loop: The loop the transport's client runs on; ``None`` when the
             transport is used only from its caller's own loop.
         sync_timeout_s: Bound on :meth:`submit_blocking`.
@@ -80,7 +80,7 @@ class KnowledgeIngest:
         """Commit ``changes`` for ``binding``; the receipt is returned after commit.
 
         Raises:
-            IngestError: the change set is malformed or epistemic-graph refused it.
+            IngestError: the change set is malformed or medulla refused it.
             IngestConflictError: the checkpoint kept moving.
         """
         call = self._commit(binding, changes)

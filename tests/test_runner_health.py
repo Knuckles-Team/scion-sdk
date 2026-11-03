@@ -48,7 +48,7 @@ from scion_sdk.runner.health_state import (
 )
 from scion_sdk.runner.sink_probe import probe_sink_readiness, sink_reason
 from scion_sdk.runner.supervisor import ConnectorSyncRunner
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.testing.sinks import InMemorySink
 from scion_sdk.transports.mcp import McpTransport
 
@@ -189,7 +189,7 @@ async def test_liveness_goes_stale_when_the_scheduler_loop_wedges(
 
 
 async def test_readiness_reflects_sink_usability() -> None:
-    graph = _health(sink=EpistemicGraphSink(object(), pack_authority_unexpected))
+    graph = _health(sink=MedullaSink(object(), pack_authority_unexpected))
     graph.sync_registry(())
     report = await graph.readiness()
     assert report.status == 503
@@ -201,7 +201,7 @@ async def test_readiness_reflects_sink_usability() -> None:
     assert (report.status, report.body["reasons"]) == (200, [])
 
 
-async def test_epistemic_graph_sink_requires_live_commit_capabilities() -> None:
+async def test_medulla_sink_requires_live_commit_capabilities() -> None:
     class CapabilityClient:
         def __init__(self, advertised: frozenset[str]) -> None:
             self.advertised = advertised
@@ -213,9 +213,7 @@ async def test_epistemic_graph_sink_requires_live_commit_capabilities() -> None:
 
     methods = frozenset({"SourceIngest", "SourceIngestStatus", "ConnectorPack"})
     ready_client = CapabilityClient(methods)
-    state = await EpistemicGraphSink(
-        ready_client, pack_authority_unexpected
-    ).readiness()
+    state = await MedullaSink(ready_client, pack_authority_unexpected).readiness()
     assert state == SinkReadiness(ready=True)
     assert ready_client.probed == [
         "SourceIngest",
@@ -224,26 +222,22 @@ async def test_epistemic_graph_sink_requires_live_commit_capabilities() -> None:
     ]
 
     stale_client = CapabilityClient(methods - {"ConnectorPack"})
-    state = await EpistemicGraphSink(
-        stale_client, pack_authority_unexpected
-    ).readiness()
+    state = await MedullaSink(stale_client, pack_authority_unexpected).readiness()
     assert state == SinkReadiness(
         ready=False, reason="engine does not advertise ConnectorPack"
     )
-    state = await EpistemicGraphSink(object(), pack_authority_unexpected).readiness()
+    state = await MedullaSink(object(), pack_authority_unexpected).readiness()
     assert state == SinkReadiness(
         ready=False, reason="engine capability probe unavailable"
     )
 
 
-async def test_epistemic_graph_sink_hides_probe_failure_details() -> None:
+async def test_medulla_sink_hides_probe_failure_details() -> None:
     class FailedProbe:
         async def supports(self, _method: str) -> bool:
             raise RuntimeError("secret in transport URL")
 
-    state = await EpistemicGraphSink(
-        FailedProbe(), pack_authority_unexpected
-    ).readiness()
+    state = await MedullaSink(FailedProbe(), pack_authority_unexpected).readiness()
     assert state == SinkReadiness(ready=False, reason="engine capability probe failed")
 
 

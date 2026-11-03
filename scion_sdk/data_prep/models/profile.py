@@ -122,7 +122,7 @@ class ProfileResult(ProtocolModel):
     """The one typed result shared by local Arrow and engine profiling."""
 
     evidence_version: Literal["data-prep-profile.v1"]
-    algorithm: Literal["arrow-local-profile", "epistemic-graph-profile"]
+    algorithm: Literal["arrow-local-profile", "medulla-profile"]
     algorithm_version: Literal["1"]
     target: ProfileTarget
     schema_digest: Digest

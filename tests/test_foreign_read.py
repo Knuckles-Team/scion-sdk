@@ -114,9 +114,9 @@ async def test_generated_foreign_read_adapter_uses_published_eg_client_sender() 
     try:
         import medulla.generated.query as generated_query
     except ImportError:
-        pytest.skip("epistemic-graph generated query module is unavailable")
+        pytest.skip("medulla generated query module is unavailable")
     if not hasattr(generated_query, "send_foreign_read_open"):
-        pytest.skip("installed epistemic-graph does not publish foreign-read senders")
+        pytest.skip("installed medulla does not publish foreign-read senders")
 
     approval = {
         "batch_id": "batch",

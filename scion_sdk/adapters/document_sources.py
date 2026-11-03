@@ -3,11 +3,11 @@
 A document source reads text files and turns them into
 :class:`~scion_sdk.ingest.model.Document` observations. It owns no
 cursor: :func:`ingest_documents` reads the provider cursor from the stream's
-durable epistemic-graph checkpoint, polls the source after it, applies the
+durable medulla checkpoint, polls the source after it, applies the
 permission envelope to every document, and commits one
 :class:`~scion_sdk.ingest.model.ChangeSet` through
 :class:`~scion_sdk.ingest.service.KnowledgeIngest`. Chunking and
-embedding happen inside epistemic-graph after the commit, so every document
+embedding happen inside medulla after the commit, so every document
 carries its access facts before it can be embedded.
 
 Persisted identity is portable: record ids and source references are derived
@@ -81,7 +81,7 @@ def _read_roles(access: ExternalAccess) -> list[str]:
 
 
 def access_properties(access: ExternalAccess) -> dict[str, Any]:
-    """The record properties that carry one source ACL into epistemic-graph.
+    """The record properties that carry one source ACL into medulla.
 
     Groups become ``group:<id>`` and users ``user:<email>`` read roles beside
     the provider-neutral roles; markings stay mandatory compartments.
@@ -265,7 +265,7 @@ def _concept_ids(front: dict[str, Any]) -> str | None:
     if not isinstance(value, list):
         return None
     ids = [str(item).strip() for item in value if str(item).strip()]
-    # epistemic-graph types documentation conceptIds as one xsd:string.
+    # medulla types documentation conceptIds as one xsd:string.
     return " ".join(ids) or None
 
 

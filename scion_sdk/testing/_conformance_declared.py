@@ -14,7 +14,7 @@ from scion_sdk.testing.ontology_rollup import orphan_classes
 
 
 def _check_ontology_rollup(resolved: ResolvedConnector) -> None:
-    """Every ontology class reaches the epistemic-graph core namespace."""
+    """Every ontology class reaches the medulla core namespace."""
     for path in sorted(resolved.dirs.ontology.glob("*.ttl")):
         orphans = orphan_classes(path)
         _require(not orphans, f"{path.name}: orphan classes {sorted(orphans)}")

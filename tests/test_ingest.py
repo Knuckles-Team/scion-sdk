@@ -45,8 +45,8 @@ from scion_sdk.ingest.records import document_entity, media_entity
 from scion_sdk.ingest.request import build_request
 from scion_sdk.ingest.service import DEFAULT_ATTEMPTS, DEFAULT_SYNC_TIMEOUT_S
 from scion_sdk.ingest.transport import (
-    EpistemicGraphIngestTransport,
     IngestTransport,
+    MedullaIngestTransport,
 )
 from scion_sdk.testing.sinks import InMemorySink
 
@@ -102,7 +102,7 @@ async def test_nonempty_page_with_empty_mapping_does_not_advance() -> None:
 
 
 class _Transport(SinkBackedEngine):
-    """An in-memory epistemic-graph: CAS checkpoints, receipts and Blob CAS."""
+    """An in-memory medulla: CAS checkpoints, receipts and Blob CAS."""
 
     def __init__(self, *, conflicts: int = 0) -> None:
         super().__init__()
@@ -401,28 +401,28 @@ class _GeneratedClient:
         return (await self.sink.submit(request)).model_dump(mode="json")
 
 
-async def test_epistemic_graph_transport_uses_the_generated_contract() -> None:
-    transport = EpistemicGraphIngestTransport(_GeneratedClient())
+async def test_medulla_transport_uses_the_generated_contract() -> None:
+    transport = MedullaIngestTransport(_GeneratedClient())
     assert isinstance(transport, IngestTransport)
     receipt = await KnowledgeIngest(transport).submit(BINDING, _changes())
     assert receipt.affected_count == 2
-    racing = EpistemicGraphIngestTransport(_GeneratedClient("CONFLICT: checkpoint"))
+    racing = MedullaIngestTransport(_GeneratedClient("CONFLICT: checkpoint"))
     with pytest.raises(IngestConflictError):
         await racing.submit(build_request(BINDING, _changes(), previous=None))
-    failing = EpistemicGraphIngestTransport(_GeneratedClient("ACCESS_DENIED: no"))
+    failing = MedullaIngestTransport(_GeneratedClient("ACCESS_DENIED: no"))
     with pytest.raises(RuntimeError, match="ACCESS_DENIED"):
         await failing.submit(build_request(BINDING, _changes(), previous=None))
     with pytest.raises(ValueError, match="verified client"):
         SourceIngestChannel(None)
 
 
-async def test_epistemic_graph_transport_stores_media_via_the_client_blob_api() -> None:
+async def test_medulla_transport_stores_media_via_the_client_blob_api() -> None:
     """``store_blob`` delegates to the verified client's chunked-upload
     convenience (``client.blob.store``), so a change set with a media asset
     commits end to end through ``KnowledgeIngest``.
     """
     client = _GeneratedClient()
-    transport = EpistemicGraphIngestTransport(client)
+    transport = MedullaIngestTransport(client)
     digest = await transport.store_blob(b"x")
     assert digest == hashlib.sha256(b"x").hexdigest()
     assert client.blob.stored == {digest: b"x"}

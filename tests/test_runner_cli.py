@@ -16,7 +16,7 @@ from medulla.generated.connector_pack import (
 )
 
 from scion_sdk import decide
-from scion_sdk.decide.epistemic_graph import EpistemicGraphDecisionRunner
+from scion_sdk.decide.medulla import MedullaDecisionRunner
 from scion_sdk.decide.transport import GeneratedTransport
 from scion_sdk.discovery import (
     TRANSPORT_GROUP,
@@ -35,7 +35,7 @@ from scion_sdk.runner.logs import (
     structured,
 )
 from scion_sdk.runner.services import RunnerServices
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.transports.mcp import McpTransport
 
 
@@ -71,7 +71,7 @@ def test_structured_json_logs() -> None:
 def test_parser_and_state_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     args = build_parser().parse_args(["--config", "runner.yml"])
     assert (args.sink, args.once, args.log_format, args.state_dir) == (
-        "epistemic_graph",
+        "medulla",
         False,
         "json",
         None,
@@ -88,13 +88,13 @@ def test_default_services_load_certified_extensions(tmp_path: Path) -> None:
     built = default_services(
         RunnerSettings(),
         state_dir=tmp_path,
-        sink_name="epistemic_graph",
+        sink_name="medulla",
         sink_client=verified_client,
         pack_import_authority=_pack_import_authority,
     )
     assert isinstance(built, RunnerServices)
     assert isinstance(built.transport, McpTransport)
-    assert isinstance(built.sink, EpistemicGraphSink)
+    assert isinstance(built.sink, MedullaSink)
     assert built.sink._client is verified_client
     assert built.sink._pack_import_authority is _pack_import_authority
     assert sorted(kind.kind for kind in built.kinds) == [
@@ -111,15 +111,13 @@ def test_default_services_load_certified_extensions(tmp_path: Path) -> None:
         default_services(
             RunnerSettings(),
             state_dir=tmp_path,
-            sink_name="epistemic_graph",
+            sink_name="medulla",
             sink_client=verified_client,
             pack_import_authority=_pack_import_authority,
             policy=CertifiedExtensions(()),
         )
     with pytest.raises(ExtensionDiscoveryError, match="pack import authority"):
-        default_services(
-            RunnerSettings(), state_dir=tmp_path, sink_name="epistemic_graph"
-        )
+        default_services(RunnerSettings(), state_dir=tmp_path, sink_name="medulla")
 
 
 @pytest.fixture
@@ -136,7 +134,7 @@ def test_default_services_installs_no_decide_runner_without_a_tenant(
         built = default_services(
             RunnerSettings(),
             state_dir=tmp_path,
-            sink_name="epistemic_graph",
+            sink_name="medulla",
             sink_client=object(),
             pack_import_authority=_pack_import_authority,
         )
@@ -168,12 +166,12 @@ def test_default_services_installs_the_eg_backed_decide_runner_with_a_tenant(
     built = default_services(
         RunnerSettings(),
         state_dir=tmp_path,
-        sink_name="epistemic_graph",
+        sink_name="medulla",
         sink_client=verified_client,
         pack_import_authority=_pack_import_authority,
         decide_tenant="tenant-connector-sync",
     )
-    assert isinstance(built.decide_runner, EpistemicGraphDecisionRunner)
+    assert isinstance(built.decide_runner, MedullaDecisionRunner)
     assert built.decide_runner.tenant == "tenant-connector-sync"
     assert isinstance(built.decide_runner.transport, GeneratedTransport)
     assert built.decide_runner.transport.client is verified_client
@@ -194,15 +192,11 @@ def test_decide_runner_is_never_built_for_a_non_eg_sink_or_missing_inputs() -> N
         is None
     )
     assert (
-        _decide_runner(
-            "epistemic_graph", None, decide_tenant="tenant-t", decide_bindings=None
-        )
+        _decide_runner("medulla", None, decide_tenant="tenant-t", decide_bindings=None)
         is None
     )
     assert (
-        _decide_runner(
-            "epistemic_graph", object(), decide_tenant=None, decide_bindings=None
-        )
+        _decide_runner("medulla", object(), decide_tenant=None, decide_bindings=None)
         is None
     )
 
@@ -236,7 +230,7 @@ def test_cli_main_installs_the_decide_runner_with_a_verified_client(
     )
     assert exit_code == 0
     runner = decide.current_runner()
-    assert isinstance(runner, EpistemicGraphDecisionRunner)
+    assert isinstance(runner, MedullaDecisionRunner)
     assert runner.tenant == "tenant-connector-sync"
     assert isinstance(runner.transport, GeneratedTransport)
     assert runner.transport.client is verified_client
@@ -257,7 +251,7 @@ def test_cli_main_env_tenant_overrides_the_injected_one(
     )
     assert exit_code == 0
     runner = decide.current_runner()
-    assert isinstance(runner, EpistemicGraphDecisionRunner)
+    assert isinstance(runner, MedullaDecisionRunner)
     assert runner.tenant == "env-tenant"
 
 

@@ -12,7 +12,7 @@ from test_contracts_and_sink import _catalog, _mutation_context
 from test_event_feeds import CONNECTOR, _rum_event
 from test_event_replay_checkpoint import _sync
 
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 
 
 async def run(socket_path: str) -> None:
@@ -29,7 +29,7 @@ async def run(socket_path: str) -> None:
                 update={"tenant_id": TENANT}
             )
 
-        sink = EpistemicGraphSink(client, authority)
+        sink = MedullaSink(client, authority)
         result = await _sync(sink, _rum_event("restart-proof", tenant_id=TENANT))
         status = await sink.source_status(CONNECTOR, "rum-stream")
         print(

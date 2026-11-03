@@ -47,7 +47,7 @@ def test_base_modules_import_without_the_mcp_extra() -> None:
             "scion_sdk.runner.provisioning",
             "scion_sdk.runner.worker",
             "scion_sdk.certify.cli",
-            "scion_sdk.sinks.epistemic_graph",
+            "scion_sdk.sinks.medulla",
         ):
             importlib.import_module(name)
         """

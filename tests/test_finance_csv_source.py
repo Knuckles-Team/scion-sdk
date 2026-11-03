@@ -28,7 +28,7 @@ from scion_sdk.finance.csv_source import (
 )
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
-from scion_sdk.sinks.epistemic_graph import EpistemicGraphSink
+from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.transports.mcp import McpTransport
 
 
@@ -120,7 +120,7 @@ async def _exercise():
         async def authority(_connector):
             return _catalog(), context
 
-        sink = EpistemicGraphSink(client, authority)
+        sink = MedullaSink(client, authority)
         preset = csv_activity_preset(
             stream="activities", server=CONNECTOR, tool="csv_activities"
         )

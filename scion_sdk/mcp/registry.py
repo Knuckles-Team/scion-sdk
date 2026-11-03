@@ -3,10 +3,10 @@
 Extracted from the ``RegisterServer`` lease loop in
 ``agent_utilities.mcp.server_factory``. AU reached the engine through its own
 ``GraphComputeEngine`` singleton; here the registry is a port, and
-:class:`EpistemicGraphServerRegistry` adapts an ``medulla`` client that
+:class:`MedullaServerRegistry` adapts an ``medulla`` client that
 exposes ``server_registry.register``. A client that predates ``RegisterServer``
-(including epistemic-graph 2.23.0) is refused at construction instead of
-failing silently on every heartbeat. Epistemic-graph 2.27.0 is the SDK's first
+(including medulla 2.23.0) is refused at construction instead of
+failing silently on every heartbeat. Medulla 2.27.0 is the SDK's first
 compatible client contract.
 """
 
@@ -24,7 +24,7 @@ from scion_sdk.config import setting
 __all__ = [
     "DEFAULT_LEASE_TTL_SECONDS",
     "MIN_LEASE_TTL_SECONDS",
-    "EpistemicGraphServerRegistry",
+    "MedullaServerRegistry",
     "ServerRegistry",
     "ServerRegistryUnavailableError",
     "endpoint_reference",
@@ -59,14 +59,14 @@ class ServerRegistryUnavailableError(RuntimeError):
     """The supplied client cannot register servers."""
 
 
-class EpistemicGraphServerRegistry:
+class MedullaServerRegistry:
     """Adapts an ``medulla`` client's ``server_registry`` namespace."""
 
     def __init__(self, client: object) -> None:
         namespace = getattr(client, "server_registry", None)
         if not callable(getattr(namespace, "register", None)):
             raise ServerRegistryUnavailableError(
-                "this epistemic-graph client does not expose RegisterServer"
+                "this medulla client does not expose RegisterServer"
             )
         self._namespace: Any = namespace
 
