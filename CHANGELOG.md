@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1
+
+### Added
+
+- A connector can declare upstream MCP servers as data and serve them behind its own
+  server: namespaced `<namespace>_<tool>` proxies, fail-closed stdio roots, credentials
+  and TLS by reference only, pooled lifecycle with a restart circuit (#589).
+
 ## Unreleased
 
 ### Fixed
