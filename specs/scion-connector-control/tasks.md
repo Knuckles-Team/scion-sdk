@@ -288,16 +288,16 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [ ] T281 [US1] SCION-CONNECTOR-CONTROL-R911 Tool declaration of a resource protocol.
 - [ ] T282 [US1] SCION-CONNECTOR-CONTROL-R912 Virtual-graph SQL and document dialect declaration.
 - [ ] T283 [US1] SCION-CONNECTOR-CONTROL-R913 One capability contract unifies a skill resource and a tool, and a frontend contribution declares its read model.
-- [ ] T284 [US1] SCION-CONNECTOR-CONTROL-R914 The SDK serves a declarative registry of upstream MCP servers behind one connector server (rollup).
-- [ ] T285 [US1] SCION-CONNECTOR-CONTROL-R914.1 Model: the upstream declaration.
-- [ ] T286 [US1] SCION-CONNECTOR-CONTROL-R914.2 Refusal: a stdio upstream declares its filesystem roots or it does not start.
-- [ ] T287 [US1] SCION-CONNECTOR-CONTROL-R914.3 Behavior: credentials, environment and TLS arrive by reference only.
-- [ ] T288 [US1] SCION-CONNECTOR-CONTROL-R914.4 Behavior: bridge mode attaches the proxy to a running desktop application.
-- [ ] T289 [US1] SCION-CONNECTOR-CONTROL-R914.5 Wiring: the loader turns declarations into namespaced providers on the connector server.
-- [ ] T290 [US1] SCION-CONNECTOR-CONTROL-R914.6 Behavior: per-upstream toggles and the provider error strategy.
-- [ ] T291 [US1] SCION-CONNECTOR-CONTROL-R914.7 Behavior: namespaces start hidden, and activation tools reveal them per session.
-- [ ] T292 [US1] SCION-CONNECTOR-CONTROL-R914.8 Behavior: stdio upstreams run in a shared pool, not one process per session.
-- [ ] T293 [US1] SCION-CONNECTOR-CONTROL-R914.9 Evidence: health and readiness per upstream.
-- [ ] T294 [US1] SCION-CONNECTOR-CONTROL-R914.10 Behavior: elicitation and confirmation pass through once, with no second gate.
-- [ ] T295 [US1] SCION-CONNECTOR-CONTROL-R914.11 Behavior: schema-fingerprint drift is detected and reported.
-- [ ] T296 [US1] SCION-CONNECTOR-CONTROL-R914.12 Behavior: certification treats upstream tools as declared and unpinned.
+- [x] T284 [US1] SCION-CONNECTOR-CONTROL-R914 The SDK serves a declarative registry of upstream MCP servers behind one connector server (rollup).
+- [x] T285 [US1] SCION-CONNECTOR-CONTROL-R914.1 Model: the upstream declaration.
+- [x] T286 [US1] SCION-CONNECTOR-CONTROL-R914.2 Refusal: a stdio upstream declares its filesystem roots or it does not start.
+- [x] T287 [US1] SCION-CONNECTOR-CONTROL-R914.3 Behavior: credentials, environment and TLS arrive by reference only.
+- [x] T288 [US1] SCION-CONNECTOR-CONTROL-R914.4 Behavior: bridge mode attaches the proxy to a running desktop application.
+- [x] T289 [US1] SCION-CONNECTOR-CONTROL-R914.5 Wiring: the loader turns declarations into namespaced providers on the connector server.
+- [x] T290 [US1] SCION-CONNECTOR-CONTROL-R914.6 Behavior: per-upstream toggles and the provider error strategy.
+- [x] T291 [US1] SCION-CONNECTOR-CONTROL-R914.7 Behavior: namespaces start hidden, and activation tools reveal them per session.
+- [x] T292 [US1] SCION-CONNECTOR-CONTROL-R914.8 Behavior: stdio upstreams run in a shared pool, not one process per session.
+- [x] T293 [US1] SCION-CONNECTOR-CONTROL-R914.9 Evidence: health and readiness per upstream.
+- [x] T294 [US1] SCION-CONNECTOR-CONTROL-R914.10 Behavior: elicitation and confirmation pass through once, with no second gate.
+- [x] T295 [US1] SCION-CONNECTOR-CONTROL-R914.11 Behavior: schema-fingerprint drift is detected and reported.
+- [x] T296 [US1] SCION-CONNECTOR-CONTROL-R914.12 Behavior: certification treats upstream tools as declared and unpinned.

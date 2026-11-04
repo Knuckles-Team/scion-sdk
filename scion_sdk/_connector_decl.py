@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from importlib.metadata import entry_points
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from scion_sdk.connector_hooks import (
     InlineTool,
@@ -25,6 +25,9 @@ from scion_sdk.connector_identity import (
     connector_point,
     connector_version,
 )
+
+if TYPE_CHECKING:
+    from scion_sdk.mcp.upstreams.model import UpstreamDecl
 
 
 @dataclass(frozen=True)
@@ -65,6 +68,9 @@ class Connector:
         content_root: Package-relative directory holding ``skills/``,
             ``prompts/``, ``ontology/`` and ``connectors/``; defaults to the
             package root.
+        upstreams: Upstream MCP servers proxied behind this connector's own
+            server (SCION-CONNECTOR-CONTROL-R914); the SDK namespaces, pools
+            and health-checks them. Empty (and no overlay file) pays nothing.
     """
 
     instructions: str = ""
@@ -85,6 +91,7 @@ class Connector:
     routes: tuple[Route, ...] = ()
     readiness: ReadinessProbe | None = None
     content_root: str | None = None
+    upstreams: tuple[UpstreamDecl, ...] = ()
 
     def __post_init__(self) -> None:
         if (self.api is None) != (self.get_client is None):
@@ -95,6 +102,12 @@ class Connector:
             raise ValueError("action_prefixes name tools of action_tools")
         if self.content_root is not None:
             content_subdir(self.content_root)
+        if self.upstreams:
+            from scion_sdk.mcp.upstreams.model import UpstreamDecl
+
+            for decl in self.upstreams:
+                if not isinstance(decl, UpstreamDecl):
+                    raise TypeError("upstreams must hold scion_sdk UpstreamDecl values")
 
 
 @dataclass(frozen=True)
