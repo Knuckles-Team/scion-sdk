@@ -107,8 +107,25 @@ def _serve_hooks(mcp: FastMCP[Any], args: Any, resolved: ResolvedConnector) -> N
     for register in connector.extra_registrations:
         register(context)
     serve_routes(mcp, connector.routes)
+    registry = _attach_upstreams(mcp, connector, args)
     if connector.readiness is not None:
-        serve_readiness(mcp, connector.readiness)
+        probe = connector.readiness
+        if registry is not None:
+            from scion_sdk.mcp.upstreams.health import compose_readiness
+
+            probe = compose_readiness(connector.readiness, registry)
+        serve_readiness(mcp, probe)
+
+
+def _attach_upstreams(mcp: FastMCP[Any], connector: Any, args: Any) -> Any:
+    """The upstream registry of the serve path; ``None`` when the connector pays nothing."""
+    from scion_sdk.config import setting
+
+    if not connector.upstreams and not setting("SCION_UPSTREAMS_FILE"):
+        return None
+    from scion_sdk.mcp.upstreams.loader import attach_upstreams
+
+    return attach_upstreams(mcp, connector.upstreams)
 
 
 def _calling_package() -> str:

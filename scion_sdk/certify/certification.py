@@ -15,7 +15,9 @@ from scion_sdk.certify.fingerprints import tool_name
 from scion_sdk.certify.listing import (
     ToolListing,
     ToolListingError,
+    UpstreamReport,
     list_server_tools,
+    upstream_reports,
 )
 from scion_sdk.certify.read_only_check import ToolFixture
 from scion_sdk.certify.verdicts import ToolStatus, ToolVerdict, tool_verdicts
@@ -28,7 +30,7 @@ from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.ports.transport import Transport
 from scion_sdk.testing.successor_parity import compare_successor_tools
 
-__all__ = ["CertificationReport", "certify_connector"]
+__all__ = ["CertificationReport", "UpstreamReport", "certify_connector"]
 
 _logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ class CertificationReport:
     verdicts: tuple[ToolVerdict, ...] = ()
     exact_name_check: bool | None = None
     exact_name_reason: str = ""
+    upstreams: tuple[UpstreamReport, ...] = ()
 
     @property
     def passed(self) -> bool:
@@ -89,6 +92,19 @@ class CertificationReport:
                 }
                 for verdict in self.verdicts
             ],
+            "upstreams": [
+                {
+                    "name": upstream.name,
+                    "namespace": upstream.namespace,
+                    "kind": upstream.kind,
+                    "state": upstream.state,
+                    "tool_count": upstream.tool_count,
+                    "fingerprint": upstream.fingerprint,
+                    "version": upstream.version,
+                    "expected_fingerprint": upstream.expected_fingerprint,
+                }
+                for upstream in self.upstreams
+            ],
         }
 
 
@@ -108,6 +124,7 @@ async def certify_connector(
             timeout_seconds=timeout_seconds,
             predecessor=predecessor,
         )
+        upstreams = upstream_reports(listing.upstreams_body)
     except (ToolListingError, ContractError) as exc:
         _logger.warning("connector certification failed: %s", exc)
         return CertificationReport(
@@ -125,6 +142,7 @@ async def certify_connector(
         verdicts=tool_verdicts(checkout, listing.tools, fixtures=fixtures),
         exact_name_check=exact[0],
         exact_name_reason=exact[1],
+        upstreams=upstreams,
     )
 
 
