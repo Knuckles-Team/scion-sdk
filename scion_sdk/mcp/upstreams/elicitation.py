@@ -16,7 +16,7 @@ advertised elicitation, the registry answers the upstream with
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 
 from fastmcp.client.elicitation import ElicitationHandler, ElicitResult
 from fastmcp.server.context import Context
@@ -94,7 +94,7 @@ class ForwardingProxyTool(ProxyTool):
         super().__init__(client_factory, **kwargs)
 
     @classmethod
-    def from_proxy_tool(cls, tool: ProxyTool) -> ForwardingProxyTool:
+    def from_proxy_tool(cls, tool: ProxyTool) -> Self:
         return cls(
             tool._client_factory,
             name=tool.name,

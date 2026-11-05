@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scion-sdk"
-version = "0.7.1"
+version = "0.8.0"
 description = "Scion SDK for the Arbora ecosystem: MCP server scaffolding, connector manifests, and typed source/content extension ports"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -96,6 +96,17 @@ vector-chroma = [
 workspace = [
     "pypdf>=6.21.3,<7",
 ]
+# Storage backend provider libraries (scion_sdk.storage, R042). The WebDAV
+# and filesystem backends need only the base install.
+storage-s3 = [
+    "boto3>=1.43.114",
+]
+storage-gcs = [
+    "google-cloud-storage>=3.17.1",
+]
+storage-azure = [
+    "azure-storage-blob>=12.31.0",
+]
 
 [[project.authors]]
 name = "Repository Maintainers"
@@ -148,7 +159,8 @@ scion_sdk = ["py.typed", "skills/**/*", "ontology/*.ttl"]
 
 [dependency-groups]
 test = [
-    "scion-sdk[mcp,feeds,dataprep,integrity,graphql,a2a,requests,workspace]",
+    "scion-sdk[mcp,feeds,dataprep,integrity,graphql,a2a,requests,workspace,storage-s3]",
+    "moto[s3]>=5.2.4",
     "pandas>=2.2.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
@@ -190,6 +202,12 @@ warn_unreachable = true
 module = [
     "akshare",
     "atlassian_agent.*",
+    "azure.*",
+    "boto3",
+    "boto3.*",
+    "botocore.*",
+    "google.cloud",
+    "google.cloud.*",
     "ccxt",
     "emerald_exchange.*",
     "fasta2a",

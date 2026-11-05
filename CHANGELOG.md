@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.0
+
+### Added
+
+- `scion_sdk.storage`: one storage backend protocol with S3-compatible, two hosted
+  cloud object stores, local filesystem and a new WebDAV backend; a store registry
+  whose credentials are secret references only; endpoints pass the egress guard.
+  Extras `storage-s3`, `storage-gcs`, `storage-azure`
+  (SCION-CENTRALIZED-CAPABILITIES-R042).
+- `scion_sdk.exchange`: the artifact exchange. Per-run staging directories, inputs
+  from `exchange://<sink>/<key>` or `https` URLs, outputs published to every
+  configured sink with signed URLs, MCP resource links and `scion/artifacts`
+  metadata in tool results, size limits, retention and optional lineage records
+  (SCION-CENTRALIZED-CAPABILITIES-R043).
+- `UpstreamDecl.exchange`: a declared upstream runs each call through the exchange
+  (SCION-CONNECTOR-CONTROL-R914.13).
+
 ## 0.7.1
 
 ### Added
