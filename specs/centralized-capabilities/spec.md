@@ -13,6 +13,11 @@ A connector author must know which capabilities the SDK provides and which code 
 - FR-002: The index in `plan.md` names the owner row, the module or extra, and the conformance method of each row. A missing method reads "unchecked". Rows: `SCION-CENTRALIZED-CAPABILITIES-R001`.
 - SC-001: Every module path in the index exists in the package, and every owner row ID exists in a `requirements.md` file. Rows: `SCION-CENTRALIZED-CAPABILITIES-R001`.
 - SC-002: Every key in `[project.optional-dependencies]` appears in at least one row. Rows: `SCION-CENTRALIZED-CAPABILITIES-R040`.
+- FR-003: Connectors read and write object stores and file shares through one SDK backend protocol and its five backends. Rows: `SCION-CENTRALIZED-CAPABILITIES-R042`, `SCION-CENTRALIZED-CAPABILITIES-R042.1`, `SCION-CENTRALIZED-CAPABILITIES-R042.2`, `SCION-CENTRALIZED-CAPABILITIES-R042.3`, `SCION-CENTRALIZED-CAPABILITIES-R042.4`, `SCION-CENTRALIZED-CAPABILITIES-R042.5`.
+- FR-004: Store credentials arrive by secret reference only, and every storage endpoint passes the egress guard. Rows: `SCION-CENTRALIZED-CAPABILITIES-R042.6`, `SCION-CENTRALIZED-CAPABILITIES-R042.7`.
+- FR-005: A tool that produces files takes inputs from sinks or URLs and publishes outputs to every configured sink. Rows: `SCION-CENTRALIZED-CAPABILITIES-R043`, `SCION-CENTRALIZED-CAPABILITIES-R043.1`, `SCION-CENTRALIZED-CAPABILITIES-R043.2`, `SCION-CENTRALIZED-CAPABILITIES-R043.3`, `SCION-CENTRALIZED-CAPABILITIES-R043.4`.
+- FR-006: The tool result links each published output, and the engine may record its lineage. Rows: `SCION-CENTRALIZED-CAPABILITIES-R043.5`, `SCION-CENTRALIZED-CAPABILITIES-R043.6`.
+- SC-003: A served upstream call with one input reference returns one link, and both test sinks hold the output. Rows: `SCION-CENTRALIZED-CAPABILITIES-R042.8`, `SCION-CENTRALIZED-CAPABILITIES-R043.7`.
 
 ## Why a new spec
 
@@ -51,11 +56,24 @@ A reviewer checks that a connector ships no copy of a capability.
 
 1. **Given** a connector that builds its own HTTP session, **When** `sdk-conformance` runs, **Then** it reports a finding that cites row `SCION-CENTRALIZED-CAPABILITIES-R001`.
 
+### User Story 3 - Deliver a tool's output files to configured sinks (Priority: P1)
+
+An operator configures an object store and a WebDAV file share as sinks. A tool run writes a file. The operator finds the file in both sinks, and the caller gets a link.
+
+**Acceptance Scenarios**:
+
+1. **Given** two configured sinks, **When** a bound upstream tool writes `out.png`, **Then** both sinks hold it under `<namespace>/<date>/<run>/out.png`.
+2. **Given** an object-store sink with a signed-URL lifetime, **When** the run ends, **Then** the result links a signed URL.
+3. **Given** an input `exchange://files/in/photo.png`, **When** the tool runs, **Then** the tool reads the staged copy.
+
 ### Edge Cases
 
 - A row whose conformance method is unchecked reads "unchecked" and is not silently passed.
 - An owner row that no `requirements.md` defines fails the index test.
 - A module path that moves fails the index test until the row follows.
+- A store credential written as a literal refuses at load with `STORAGE_SECRET_LITERAL`.
+- A URL input that resolves to a private address refuses before the upstream runs.
+- An optional sink that fails leaves the call successful and records `EXCHANGE_PUBLISH_FAILED`.
 
 ## Assumptions
 

@@ -610,6 +610,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R914.10` | `tests/upstreams/test_elicitation_passthrough.py::test_single_prompt_forwarded_and_decline_when_client_cannot_elicit` |
 | `SCION-CONNECTOR-CONTROL-R914.11` | `tests/upstreams/test_drift.py::test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace` |
 | `SCION-CONNECTOR-CONTROL-R914.12` | `tests/upstreams/test_certify_upstreams.py::test_certify_excludes_proxied_tools_from_pins` |
+| `SCION-CONNECTOR-CONTROL-R914.13` | `tests/upstreams/test_upstream_exchange.py::test_bound_upstream_rewrites_paths_stages_inputs_and_publishes` |
 
 ## SCION-CONNECTOR-CONTROL-R914 acceptance
 
@@ -628,3 +629,4 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | Planned | `SCION-CONNECTOR-CONTROL-R914.10` | `tests/upstreams/test_elicitation_passthrough.py::test_single_prompt_forwarded_and_decline_when_client_cannot_elicit`: A fixture upstream elicits once. An eliciting client sees exactly one prompt, and the answer reaches the upstream. A client without elicitation causes `decline`, and the upstream's refusal comes back unchanged with the `scion/elicitation` metadata. The local confirmation helper is never called for the proxied tool. |
 | Planned | `SCION-CONNECTOR-CONTROL-R914.11` | `tests/upstreams/test_drift.py::test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace`: A fixture upstream changes one input schema. The status shows `drifted` with that tool name. With `on_drift: refuse`, the list is empty and a call refuses with `UPSTREAM_DRIFT_REFUSED`. A matching fingerprint stays `ready`. |
 | Planned | `SCION-CONNECTOR-CONTROL-R914.12` | `tests/upstreams/test_certify_upstreams.py::test_certify_excludes_proxied_tools_from_pins`: A fixture connector with two upstreams certifies with pins for local tools only. The report names both upstreams with a fingerprint. No upstream process starts. |
+| Planned | `SCION-CONNECTOR-CONTROL-R914.13` | `tests/upstreams/test_upstream_exchange.py::test_bound_upstream_rewrites_paths_stages_inputs_and_publishes`: A fixture upstream echoes its arguments. A relative `path` arrives as an absolute path in the run output directory. An absolute path arrives unchanged. An `exchange://` value arrives as a staged input path. The stdio command holds both exchange roots. An unbound upstream receives its arguments unchanged. |

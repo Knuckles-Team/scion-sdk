@@ -57,3 +57,20 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T051 SCION-CENTRALIZED-CAPABILITIES-R017.1 implement and prove: SDK A2A server takes a durable storage and serves tasks/list
 - [ ] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
 - [ ] T053 SCION-CENTRALIZED-CAPABILITIES-R041 implement and prove: connector-certify submits conformance evidence
+- [ ] T054 SCION-CENTRALIZED-CAPABILITIES-R042 implement and prove: Object store and file-share backends (rollup)
+- [ ] T055 SCION-CENTRALIZED-CAPABILITIES-R042.1 implement and prove: Model: one backend protocol for every store
+- [ ] T056 SCION-CENTRALIZED-CAPABILITIES-R042.2 implement and prove: S3-compatible backend
+- [ ] T057 SCION-CENTRALIZED-CAPABILITIES-R042.3 implement and prove: Hosted cloud object store backends
+- [ ] T058 SCION-CENTRALIZED-CAPABILITIES-R042.4 implement and prove: Local filesystem backend
+- [ ] T059 SCION-CENTRALIZED-CAPABILITIES-R042.5 implement and prove: WebDAV file-share backend
+- [ ] T060 SCION-CENTRALIZED-CAPABILITIES-R042.6 implement and prove: Store registry with secrets by reference
+- [ ] T061 SCION-CENTRALIZED-CAPABILITIES-R042.7 implement and prove: Storage endpoints pass the egress guard
+- [ ] T062 SCION-CENTRALIZED-CAPABILITIES-R042.8 implement and prove: Wiring: the exchange sinks write through the shared backends
+- [ ] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
+- [ ] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
+- [ ] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
+- [ ] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
+- [ ] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
+- [ ] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
+- [ ] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
+- [ ] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files

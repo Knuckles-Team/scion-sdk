@@ -42,11 +42,21 @@ scion_sdk/certify/              existing  connector-certify command
 tests/test_centralized_capability_index.py  existing  index test
 tests/test_a2a_protocol.py      existing  gains the R017.1 and R017.2 tests
 tests/test_conformance_plugin.py existing gains the R006.2 test
+scion_sdk/storage/              planned   backend protocol, five backends, store registry (R042)
+scion_sdk/exchange/             planned   settings, staging, inputs, publication, links, lineage (R043)
+scion_sdk/mcp/upstreams/exchange.py planned  the served proxy wrapper (SCION-CONNECTOR-CONTROL-R914.13)
+tests/storage/                  planned   R042 tests
+tests/exchange/                 planned   R043 tests and the served proof
 ```
 
 ## Phase 0: Research
 
-No unknowns. Each module path in the index exists in the package and the index test checks it on every run.
+The index rows hold no unknowns. The storage and exchange rows (R042, R043) held four unknowns. [research.md](research.md) records each decision:
+
+1. Where the backends live, and how connectors that serve the same stores move.
+2. How a pooled child process receives a per-call working directory.
+3. Which input forms the exchange accepts, and how it keeps egress safe.
+4. How the exchange records lineage without a new engine type.
 
 ## Phase 1: Design
 
@@ -116,6 +126,18 @@ Each module's interface stays in its owner row. This spec adds three interfaces.
 `RateLimiter(min_interval_seconds, *, clock=time.monotonic, sleep=asyncio.sleep)` in `scion_sdk.httpsupport.rate_limit`, exported from `scion_sdk.httpsupport`. The coroutine `wait()` sleeps only as long as the minimum interval needs. Concurrent callers queue on one lock. The first call never waits. The class is also an async context manager. The property `min_interval_seconds` returns the clamped interval.
 
 The `vector` extra carries the vector-store clients `qdrant-client`, `psycopg[binary,pool]`, and `pymongo`. The `vector-chroma` extra carries the embedded-index store client `chromadb` and its index adapter `llama-index-vector-stores-chroma`. The `psycopg` and `pymongo` floors equal the `db` floors. `test_vector_extras_share_db_floors` checks this.
+
+### Storage backends and artifact exchange (R042, R043)
+
+`scion_sdk.storage` holds the backend protocol, the value types, the error taxonomy, the store registry and five backends. The object-store connector carried the protocol and four backends; the SDK lifts them, and the connector then imports them. The WebDAV backend is new. It reaches file shares through the governed client.
+
+`scion_sdk.exchange` sits on top. `read_exchange_settings` reads one JSON document of stores and sinks. `RunStaging` opens a private input directory and a private output directory per run. `resolve_input` stages an `exchange://` reference or an `https` URL. `publish_outputs` writes each output to every sink. `attach_artifacts` adds resource links and metadata to the tool result. `record_lineage` submits one change set through the existing ingest facade.
+
+The served caller is the upstream proxy of `SCION-CONNECTOR-CONTROL-R914.13`. A connector that runs its own tools may call the same functions from a tool body.
+
+The lineage record uses core engine classes that exist today: `MediaFile` with `contentSha256`, `Action`, and the relations `participatedIn`, `hasInput` and `derivedFrom`. The engine needs no new type.
+
+New extras: `storage-s3` (`boto3`), `storage-gcs` (`google-cloud-storage`) and `storage-azure` (`azure-storage-blob`). The WebDAV backend needs only the base install.
 
 ### Live integration path
 
@@ -207,7 +229,7 @@ Fleet migration: most connectors use the central SDK pattern and the rest migrat
 
 ## Phase 2: Task approach
 
-Order the work producer first. Rows that extend the A2A server (R017.1, R017.2) and the certify submission (R041) wait for their provider rows in the Arbora and Medulla specs. Index rows need no task order. Each task line in tasks.md names one row.
+Order the work producer first. R042.1 lands before the backends, and R042.6 before R043.1. R043.2 to R043.6 land before the served proof R043.7 and `SCION-CONNECTOR-CONTROL-R914.13`. Rows that extend the A2A server (R017.1, R017.2) and the certify submission (R041) wait for their provider rows in the Arbora and Medulla specs. Index rows need no task order. Each task line in tasks.md names one row.
 
 ## Complexity Tracking
 

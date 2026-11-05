@@ -974,6 +974,8 @@ Decision, confirmation: the registry is a pass-through. The upstream owns its ow
 
 Risk: a hidden provider still answers list calls in the framework. The gate subclass returns empty lists while no session has the namespace active, and `test_activation_is_per_session_lazy_and_capped` proves no process starts.
 
+Decision, artifact exchange (R914.13): the proxy wraps each bound call in the exchange of `SCION-CENTRALIZED-CAPABILITIES-R043`. A pooled child receives its roots once, at spawn. So the exchange passes one input tree and one output tree as roots. Each call then works in its own run directory under those trees. The proxy rewrites relative path arguments into the run's output directory. The child writes there, and the exchange publishes what it finds. An absolute path passes through; the child's own roots still govern it.
+
 ## Phase 2: Task approach
 
 tasks.md holds one task line per active row, ordered producer first; rows that share no file are marked parallel by their order.

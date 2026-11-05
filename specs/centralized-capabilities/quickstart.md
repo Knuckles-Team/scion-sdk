@@ -25,3 +25,11 @@ uv run pytest tests/test_a2a_protocol.py tests/test_certify_surface.py
 ```
 
 Expected once built: `tasks/list` serves durable storage and the certify report reaches a loopback engine.
+
+## Storage backends and artifact exchange (R042, R043)
+
+```bash
+uv run pytest tests/storage tests/exchange tests/upstreams/test_upstream_exchange.py
+```
+
+Expected: every backend round-trips against its double. The served proof `tests/exchange/test_exchange_served.py::test_upstream_call_stages_input_publishes_output_and_links` returns one link, and both sinks hold the output.
