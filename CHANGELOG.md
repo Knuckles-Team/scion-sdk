@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1
+
+### Fixed
+
+- `SandboxRoots` flag names may be `None` for an upstream whose CLI has no root flags;
+  the loader passes none, and roots on a flagless side refuse with
+  `UPSTREAM_DECL_INVALID` (SCION-CONNECTOR-CONTROL-R914.2).
+
 ## 0.8.0
 
 ### Added
