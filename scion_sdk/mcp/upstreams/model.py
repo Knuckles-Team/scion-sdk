@@ -133,14 +133,29 @@ class SandboxRoots(BaseModel):
 
     The connector supplies the two flag names so the SDK stays vendor-neutral.
     An empty ``read`` or ``write`` tuple is an explicit deny and passes no flag.
+    A flag name of ``None`` says the upstream's CLI has no such flag: the SDK
+    passes none, and roots on that side refuse rather than being dropped.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     read: tuple[str, ...] = ()
     write: tuple[str, ...] = ()
-    read_flag: str
-    write_flag: str
+    read_flag: str | None
+    write_flag: str | None
+
+    @model_validator(mode="after")
+    def _roots_need_flags(self) -> SandboxRoots:
+        for side, roots, flag in (
+            ("read", self.read, self.read_flag),
+            ("write", self.write, self.write_flag),
+        ):
+            if roots and flag is None:
+                raise _refuse(
+                    UPSTREAM_DECL_INVALID,
+                    f"{side} roots declared but the upstream has no {side} flag",
+                )
+        return self
 
 
 class BridgeDecl(BaseModel):

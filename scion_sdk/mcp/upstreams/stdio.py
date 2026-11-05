@@ -86,10 +86,12 @@ def build_stdio_command(decl: UpstreamDecl) -> list[str]:
             UPSTREAM_ROOT_OVERLAP, f"{decl.name} read and write roots collide"
         )
     command = [decl.command, *decl.args]
-    for root in sandbox.read:
-        command.extend([sandbox.read_flag, root])
-    for root in sandbox.write:
-        command.extend([sandbox.write_flag, root])
+    if sandbox.read_flag is not None:
+        for root in sandbox.read:
+            command.extend([sandbox.read_flag, root])
+    if sandbox.write_flag is not None:
+        for root in sandbox.write:
+            command.extend([sandbox.write_flag, root])
     return command
 
 

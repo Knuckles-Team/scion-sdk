@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from scion_sdk.mcp.upstreams import SandboxRoots, UpstreamDecl, UpstreamDeclError
 from scion_sdk.mcp.upstreams.stdio import build_stdio_command
@@ -56,3 +57,12 @@ def test_missing_roots_refuse_and_empty_roots_pass_no_flag() -> None:
             _decl(_roots(read=("/srv/data",), write=("/srv/data/sub",)))
         )
     assert excinfo.value.code == "UPSTREAM_ROOT_OVERLAP"
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R914.2")
+def test_none_flag_passes_no_flag_and_refuses_roots() -> None:
+    flagless = SandboxRoots(read_flag=None, write_flag=None)
+    assert build_stdio_command(_decl(flagless)) == ["/usr/bin/alpha", "/app"]
+
+    with pytest.raises(ValidationError, match="UPSTREAM_DECL_INVALID"):
+        SandboxRoots(read=("/srv/one",), read_flag=None, write_flag="--write-root")
