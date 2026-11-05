@@ -491,7 +491,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-SOURCE-INGEST-R016.5` | `tests/test_media_tags.py::test_records_bind_producer_revision_and_input_digest` |
 | `SCION-SOURCE-INGEST-R016.6` | `tests/test_media_vision_served.py::test_image_inference_and_attachment` |
 | `SCION-SOURCE-INGEST-R005.41` | `tests/test_stream_source_served.py::test_offset_commits_after_accepted_checkpoint`, `tests/test_stream_source_served.py::test_offset_commits_after_accepted_checkpoint` |
-| `SCION-SOURCE-INGEST-R007.1` | `tests/conformance/test_drift_hold.py::test_checkpoint_held_on_engine_quarantine` |
+| `SCION-SOURCE-INGEST-R007.1` | `tests/conformance/test_drift_hold.py::test_checkpoint_held_on_engine_quarantine` (planned) |
 | `SCION-SOURCE-INGEST-R017.7` | `tests/test_ingest_contract_binding.py::test_binding_without_a_contract_is_refused`, `tests/test_ingest_contract_binding.py::test_binding_without_a_contract_is_refused` |
 | `SCION-SOURCE-INGEST-R903.1` | `tests/test_raw_source.py::test_models_round_trip_and_reject_invalid_offsets` |
 | `SCION-SOURCE-INGEST-R903.2` | `tests/test_raw_source.py::test_search_span_check_and_ceiling_on_an_unindexed_fixture` |
