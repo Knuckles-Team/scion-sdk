@@ -69,9 +69,18 @@ def bind_exchange_roots(
         return decl
     root = runtime.settings.staging_root
     sandbox = decl.sandbox
+    # A side whose flag is None has no flag to carry the tree: leave it alone.
     roots = SandboxRoots(
-        read=(*sandbox.read, str(input_tree(root))),
-        write=(*sandbox.write, str(output_tree(root))),
+        read=(
+            (*sandbox.read, str(input_tree(root)))
+            if sandbox.read_flag is not None
+            else sandbox.read
+        ),
+        write=(
+            (*sandbox.write, str(output_tree(root)))
+            if sandbox.write_flag is not None
+            else sandbox.write
+        ),
         read_flag=sandbox.read_flag,
         write_flag=sandbox.write_flag,
     )

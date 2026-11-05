@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2
+
+### Fixed
+
+- A bound exchange no longer appends its staging trees to a sandbox side whose flag is
+  `None`; 0.8.1 refused such a declaration at load (SCION-CONNECTOR-CONTROL-R914.13).
+
 ## 0.8.1
 
 ### Fixed

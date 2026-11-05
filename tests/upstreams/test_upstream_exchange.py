@@ -57,6 +57,13 @@ async def test_bound_upstream_rewrites_paths_stages_inputs_and_publishes(
     assert bound.sandbox.read == ("/data", str(staging / "in"))
     assert bound.sandbox.write == ("/work", str(staging / "out"))
 
+    flagless = decl.model_copy(
+        update={"sandbox": SandboxRoots(read_flag=None, write_flag=None)}
+    )
+    unflagged = bind_exchange_roots(flagless, runtime)
+    assert unflagged.sandbox.read == ()
+    assert unflagged.sandbox.write == ()
+
     absolute = str(tmp_path / "elsewhere.png")
     echoed = await _echo(
         tmp_path,
