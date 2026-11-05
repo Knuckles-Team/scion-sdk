@@ -30,6 +30,7 @@ from scion_sdk.mcp.upstreams.model import (
 )
 
 if TYPE_CHECKING:
+    from scion_sdk.mcp.upstreams.exchange import ExchangeRuntime
     from scion_sdk.mcp.upstreams.pool import UpstreamPool
 
 __all__ = ["ActivationGate", "session_active_namespaces"]
@@ -85,8 +86,10 @@ class ActivationGate(Provider):
         registry: Any,
         activation: str,
         pool: UpstreamPool | None = None,
+        exchange: ExchangeRuntime | None = None,
     ) -> None:
         super().__init__()
+        self._exchange = exchange
         self._inner = inner
         self._decl = decl
         self._registry = registry
@@ -136,6 +139,10 @@ class ActivationGate(Provider):
         from scion_sdk.mcp.upstreams.elicitation import ForwardingProxyTool
 
         if isinstance(tool, ProxyTool):
+            if self._exchange is not None and self._decl.exchange is not None:
+                from scion_sdk.mcp.upstreams.exchange import ExchangeProxyTool
+
+                return ExchangeProxyTool.bind(tool, self._decl, self._exchange)
             return ForwardingProxyTool.from_proxy_tool(tool)
         return tool
 

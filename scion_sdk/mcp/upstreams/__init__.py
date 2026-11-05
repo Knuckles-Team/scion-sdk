@@ -9,6 +9,7 @@ from scion_sdk.mcp.upstreams.loader import attach_upstreams, read_registry_setti
 from scion_sdk.mcp.upstreams.model import (
     REFUSAL_CODES,
     BridgeDecl,
+    ExchangeBinding,
     SandboxRoots,
     UpstreamDecl,
     UpstreamDeclError,
@@ -21,6 +22,7 @@ from scion_sdk.mcp.upstreams.model import (
 __all__ = [
     "REFUSAL_CODES",
     "BridgeDecl",
+    "ExchangeBinding",
     "SandboxRoots",
     "UpstreamDecl",
     "UpstreamDeclError",

@@ -196,11 +196,20 @@ def attach_upstreams(
     if not merged:
         return None
 
+    from scion_sdk.mcp.upstreams.exchange import (
+        bind_exchange_roots,
+        load_exchange_runtime,
+    )
+
+    exchange = load_exchange_runtime(merged, getattr(server, "name", "") or "connector")
+    merged = tuple(bind_exchange_roots(decl, exchange) for decl in merged)
     knobs = read_registry_settings()
     registry = UpstreamRegistry(
         merged, activation_setting=knobs.activation, error_strategy=knobs.error_strategy
     )
     _check_collisions(server, merged)
+    if any(decl.exchange is not None for decl in merged):
+        registry.exchange_state = "configured" if exchange else "not_configured"
 
     resolver = EnvironmentCredentialResolver()
     forwarder = make_elicitation_forwarder()
@@ -245,6 +254,7 @@ def attach_upstreams(
             registry=registry,
             activation=activation,
             pool=pool if decl.kind in ("stdio", "bridge") else None,
+            exchange=exchange,
         )
         aggregate.add_provider(gate, namespace=decl.effective_namespace)
         gates.append((decl, gate))

@@ -22,6 +22,7 @@ from scion_sdk.credentials.references import (
 __all__ = [
     "REFUSAL_CODES",
     "BridgeDecl",
+    "ExchangeBinding",
     "SandboxRoots",
     "UpstreamDecl",
     "UpstreamDeclError",
@@ -158,6 +159,19 @@ class BridgeDecl(BaseModel):
     token_file_flag: str = "--control-token-file"
 
 
+class ExchangeBinding(BaseModel):
+    """Run each call of a local upstream through the artifact exchange (R914.13).
+
+    ``path_args`` names the top-level arguments whose relative values the
+    proxy rewrites into the run's output directory. Every argument that holds
+    an ``exchange://`` reference or a URL is staged regardless.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    path_args: tuple[str, ...] = ("path", "dir", "out", "out_dir")
+
+
 UpstreamKind = Literal["stdio", "http", "bridge"]
 ActivationMode = Literal["lazy", "active"]
 PoolScope = Literal["server", "principal"]
@@ -190,6 +204,7 @@ class UpstreamDecl(BaseModel):
     pool_scope: PoolScope | None = None
     expected_fingerprint: str | None = None
     on_drift: OnDrift = "warn"
+    exchange: ExchangeBinding | None = None
 
     @property
     def effective_namespace(self) -> str:
@@ -225,7 +240,7 @@ class UpstreamDecl(BaseModel):
         elif kind == "http":
             if self.url is None:
                 raise _refuse(UPSTREAM_KIND_FIELDS, f"{self.name}: http requires url")
-            foreign = {"command", "args", "env", "sandbox", "bridge"}
+            foreign = {"command", "args", "env", "sandbox", "bridge", "exchange"}
         else:  # pragma: no cover - Literal exhausts
             foreign = set()
         for field in foreign:

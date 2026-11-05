@@ -9,6 +9,8 @@ Kinds:
     tools   a stable tool set (save, read, compute, whoami)
     elicit  one tool that elicits mid-call and reports the outcome
     flaky   writes its marker, then exits before serving anything
+    files   ``copy`` reads ``src`` and writes ``path``; ``echo`` returns its
+            arguments (the artifact exchange tests, R914.13)
     drift   like ``tools`` plus ``volatile`` whose schema changes when the
             file named by the ``CONTROL_FILE`` environment variable exists
 """
@@ -107,6 +109,21 @@ def _build(kind: str, roots: dict[str, str]) -> None:
             def volatile(number: int) -> int:
                 """A tool (integer form)."""
                 return number
+
+    if kind == "files":
+
+        @upstream.tool
+        def copy(src: str, path: str) -> str:
+            """Copy the file at ``src`` to ``path``."""
+            target = Path(path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(Path(src).read_bytes())
+            return f"copied:{target.name}"
+
+        @upstream.tool
+        def echo(path: str = "", src: str = "", paths: list[str] | None = None) -> dict:
+            """Return the arguments as received."""
+            return {"path": path, "src": src, "paths": paths or []}
 
     if kind == "flaky":
         os._exit(0)

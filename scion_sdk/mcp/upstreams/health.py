@@ -62,6 +62,9 @@ class UpstreamRegistry:
         self._fingerprints: dict[str, dict[str, str]] = {}
         self._drift: dict[str, DriftReport] = {}
         self._lock = anyio.Lock()
+        #: ``configured`` or ``not_configured`` when a declaration binds the
+        #: artifact exchange (R914.13); ``None`` when none does.
+        self.exchange_state: str | None = None
         for decl in declarations:
             state: Literal["disabled", "inactive"] = (
                 "disabled" if not decl.enabled else "inactive"
@@ -160,7 +163,10 @@ class UpstreamRegistry:
                 namespace
             ].expected_fingerprint
             block.append(entry)
-        return {"upstreams": block}
+        result: dict[str, Any] = {"upstreams": block}
+        if self.exchange_state is not None:
+            result["exchange"] = self.exchange_state
+        return result
 
     def has_fatal(self) -> bool:
         """An enabled upstream in ``unavailable`` or ``circuit_open``."""

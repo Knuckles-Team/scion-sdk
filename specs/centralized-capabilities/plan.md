@@ -42,11 +42,11 @@ scion_sdk/certify/              existing  connector-certify command
 tests/test_centralized_capability_index.py  existing  index test
 tests/test_a2a_protocol.py      existing  gains the R017.1 and R017.2 tests
 tests/test_conformance_plugin.py existing gains the R006.2 test
-scion_sdk/storage/              planned   backend protocol, five backends, store registry (R042)
-scion_sdk/exchange/             planned   settings, staging, inputs, publication, links, lineage (R043)
-scion_sdk/mcp/upstreams/exchange.py planned  the served proxy wrapper (SCION-CONNECTOR-CONTROL-R914.13)
-tests/storage/                  planned   R042 tests
-tests/exchange/                 planned   R043 tests and the served proof
+scion_sdk/storage/              new       backend protocol, five backends, store registry (R042)
+scion_sdk/exchange/             new       settings, staging, inputs, publication, links, lineage (R043)
+scion_sdk/mcp/upstreams/exchange.py new      the served proxy wrapper (SCION-CONNECTOR-CONTROL-R914.13)
+tests/storage/                  new       R042 tests
+tests/exchange/                 new       R043 tests and the served proof
 ```
 
 ## Phase 0: Research
@@ -112,6 +112,8 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 | `SCION-CENTRALIZED-CAPABILITIES-R038` | Connector test kit | `SCION-CONNECTOR-CONTROL-R004`, `SCION-CONNECTOR-CONTROL-R014.1` | `testing/` | SDK import scan `scan_many_packages`. No pipelines gate runs it. |
 | `SCION-CENTRALIZED-CAPABILITIES-R039` | Domain record models | `SCION-SOURCE-INGEST-R009`, `SCION-SOURCE-INGEST-R804`, this spec | `taxonomy/`, `earth_observations/`, `voice_supply_chain/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R040` | Optional dependencies come from SDK extras | `SCION-CENTRALIZED-CAPABILITIES-R040` | `pyproject.toml` `[project.optional-dependencies]` | pipelines `sdk-conformance` (`PIPE-GATES-R013`): a direct pin of a package an SDK extra carries. Warns; `--strict` blocks. SDK test `test_every_extra_has_a_row`. |
+| `SCION-CENTRALIZED-CAPABILITIES-R042` | Object store and file-share backends | `SCION-CENTRALIZED-CAPABILITIES-R042` | `storage/base.py`, `storage/config.py`, `storage/factory.py`, `storage/s3.py`, `storage/gcs.py`, `storage/azure_blob.py`, `storage/filesystem.py`, `storage/webdav.py`, extras `storage-s3`, `storage-gcs`, `storage-azure` | Unit tests `tests/storage/`. No connector scan. |
+| `SCION-CENTRALIZED-CAPABILITIES-R043` | Artifact exchange for tools that produce files | `SCION-CENTRALIZED-CAPABILITIES-R043` | `exchange/config.py`, `exchange/staging.py`, `exchange/inputs.py`, `exchange/publish.py`, `exchange/results.py`, `exchange/lineage.py`, `exchange/run.py` | Unit and served tests `tests/exchange/`. No connector scan. |
 
 ### Architecture
 
