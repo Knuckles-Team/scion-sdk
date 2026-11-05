@@ -595,7 +595,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R909` | `tests/test_desktop_port.py::test_provider_never_captures_focus` |
 | `SCION-CONNECTOR-CONTROL-R910` | `tests/test_observation_contract.py::test_observation_triple_required` |
 | `SCION-CONNECTOR-CONTROL-R911` | `tests/test_resource_protocol_declaration.py::test_declaration_pairs_and_manifest_round_trip` |
-| `SCION-CONNECTOR-CONTROL-R912` | `tests/contract/test_virtual_graph_dialect.py::test_dialect_and_capabilities_are_validated`, `tests/conformance/test_virtual_graph_descriptor.py::test_descriptor_declares_dialect` |
+| `SCION-CONNECTOR-CONTROL-R912` | `tests/contract/test_virtual_graph_dialect.py::test_dialect_and_capabilities_are_validated` (planned), `tests/conformance/test_virtual_graph_descriptor.py::test_descriptor_declares_dialect` (planned) |
 | `SCION-CONNECTOR-CONTROL-R913` | `tests/test_capability_contract.py::test_contract_unifies_tool_and_skill_and_contribution_needs_read_model` |
 | `SCION-CONNECTOR-CONTROL-R914` | `tests/upstreams/test_registry_served.py::test_two_stdio_upstreams_are_namespaced_and_lazy` |
 | `SCION-CONNECTOR-CONTROL-R914.1` | `tests/upstreams/test_decl_model.py::test_decl_round_trips_and_refuses_wrong_kind_fields` |
