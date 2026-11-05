@@ -301,3 +301,4 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T294 [US1] SCION-CONNECTOR-CONTROL-R914.10 Behavior: elicitation and confirmation pass through once, with no second gate.
 - [x] T295 [US1] SCION-CONNECTOR-CONTROL-R914.11 Behavior: schema-fingerprint drift is detected and reported.
 - [x] T296 [US1] SCION-CONNECTOR-CONTROL-R914.12 Behavior: certification treats upstream tools as declared and unpinned.
+- [ ] T297 [US1] SCION-CONNECTOR-CONTROL-R914.13 Behavior: a declared upstream runs its calls through the artifact exchange.
