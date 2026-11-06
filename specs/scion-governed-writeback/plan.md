@@ -281,7 +281,14 @@ Each row names its caller chain from the entry point to the owner and the effect
 
 ### State machine descriptor
 
-`scion_sdk/state_machine.py` holds `StateMachineDescriptor` and `next_state` (SCION-GOVERNED-WRITEBACK-R007). `execute_governed` calls `next_state` before any external API call. The ontology generator emits each descriptor as classes that extend the core vocabulary.
+`scion_sdk/state_machine.py` holds `StateMachineDescriptor`, `TransitionDecl`, `GuardDecl`, `next_state`, `StateTransitionRefused` and `render_state_machine_turtle` (SCION-GOVERNED-WRITEBACK-R007). The state of an external record is one named attribute (`state_field`) of that record; the SDK stores nothing.
+
+Entry points to attach points:
+
+- Connector tool call → `scion_sdk/writeback_sinks/core.py::run_writeback` → `scion_sdk/writeback_sinks/governed.py::execute_governed` → reads the record state and facts → `scion_sdk/state_machine.py::next_state` → a refusal raises `StateTransitionRefused` before the transport call. A legal event continues to `_connector` and the external API.
+- Connector pack generation → `render_state_machine_turtle` → Turtle whose classes extend the core `StateMachine`, `State`, `Transition`, `Event`, `Guard` and `TransitionRefused`.
+
+Wiring row: R007.3. Hot-path proof row: R007.5. Connector consumers cite R007 for the descriptor and SCION-CONNECTOR-CONTROL-R917 for readiness.
 
 ## Cross-repo seams
 

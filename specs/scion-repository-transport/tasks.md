@@ -16,3 +16,4 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [ ] T009 [US1] SCION-REPOSITORY-TRANSPORT-R008.1 Model: states, events and the transition table.
 - [ ] T010 [US1] SCION-REPOSITORY-TRANSPORT-R008.2 Refusal: connect outside Idle and listen outside Open are typed refusals.
 - [ ] T011 [US1] SCION-REPOSITORY-TRANSPORT-R008.3 Wiring: the stream machine reports to the connector lifecycle.
+- [ ] T012 [US1] SCION-REPOSITORY-TRANSPORT-R008.4 Ontology: stream states and transitions extend the core vocabulary.
