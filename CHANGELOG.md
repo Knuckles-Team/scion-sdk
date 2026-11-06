@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1
+
+### Fixed
+
+- The standard error handler no longer turns a typed refusal into `-32603 Internal error`.
+  A `ToolError` a tool raised on purpose, a `PermissionError` subclass, and an exception that
+  names an integer `code` and a string `reason` reach the caller with their message and code;
+  only an unexpected exception is an internal error (SCION-CONNECTOR-CONTROL-R025.8).
+
 ## 0.9.0
 
 ### Added

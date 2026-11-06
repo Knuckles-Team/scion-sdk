@@ -192,7 +192,7 @@ These are required future tests. None ran during definition authoring.
 <!-- /spec-definition-patch -->
 
 <!-- spec-definition-patch:sdk-confirmation-r026-1 -->
-## Request actor binding (SCION-CONNECTOR-CONTROL-R025-R025.5)
+## Request actor binding (SCION-CONNECTOR-CONTROL-R025-R025.8)
 
 - `SCION-CONNECTOR-CONTROL-R025`: `tests/test_actor_binding_served.py::test_every_transport_gets_the_same_binding_stack`.
 - `SCION-CONNECTOR-CONTROL-R025.1`: `tests/test_actor_binding_served.py::test_local_transport_binds_the_system_actor`.
@@ -202,6 +202,7 @@ These are required future tests. None ran during definition authoring.
 - `SCION-CONNECTOR-CONTROL-R025.5`: `tests/test_actor_binding_served.py::test_current_actor_resolves_system_outside_any_request`, `::test_a_bare_no_auth_server_serves_without_use_actor` and `::test_a_bare_authenticated_server_uses_the_token_identity_and_denies`.
 - `SCION-CONNECTOR-CONTROL-R025.6`: `tests/test_actor_binding_served.py::test_the_rate_limiter_runs_after_the_binding_and_keys_on_the_bound_actor`, `::test_the_trusted_local_principal_is_not_throttled_on_stdio`, `::test_the_trusted_local_principal_is_not_throttled_on_http_none` and `::test_an_untrusted_actor_keeps_its_rate_limit`.
 - `SCION-CONNECTOR-CONTROL-R025.7`: `tests/test_tool_response_redaction.py::test_a_tool_error_keeps_the_local_path_that_caused_it` and `::test_a_tool_response_redacts_secrets`.
+- `SCION-CONNECTOR-CONTROL-R025.8`: `tests/test_middleware_typed_refusal.py::test_a_tool_refusal_keeps_its_message`, `::test_a_coded_refusal_keeps_its_code_and_reason`, `::test_a_permission_subclass_is_a_denial_not_an_internal_error` and `::test_an_unexpected_exception_is_still_an_internal_error`.
 
 All five tests serve a real `create_mcp_server` server. A fastmcp client calls it in memory or over streamable HTTP. No test fakes the identity layer.
 

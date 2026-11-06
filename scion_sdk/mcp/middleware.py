@@ -15,19 +15,66 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
+from fastmcp.exceptions import FastMCPError
 from fastmcp.server.middleware import MiddlewareContext
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from mcp.shared.exceptions import MCPError
 
 from scion_sdk.identity import ActorType, current_actor
 from scion_sdk.mcp.actor_binding import ActorBindingMiddleware
 
 __all__ = [
     "ActorRateLimitingMiddleware",
+    "TypedRefusalErrorHandlingMiddleware",
     "build_middleware",
     "caller_bucket",
     "rate_limit_client_id",
 ]
+
+
+#: JSON-RPC server error code a typed refusal carries when it names none.
+REFUSAL_CODE = -32000
+
+
+class TypedRefusalErrorHandlingMiddleware(ErrorHandlingMiddleware):
+    """Error handling that lets a typed refusal reach the caller as itself.
+
+    FastMCP's stock handler rewrites every exception it does not know exactly
+    to ``-32603 Internal error``. A refusal is an answer, not a crash, so it
+    passes through with its code and message:
+
+    * a ``ToolError`` (or other ``FastMCPError``) a tool raised on purpose, which
+      carries no wrapped cause, is re-raised unchanged;
+    * a ``PermissionError`` subclass (an authorization or identity refusal) is
+      ``-32000`` with its message;
+    * an exception that names its own integer ``code`` and string ``reason`` is
+      that code, ``"<reason>: <message>"`` and ``{"reason": <reason>}``.
+
+    Any other exception, including an unexpected failure FastMCP wrapped in a
+    ``ToolError``, still becomes an internal error.
+    """
+
+    def _transform_error(
+        self, error: Exception, context: MiddlewareContext
+    ) -> Exception:
+        if isinstance(error, MCPError):
+            return error
+        cause = error.__cause__
+        if isinstance(error, FastMCPError) and cause is None:
+            return error
+        origin = cause if cause is not None else error
+        code = getattr(origin, "code", None)
+        reason = getattr(origin, "reason", None)
+        if (
+            isinstance(code, int)
+            and not isinstance(code, bool)
+            and isinstance(reason, str)
+        ):
+            return MCPError(code, f"{reason}: {origin}", {"reason": reason})
+        if isinstance(origin, PermissionError):
+            return MCPError(REFUSAL_CODE, f"Permission denied: {origin}")
+        return super()._transform_error(error, context)
 
 
 def caller_bucket(client_id: object, claims: object) -> str:
@@ -72,7 +119,9 @@ def build_middleware(*, no_auth: bool = False) -> list[Any]:
     returned stack has the same classes in the same order for every transport.
     """
     return [
-        ErrorHandlingMiddleware(include_traceback=False, transform_errors=True),
+        TypedRefusalErrorHandlingMiddleware(
+            include_traceback=False, transform_errors=True
+        ),
         ActorBindingMiddleware(no_auth=no_auth),
         ActorRateLimitingMiddleware(
             max_requests_per_second=10.0,
