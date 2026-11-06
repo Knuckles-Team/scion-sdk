@@ -279,6 +279,10 @@ Gates: the repository pre-commit hooks (`pre-commit run --all-files -c .config/p
 
 Each row names its caller chain from the entry point to the owner and the effect boundary; obsolete paths are deleted in the same change.
 
+### State machine descriptor
+
+`scion_sdk/state_machine.py` holds `StateMachineDescriptor` and `next_state` (SCION-GOVERNED-WRITEBACK-R007). `execute_governed` calls `next_state` before any external API call. The ontology generator emits each descriptor as classes that extend the core vocabulary.
+
 ## Cross-repo seams
 
 none
