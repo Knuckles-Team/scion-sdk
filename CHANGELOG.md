@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0
+
+### Added
+
+- `scion_sdk.surface_contracts`: tool-use contracts, surface links, data locations and
+  business roles declared in `connector_contracts.py`, served as
+  `ontology://<connector>/contracts.ttl` with a vocabulary whose classes extend core
+  classes (SCION-CONNECTOR-CONTROL-R916.1 to R916.3).
+- `surface_findings` and `python -m scion_sdk.testing.surface_check <package>`; the
+  conformance plugin runs the new `surface_complete` check in every connector
+  (SCION-CONNECTOR-CONTROL-R916.4, R916.5).
+- `python -m scion_sdk.surface_contracts complete <package> [--write]` drafts the
+  missing contracts, links, locations, roles and prompts of an existing connector
+  (SCION-CONNECTOR-CONTROL-R916.7).
+- Prompts carry an `agent` definition in their served meta and are validated by
+  `prompt_agent_findings` (SCION-CONNECTOR-CONTROL-R916.8).
+
+### Changed
+
+- Every connector now needs a complete surface declaration to pass conformance.
+
 ## 0.8.2
 
 ### Fixed

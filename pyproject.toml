@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scion-sdk"
-version = "0.8.2"
+version = "0.9.0"
 description = "Scion SDK for the Arbora ecosystem: MCP server scaffolding, connector manifests, and typed source/content extension ports"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -264,6 +264,8 @@ public_modules = [
     "scion_sdk.a2a.client",
     "scion_sdk.a2a.models",
     "scion_sdk.access_contract",
+    "scion_sdk.surface_contracts",
+    "scion_sdk.testing.surface_check",
     "scion_sdk.earth_observations.storm",
     "scion_sdk.earth_observations.storm_stream",
     "scion_sdk.earth_observations.weather",

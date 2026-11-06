@@ -11,6 +11,7 @@ Package path                        Served as
 ``prompts/<name>.json``             MCP prompt ``<name>`` (``prompts/list``)
 ``ontology/<file>.ttl``             ``ontology://<connector>/<file>.ttl``
 ``ontology/shapes/<file>.ttl``      ``shapes://<connector>/<file>.ttl``
+``connector_contracts.py``          ``ontology://<connector>/contracts.ttl``
 (tool ``meta`` via ``source_meta``)   ``connector://resources``
 ==================================  ==============================================
 
@@ -27,13 +28,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from fastmcp.resources import FileResource
+from fastmcp.resources import FileResource, TextResource
 from fastmcp.server.providers.skills import SkillsDirectoryProvider
 from pydantic import AnyUrl
 
 from scion_sdk.mcp._content_descriptors import _register_resource_descriptors
 from scion_sdk.mcp._content_prompts import (
     PROMPT_META_KEY,
+    _prompt_document,
     _register_prompt,
 )
 from scion_sdk.mcp.prompt_pack_meta import ContentError
@@ -43,6 +45,7 @@ __all__ = [
     "ConnectorContent",
     "ContentError",
     "ContentRegistration",
+    "contracts_resource",
     "ontology_resources",
     "register_connector_content",
     "register_ontology_resources",
@@ -142,8 +145,41 @@ def register_ontology_resources(mcp: Any, connector: str, ontology_dir: Path) ->
     return len(resources)
 
 
-def _content_resources(content: ConnectorContent) -> list[FileResource]:
-    return ontology_resources(content.connector, content.package_root / "ontology")
+def contracts_resource(content: ConnectorContent) -> TextResource | None:
+    """The rendered surface contracts as ``ontology://<connector>/contracts.ttl``.
+
+    ``None`` when the package declares no ``connector_contracts`` module
+    (SCION-CONNECTOR-CONTROL-R916.3).
+    """
+    from scion_sdk.surface_contracts import load_surface, render_surface_turtle
+
+    if not (content.package_root / "connector_contracts.py").is_file():
+        return None
+    declaration = load_surface(content.package_root.name, connector=content.connector)
+    if declaration is None:
+        return None
+    uri = f"ontology://{content.connector}/contracts.ttl"
+    prompts = {
+        path.stem: _prompt_document(path)
+        for path in sorted((content.package_root / "prompts").glob("*.json"))
+        if not path.name.startswith("_")
+    }
+    return TextResource(
+        uri=AnyUrl(uri),
+        name=uri,
+        text=render_surface_turtle(declaration, prompts),
+        mime_type="text/turtle",
+    )
+
+
+def _content_resources(content: ConnectorContent) -> list[FileResource | TextResource]:
+    found: list[FileResource | TextResource] = list(
+        ontology_resources(content.connector, content.package_root / "ontology")
+    )
+    contracts = contracts_resource(content)
+    if contracts is not None:
+        found.append(contracts)
+    return found
 
 
 def register_connector_content(

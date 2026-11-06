@@ -29,6 +29,7 @@ def _install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **kwargs):
 
 
 @pytest.mark.spec("SCION-QUALITY-RELEASE-R005.1")
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.5")
 def test_every_check_passes_for_a_conforming_connector(tmp_path, monkeypatch) -> None:
     resolved = _install(tmp_path, monkeypatch)
     for check in CHECKS:
