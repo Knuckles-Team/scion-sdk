@@ -12,6 +12,7 @@ from connector_dist import CONTRACTS, build
 
 from scion_sdk.surface_contracts import (
     CONTRACT_NS,
+    CONTRIBUTOR_SKILL_SUFFIX,
     CORE_NS,
     BusinessRole,
     DataLocation,
@@ -251,6 +252,15 @@ def test_contract_link_and_location_gaps_are_named() -> None:
     assert "no data location declared" in surface_findings(
         SurfaceDeclaration("demo-mcp"), **_SERVED
     )
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.4")
+def test_a_contributor_skill_needs_no_link() -> None:
+    contributor = f"demo-mcp{CONTRIBUTOR_SKILL_SUFFIX}"
+    served = {**_SERVED, "skills": {"pub", contributor}}
+    found = surface_findings(SurfaceDeclaration("demo-mcp"), **served)
+    assert "skill pub is not linked to a task" in found
+    assert not any(contributor in gap for gap in found)
 
 
 def _agent_document(**agent) -> dict:

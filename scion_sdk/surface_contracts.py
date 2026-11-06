@@ -35,6 +35,7 @@ from typing import Any
 
 __all__ = [
     "CONTRACT_NS",
+    "CONTRIBUTOR_SKILL_SUFFIX",
     "CORE_NS",
     "PLATFORM_PROMPTS",
     "BusinessRole",
@@ -58,6 +59,8 @@ CORE_NS = "http://knuckles.team/kg#"
 _CONTENT_SCHEMES = ("skill://", "ontology://", "shapes://")
 #: Prompts every SDK server registers itself; a connector links none of them.
 PLATFORM_PROMPTS = frozenset({"connector-status"})
+#: A skill named ``<name>-development`` guides contributors; it serves no task, so it needs no link.
+CONTRIBUTOR_SKILL_SUFFIX = "-development"
 
 
 def _strings(values: Iterable[str]) -> tuple[str, ...]:
@@ -456,7 +459,8 @@ def _link_gaps(
                 linked.setdefault(kind, set()).add(name)
                 if name not in served:
                     found.append(f"link {link.task} names unserved {kind} {name}")
-    for kind, served in (("prompt", prompts), ("skill", skills)):
+    task_skills = {s for s in skills if not s.endswith(CONTRIBUTOR_SKILL_SUFFIX)}
+    for kind, served in (("prompt", prompts), ("skill", task_skills)):
         for name in sorted(served - linked[kind]):
             found.append(f"{kind} {name} is not linked to a task")
     covered = {
