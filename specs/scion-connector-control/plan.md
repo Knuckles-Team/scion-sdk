@@ -1014,6 +1014,10 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 - `scion_sdk/testing/fleet_migration.py` (line 40): cited by 26 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/artifacts/tool_facts.py` (line 40): cited by 26 rows; its importers are named in each row's Caller chain.
 
+### Connector lifecycle state machine
+
+`scion_sdk/connector_lifecycle.py::transition` is the one function for connector readiness (SCION-CONNECTOR-CONTROL-R917). `RunnerHealth` stores `lifecycle_state` as the only field. The health server, `serve_readiness`, the component health state and the upstream status render it. `scion_sdk/resilience.py::CircuitBreaker` (SCION-CONNECTOR-CONTROL-R918) feeds it. `scion_sdk/ontology/connector_lifecycle.ttl` describes the states as classes that extend the core vocabulary.
+
 ## Cross-repo seams
 
 - Connector SDK import boundary with meristem (`SCION-CONNECTOR-CONTROL-R067`, consumer `MERISTEM-RUN-R016`): counterpart contract [meristem specs/run/contracts/scion-sdk.md](https://github.com/Knuckles-Team/meristem/blob/main/specs/run/contracts/scion-sdk.md); local document `contracts/meristem.md`.

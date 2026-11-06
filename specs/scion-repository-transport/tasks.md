@@ -12,3 +12,7 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T005 [US1] SCION-REPOSITORY-TRANSPORT-R005 Branch-aware transport batches indexing into one call per batch.
 - [x] T006 [US1] SCION-REPOSITORY-TRANSPORT-R006 Provider pages respect their requested bound.
 - [x] T007 [US1] SCION-REPOSITORY-TRANSPORT-R007 Local Git blob reads stay within the selected revision.
+- [ ] T008 [US1] SCION-REPOSITORY-TRANSPORT-R008 WebSocket transport is one explicit state machine (rollup).
+- [ ] T009 [US1] SCION-REPOSITORY-TRANSPORT-R008.1 Model: states, events and the transition table.
+- [ ] T010 [US1] SCION-REPOSITORY-TRANSPORT-R008.2 Refusal: connect outside Idle and listen outside Open are typed refusals.
+- [ ] T011 [US1] SCION-REPOSITORY-TRANSPORT-R008.3 Wiring: the stream machine reports to the connector lifecycle.

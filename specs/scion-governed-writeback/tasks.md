@@ -32,3 +32,9 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T025 [US1] SCION-GOVERNED-WRITEBACK-R004.17 Refuse overlapping effects in one connector.
 - [x] T026 [US1] SCION-GOVERNED-WRITEBACK-R005 Write-back implementation passes its full durable test suite together.
 - [ ] T027 [US1] SCION-GOVERNED-WRITEBACK-R006 Execute a released governed change set.
+- [ ] T028 [US1] SCION-GOVERNED-WRITEBACK-R007 State machine descriptor and governed writeback guard (rollup).
+- [ ] T029 [US1] SCION-GOVERNED-WRITEBACK-R007.1 Model: the descriptor contract.
+- [ ] T030 [US1] SCION-GOVERNED-WRITEBACK-R007.2 Behavior: one transition function decides legality.
+- [ ] T031 [US1] SCION-GOVERNED-WRITEBACK-R007.3 Refusal and wiring: the governed writeback refuses before the call.
+- [ ] T032 [US1] SCION-GOVERNED-WRITEBACK-R007.4 Ontology: the generator emits descriptor classes that extend the core.
+- [ ] T033 [US1] SCION-GOVERNED-WRITEBACK-R007.5 Hot-path proof: a fixture connector blocks an illegal external transition.

@@ -641,3 +641,15 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | Planned | `SCION-CONNECTOR-CONTROL-R914.12` | `tests/upstreams/test_certify_upstreams.py::test_certify_excludes_proxied_tools_from_pins`: A fixture connector with two upstreams certifies with pins for local tools only. The report names both upstreams with a fingerprint. No upstream process starts. |
 | Planned | `SCION-CONNECTOR-CONTROL-R914.13` | `tests/upstreams/test_upstream_exchange.py::test_bound_upstream_rewrites_paths_stages_inputs_and_publishes`: A fixture upstream echoes its arguments. A relative `path` arrives as an absolute path in the run output directory. An absolute path arrives unchanged. An `exchange://` value arrives as a staged input path. The stdio command holds both exchange roots. An unbound upstream receives its arguments unchanged. |
 | Planned | `SCION-CONNECTOR-CONTROL-R915` | `tests/mcp/test_tool_paging.py::test_a_large_catalog_is_served_in_bounded_pages`: A fixture connector with 9,000 tools lists them all across pages; each page encodes under 1 MiB; the last page has no cursor; `resources/list` stays one page. |
+| Planned | `SCION-CONNECTOR-CONTROL-R917` | `tests/test_connector_lifecycle.py::test_every_edge_and_refusal_of_the_lifecycle` (L2). |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.1` | `tests/test_connector_lifecycle.py::test_each_legal_edge_moves_state` (L2). It walks every edge in the table. |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.2` | `tests/test_connector_lifecycle.py::test_every_illegal_pair_is_refused_with_the_typed_error` (L2). |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.3` | `tests/test_connector_lifecycle_wiring.py::test_supervisor_events_drive_the_single_state_field` (L3). |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.4` | `tests/test_component_health_served.py::test_failing_connector_is_not_ready_and_one_vocabulary_is_served` (L3). |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.5` | `tests/test_connector_lifecycle_ontology.py::test_turtle_matches_the_table_and_extends_core` (L2). |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.6` | `tests/upstreams/test_upstream_health.py::test_each_upstream_has_its_own_lifecycle_state` (L3). |
+| Planned | `SCION-CONNECTOR-CONTROL-R917.7` | `tests/test_component_health_served.py::test_failing_every_cycle_walks_degraded_backoff_ready_stopped` (L3). |
+| Planned | `SCION-CONNECTOR-CONTROL-R918` | `tests/test_circuit_breaker.py::test_breaker_walks_closed_open_half_open_closed` (L2). |
+| Planned | `SCION-CONNECTOR-CONTROL-R918.1` | `tests/test_circuit_breaker.py::test_each_legal_edge_moves_state` (L2). |
+| Planned | `SCION-CONNECTOR-CONTROL-R918.2` | `tests/test_circuit_breaker.py::test_open_refuses_without_network_and_half_open_admits_one_probe` (L3). |
+| Planned | `SCION-CONNECTOR-CONTROL-R918.3` | `tests/test_circuit_breaker.py::test_open_breaker_makes_lifecycle_degraded` (L3). |

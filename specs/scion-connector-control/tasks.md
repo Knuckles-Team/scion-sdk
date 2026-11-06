@@ -313,3 +313,15 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T306 [US1] SCION-CONNECTOR-CONTROL-R916.7 Backfill: complete drafts the declaration of an existing connector.
 - [x] T307 [US1] SCION-CONNECTOR-CONTROL-R916.8 Behavior: prompts are complete agent definitions.
 - [x] T308 [US1] SCION-CONNECTOR-CONTROL-R025.8 A typed refusal reaches the caller as itself, never as an internal error.
+- [ ] T309 [US1] SCION-CONNECTOR-CONTROL-R917 Connector lifecycle is one explicit state machine (rollup).
+- [ ] T310 [US1] SCION-CONNECTOR-CONTROL-R917.1 Model: states, events and the transition table.
+- [ ] T311 [US1] SCION-CONNECTOR-CONTROL-R917.2 Refusal: an illegal lifecycle event raises a typed error.
+- [ ] T312 [US1] SCION-CONNECTOR-CONTROL-R917.3 Wiring: the supervisor and the health state feed events to one function.
+- [ ] T313 [US1] SCION-CONNECTOR-CONTROL-R917.4 Wiring: every health surface renders the lifecycle state.
+- [ ] T314 [US1] SCION-CONNECTOR-CONTROL-R917.5 Ontology: lifecycle states and transitions extend the core vocabulary.
+- [ ] T315 [US1] SCION-CONNECTOR-CONTROL-R917.6 Reuse: the upstream registry runs one lifecycle per upstream.
+- [ ] T316 [US1] SCION-CONNECTOR-CONTROL-R917.7 Hot-path proof: a connector that fails every cycle is never ready.
+- [ ] T317 [US1] SCION-CONNECTOR-CONTROL-R918 Circuit breaker is one explicit state machine (rollup).
+- [ ] T318 [US1] SCION-CONNECTOR-CONTROL-R918.1 Model: states, events and the transition table.
+- [ ] T319 [US1] SCION-CONNECTOR-CONTROL-R918.2 Refusal: an open breaker refuses the call and an illegal edge is typed.
+- [ ] T320 [US1] SCION-CONNECTOR-CONTROL-R918.3 Wiring: the breaker state drives the connector lifecycle.

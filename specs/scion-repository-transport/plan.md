@@ -82,6 +82,10 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 - `scion_sdk/repository/errors.py` (line 6): cited by 6 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/testing/plugin.py` (line 27): cited by 2 rows; its importers are named in each row's Caller chain.
 
+### Stream state machine
+
+`scion_sdk/streaming.py` holds one `state` field with the states of SCION-REPOSITORY-TRANSPORT-R008 and one `transition`. It reports `Failed` to the connector lifecycle machine.
+
 ## Cross-repo seams
 
 none. Dependencies on other repositories are `Depends on:` rows that cite the owner row ID; this spec adds no new wire contract.

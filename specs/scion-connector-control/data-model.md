@@ -10,3 +10,5 @@ This spec adds no new persisted type. Its rows describe the following in-memory 
 - Surface declaration (`scion_sdk/surface_contracts.py`, SCION-CONNECTOR-CONTROL-R916.2): frozen `Refusal`, `ToolStep`, `ToolUseContract`, `SurfaceLink`, `DataLocation`, `BusinessRole` and `SurfaceDeclaration`. A connector declares them in `connector_contracts.py`; the SDK persists none.
 - Surface vocabulary (`scion_sdk/ontology/surface_contract.ttl`, SCION-CONNECTOR-CONTROL-R916.1): the ontology classes `sc:ToolUseContract`, `sc:ToolStep`, `sc:Refusal`, `sc:DataLocation` and `sc:BusinessRole`, each a subclass of a core class.
 - Prompt agent definition (SCION-CONNECTOR-CONTROL-R916.8): the `agent` object of a prompt JSON, carried in the served prompt meta.
+- Connector lifecycle (`scion_sdk/connector_lifecycle.py`, SCION-CONNECTOR-CONTROL-R917.1): `LifecycleState`, `LifecycleEvent` and the edge table. `RunnerHealth` keeps `lifecycle_state` as the one stored field. The SDK persists nothing.
+- Circuit breaker (`scion_sdk/resilience.py`, SCION-CONNECTOR-CONTROL-R918.1): `CircuitBreaker` with the one field `state`, in memory.
