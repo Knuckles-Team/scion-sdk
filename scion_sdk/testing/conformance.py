@@ -145,6 +145,14 @@ def check_connector_sources(resolved: ResolvedConnector) -> None:
             _require("declaration" not in names, "declaration() belongs to the SDK")
 
 
+def check_surface_complete(resolved: ResolvedConnector) -> None:
+    """The served surface and its contracts, links and locations are complete."""
+    from scion_sdk.testing.surface_check import surface_check
+
+    findings = surface_check(resolved.package)
+    _require(not findings, "surface incomplete: " + "; ".join(findings))
+
+
 def check_kg_ingest(resolved: ResolvedConnector) -> None:
     """The ingest module imports and binds under the fleet name."""
     if importlib.util.find_spec(f"{resolved.package}.kg_ingest") is None:
@@ -168,6 +176,7 @@ CHECKS: tuple[Check, ...] = (
     Check("kg_ingest", _ROW, check_kg_ingest),
     Check("one_entry_point", _ROW, _check_one_entry_point),
     Check("config_mounts", "SCION-CONNECTOR-CONTROL-R019.3", _check_config_mounts),
+    Check("surface_complete", "SCION-CONNECTOR-CONTROL-R916.5", check_surface_complete),
 )
 
 

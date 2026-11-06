@@ -27,3 +27,12 @@ Run the served proof of the rows below from a fresh checkout after `uv sync`. Ea
 - SCION-CONNECTOR-CONTROL-R914.10: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_elicitation_passthrough.py::test_single_prompt_forwarded_and_decline_when_client_cannot_elicit -q`
 - SCION-CONNECTOR-CONTROL-R914.11: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_drift.py::test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace -q`
 - SCION-CONNECTOR-CONTROL-R914.12: `PYTHONNOUSERSITE=1 uv run pytest tests/upstreams/test_certify_upstreams.py::test_certify_excludes_proxied_tools_from_pins -q`
+- SCION-CONNECTOR-CONTROL-R916: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_served_contracts_resource_carries_the_declaration -q`
+- SCION-CONNECTOR-CONTROL-R916.1: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_vocabulary_rolls_up_to_core_and_never_imports_it -q`
+- SCION-CONNECTOR-CONTROL-R916.2: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_builders_normalise_lists_and_render_deterministic_individuals -q`
+- SCION-CONNECTOR-CONTROL-R916.3: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_no_declaration_serves_no_contracts_resource -q`
+- SCION-CONNECTOR-CONTROL-R916.4: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_each_missing_element_is_a_named_finding -q`
+- SCION-CONNECTOR-CONTROL-R916.5: `PYTHONNOUSERSITE=1 uv run pytest tests/test_conformance_plugin.py::test_every_check_passes_for_a_conforming_connector -q`
+- SCION-CONNECTOR-CONTROL-R916.6: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_self_check_flags_an_action_routed_tool -q`
+- SCION-CONNECTOR-CONTROL-R916.7: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_complete_drafts_a_full_declaration_for_a_bare_connector -q`
+- SCION-CONNECTOR-CONTROL-R916.8: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_prompt_agent_definitions_are_validated -q`

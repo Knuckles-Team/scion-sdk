@@ -342,6 +342,15 @@ A connector author or host integrator relies on the SDK for this capability: A c
 - **FR-093**: Behavior: elicitation and confirmation pass through once, with no second gate. Rows: SCION-CONNECTOR-CONTROL-R914.10.
 - **FR-094**: Behavior: schema-fingerprint drift is detected and reported. Rows: SCION-CONNECTOR-CONTROL-R914.11.
 - **FR-095**: Behavior: certification treats upstream tools as declared and unpinned. Rows: SCION-CONNECTOR-CONTROL-R914.12.
+- **FR-096**: Connector surface contracts and self-check (rollup). Rows: SCION-CONNECTOR-CONTROL-R916.
+- **FR-097**: Vocabulary: surface-contract classes extend core classes. Rows: SCION-CONNECTOR-CONTROL-R916.1.
+- **FR-098**: Builders: declarations load and render as Turtle individuals. Rows: SCION-CONNECTOR-CONTROL-R916.2.
+- **FR-099**: Wiring: the server serves the rendered contracts. Rows: SCION-CONNECTOR-CONTROL-R916.3.
+- **FR-100**: Behavior: the self-check names every missing surface element. Rows: SCION-CONNECTOR-CONTROL-R916.4.
+- **FR-101**: Wiring: every connector's test run checks its surface. Rows: SCION-CONNECTOR-CONTROL-R916.5.
+- **FR-102**: Hot-path proof: a served connector carries its contracts. Rows: SCION-CONNECTOR-CONTROL-R916.6.
+- **FR-103**: Backfill: complete drafts the declaration of an existing connector. Rows: SCION-CONNECTOR-CONTROL-R916.7.
+- **FR-104**: Behavior: prompts are complete agent definitions. Rows: SCION-CONNECTOR-CONTROL-R916.8.
 
 ## Success Criteria
 

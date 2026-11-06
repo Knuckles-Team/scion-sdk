@@ -70,7 +70,7 @@ def _meta_values(document: dict[str, Any], metadata: dict[str, Any]) -> dict[str
 
 
 def _prompt_meta(document: dict[str, Any]) -> dict[str, Any]:
-    """Role, goal, topic, tone, style, version, use case and system-prompt target.
+    """Role, goal, topic, tone, style, version, use case, target and agent definition.
 
     These become the ``team.knuckles/prompt`` entry of ``prompts/list`` ``_meta``.
     """
@@ -82,7 +82,11 @@ def _prompt_meta(document: dict[str, Any]) -> dict[str, Any]:
         for key, value in metadata.items()
         if key not in _META_FOLDED and isinstance(value, (str, int, float, bool))
     }
-    return {PROMPT_META_KEY: {**declared, **{k: v for k, v in values.items() if v}}}
+    entry = {**declared, **{k: v for k, v in values.items() if v}}
+    agent = document.get("agent")
+    if isinstance(agent, dict):
+        entry["agent"] = agent
+    return {PROMPT_META_KEY: entry}
 
 
 def _prompt_title(document: dict[str, Any]) -> str | None:

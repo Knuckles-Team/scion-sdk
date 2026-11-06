@@ -1,0 +1,67 @@
+# Connector surface-contract vocabulary (SCION-CONNECTOR-CONTROL-R916.1).
+#
+# A connector declares how its tools execute a task, how its prompts, skills
+# and tools link to that task, and where its data lives. Every class extends a
+# core class. The file never imports the core ontology.
+
+@prefix sc:   <https://knuckles-team.github.io/scion-sdk/contract#> .
+@prefix kg:   <http://knuckles.team/kg#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<https://knuckles-team.github.io/scion-sdk/contract> a owl:Ontology ;
+    rdfs:label "Connector surface contract" ;
+    rdfs:comment "Tool-use contracts, surface links and data locations of one connector." .
+
+sc:ToolUseContract a owl:Class ; rdfs:subClassOf kg:Procedure ;
+    rdfs:comment "The ordered tool calls that execute one task." .
+sc:ToolStep a owl:Class ; rdfs:subClassOf kg:TaskStep ;
+    rdfs:comment "One ordered tool call of a tool-use contract. Order is sc:stepOrder and kg:precedes." .
+sc:Refusal a owl:Class ; rdfs:subClassOf kg:ErrorDetail ;
+    rdfs:comment "One refusal a step can return: a code and its condition." .
+sc:DataLocation a owl:Class ; rdfs:subClassOf kg:SourceBackend ;
+    rdfs:comment "The instance or store that holds a set of classes, and the tool that reads them." .
+
+sc:forTask a owl:ObjectProperty ; rdfs:domain sc:ToolUseContract ; rdfs:range kg:Task .
+sc:stepOrder a owl:DatatypeProperty ; rdfs:domain sc:ToolStep ; rdfs:range xsd:integer ;
+    rdfs:comment "The 1-based position of the step in its contract." .
+sc:callsTool a owl:ObjectProperty ; rdfs:domain sc:ToolStep ; rdfs:range kg:Tool .
+sc:param a owl:DatatypeProperty ; rdfs:domain sc:ToolStep ; rdfs:range xsd:string ;
+    rdfs:comment "One parameter name the step passes. Repeatable." .
+sc:resultField a owl:DatatypeProperty ; rdfs:domain sc:ToolStep ; rdfs:range xsd:string ;
+    rdfs:comment "One field of the step result. Repeatable." .
+sc:refusal a owl:ObjectProperty ; rdfs:domain sc:ToolStep ; rdfs:range sc:Refusal .
+sc:refusalCode a owl:DatatypeProperty ; rdfs:domain sc:Refusal ; rdfs:range xsd:string .
+sc:refusalWhen a owl:DatatypeProperty ; rdfs:domain sc:Refusal ; rdfs:range xsd:string .
+
+sc:servesTask a owl:ObjectProperty ; rdfs:range kg:Task ;
+    rdfs:comment "A prompt, skill or tool serves this task." .
+sc:usesTool a owl:ObjectProperty ; rdfs:range kg:Tool ;
+    rdfs:comment "A prompt or skill uses this tool." .
+
+sc:holdsClass a owl:ObjectProperty ; rdfs:domain sc:DataLocation ;
+    rdfs:comment "An ontology class whose records this location holds." .
+sc:instance a owl:DatatypeProperty ; rdfs:domain sc:DataLocation ; rdfs:range xsd:string ;
+    rdfs:comment "The instance identifier that holds the data." .
+sc:store a owl:DatatypeProperty ; rdfs:domain sc:DataLocation ; rdfs:range xsd:string ;
+    rdfs:comment "The store inside the instance, such as a database, index or bucket." .
+sc:readTool a owl:ObjectProperty ; rdfs:domain sc:DataLocation ; rdfs:range kg:Tool .
+sc:routeParam a owl:DatatypeProperty ; rdfs:domain sc:DataLocation ; rdfs:range xsd:string ;
+    rdfs:comment "The tool parameter that selects this instance." .
+sc:federationKey a owl:DatatypeProperty ; rdfs:domain sc:DataLocation ; rdfs:range xsd:string ;
+    rdfs:comment "The record field that joins this location's records across instances." .
+
+sc:BusinessRole a owl:Class ; rdfs:subClassOf kg:Role ;
+    rdfs:comment "A business role the connector serves; a business-role prompt defines its agent." .
+sc:agentKind a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:comment "The agent a prompt defines: operator or business-role." .
+sc:businessRole a owl:ObjectProperty ; rdfs:range sc:BusinessRole ;
+    rdfs:comment "The business role a business-role prompt defines the agent for." .
+sc:usesSkill a owl:ObjectProperty ; rdfs:range kg:Skill ;
+    rdfs:comment "A prompt's agent uses this skill." .
+sc:readsLocation a owl:ObjectProperty ; rdfs:range sc:DataLocation ;
+    rdfs:comment "A prompt's agent reads this data location." .
+sc:writesLocation a owl:ObjectProperty ; rdfs:range sc:DataLocation ;
+    rdfs:comment "A prompt's agent writes this data location." .

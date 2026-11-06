@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import textwrap
 from pathlib import Path
 
@@ -61,10 +62,76 @@ SCHEMA_MAPPINGS = {
 RESOURCES = ()
 """
 
-PROMPT = (
-    '{"task": "demo", "type": "prompt", "description": "Demo.", '
-    '"instructions": {"core_directive": "Operate the demo."}}'
+CONTRACTS = """\
+from scion_sdk.surface_contracts import (
+    BusinessRole,
+    DataLocation,
+    Refusal,
+    SurfaceLink,
+    ToolStep,
+    ToolUseContract,
 )
+
+CONTRACTS = (
+    ToolUseContract(
+        task="list-demo-items",
+        steps=(
+            ToolStep(
+                tool="demo_list_items",
+                result=("id",),
+                refusals=(Refusal(code="UNAUTHORIZED", when="the token is rejected"),),
+            ),
+        ),
+    ),
+)
+LINKS = (
+    SurfaceLink(
+        task="list-demo-items",
+        tools=("demo_list_items",),
+        prompts=("demo", "demo-curator"),
+        skills=("demo-skill",),
+    ),
+)
+ROLES = (BusinessRole(name="demo curator", tasks=("list-demo-items",)),)
+LOCATIONS = (
+    DataLocation(
+        name="demo-items",
+        holds=("DemoItem",),
+        instance="demo-default",
+        read_tool="demo_list_items",
+    ),
+)
+"""
+
+
+def _prompt(kind: str, role: str = "") -> str:
+    agent = {
+        "kind": kind,
+        "tools": ["demo_list_items"],
+        "skills": ["demo-skill"],
+        "data": {"reads": ["demo-items"], "writes": []},
+        "guardrails": {"approval_required": [], "never": ["delete items"]},
+        "outputs": ["item list"],
+    }
+    if role:
+        agent["business_role"] = role
+    return json.dumps(
+        {
+            "task": "demo",
+            "type": "prompt",
+            "description": "Demo.",
+            "identity": {
+                "role": role or "demo operator",
+                "goal": "Keep the demo items listed.",
+            },
+            "instructions": {"core_directive": "Operate the demo."},
+            "agent": agent,
+        }
+    )
+
+
+PROMPT = _prompt("operator")
+ROLE_PROMPT = _prompt("business-role", "demo curator")
 SKILL = "---\nname: demo-skill\ndescription: Demo skill.\n---\n# Demo\n"
 
 
@@ -75,6 +142,7 @@ def build(
     ontology: str = ONTOLOGY,
     init: str = INIT,
     sources: str | None = SOURCES,
+    contracts: str | None = CONTRACTS,
     extra_group: str | None = None,
     extra_files: dict[str, str] | None = None,
 ) -> Path:
@@ -86,9 +154,12 @@ def build(
     (pkg / "client.py").write_text(CLIENT)
     (pkg / "skills/demo-skill/SKILL.md").write_text(SKILL)
     (pkg / "prompts/demo.json").write_text(PROMPT)
+    (pkg / "prompts/demo-curator.json").write_text(ROLE_PROMPT)
     (pkg / "ontology/demo.ttl").write_text(ontology)
     if sources is not None:
         (pkg / "connector_sources.py").write_text(sources)
+    if contracts is not None:
+        (pkg / "connector_contracts.py").write_text(contracts)
     for name, text in (extra_files or {}).items():
         (pkg / name).write_text(text)
     dist = root / f"democonn-{version}.dist-info"

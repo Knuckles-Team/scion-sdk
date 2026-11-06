@@ -611,6 +611,15 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R914.11` | `tests/upstreams/test_drift.py::test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace` |
 | `SCION-CONNECTOR-CONTROL-R914.12` | `tests/upstreams/test_certify_upstreams.py::test_certify_excludes_proxied_tools_from_pins` |
 | `SCION-CONNECTOR-CONTROL-R914.13` | `tests/upstreams/test_upstream_exchange.py::test_bound_upstream_rewrites_paths_stages_inputs_and_publishes` |
+| `SCION-CONNECTOR-CONTROL-R916` | `tests/test_surface_contracts.py::test_served_contracts_resource_carries_the_declaration` |
+| `SCION-CONNECTOR-CONTROL-R916.1` | `tests/test_surface_contracts.py::test_vocabulary_rolls_up_to_core_and_never_imports_it` |
+| `SCION-CONNECTOR-CONTROL-R916.2` | `tests/test_surface_contracts.py::test_builders_normalise_lists_and_render_deterministic_individuals` |
+| `SCION-CONNECTOR-CONTROL-R916.3` | `tests/test_surface_contracts.py::test_no_declaration_serves_no_contracts_resource` |
+| `SCION-CONNECTOR-CONTROL-R916.4` | `tests/test_surface_contracts.py::test_each_missing_element_is_a_named_finding` |
+| `SCION-CONNECTOR-CONTROL-R916.5` | `tests/test_conformance_plugin.py::test_every_check_passes_for_a_conforming_connector` |
+| `SCION-CONNECTOR-CONTROL-R916.6` | `tests/test_surface_contracts.py::test_self_check_flags_an_action_routed_tool` |
+| `SCION-CONNECTOR-CONTROL-R916.7` | `tests/test_surface_contracts.py::test_complete_drafts_a_full_declaration_for_a_bare_connector` |
+| `SCION-CONNECTOR-CONTROL-R916.8` | `tests/test_surface_contracts.py::test_prompt_agent_definitions_are_validated` |
 
 ## SCION-CONNECTOR-CONTROL-R914 acceptance
 

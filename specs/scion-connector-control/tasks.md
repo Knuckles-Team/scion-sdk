@@ -303,3 +303,12 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T296 [US1] SCION-CONNECTOR-CONTROL-R914.12 Behavior: certification treats upstream tools as declared and unpinned.
 - [ ] T297 [US1] SCION-CONNECTOR-CONTROL-R914.13 Behavior: a declared upstream runs its calls through the artifact exchange.
 - [ ] T298 [US1] SCION-CONNECTOR-CONTROL-R915 Behavior: a large connector serves tools/list in byte- and count-bounded pages.
+- [x] T299 [US1] SCION-CONNECTOR-CONTROL-R916 Connector surface contracts and self-check (rollup).
+- [x] T300 [US1] SCION-CONNECTOR-CONTROL-R916.1 Vocabulary: surface-contract classes extend core classes.
+- [x] T301 [US1] SCION-CONNECTOR-CONTROL-R916.2 Builders: declarations load and render as Turtle individuals.
+- [x] T302 [US1] SCION-CONNECTOR-CONTROL-R916.3 Wiring: the server serves the rendered contracts.
+- [x] T303 [US1] SCION-CONNECTOR-CONTROL-R916.4 Behavior: the self-check names every missing surface element.
+- [x] T304 [US1] SCION-CONNECTOR-CONTROL-R916.5 Wiring: every connector's test run checks its surface.
+- [x] T305 [US1] SCION-CONNECTOR-CONTROL-R916.6 Hot-path proof: a served connector carries its contracts.
+- [x] T306 [US1] SCION-CONNECTOR-CONTROL-R916.7 Backfill: complete drafts the declaration of an existing connector.
+- [x] T307 [US1] SCION-CONNECTOR-CONTROL-R916.8 Behavior: prompts are complete agent definitions.
