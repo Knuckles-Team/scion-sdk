@@ -2,6 +2,7 @@
 
 Provider: scion-sdk SCION-CONNECTOR-CONTROL-R916.3
 Consumer: medulla MEDULLA-CQ-ORCH-R012.1
+Consumer: medulla MEDULLA-CQ-ORCH-R012.2
 Consumer: medulla MEDULLA-SRC-AUTH-R012
 
 ## Wire shape

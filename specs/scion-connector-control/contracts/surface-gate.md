@@ -1,6 +1,7 @@
 # Surface contract seam with the connector surface gate
 
 Provider: scion-sdk SCION-CONNECTOR-CONTROL-R916.2
+Consumer: pipelines PIPE-GATES-R014.3
 Consumer: pipelines PIPE-GATES-R014.5
 Consumer: pipelines PIPE-GATES-R014.6
 Consumer: pipelines PIPE-GATES-R014.7

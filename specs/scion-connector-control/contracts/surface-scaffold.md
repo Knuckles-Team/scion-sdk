@@ -2,6 +2,9 @@
 
 Provider: scion-sdk SCION-CONNECTOR-CONTROL-R916.2
 Consumer: universal-skills US-MCP-BUILDER-R011.15
+Consumer: universal-skills US-MCP-BUILDER-R011.16
+Consumer: universal-skills US-MCP-BUILDER-R011.17
+Consumer: universal-skills US-MCP-BUILDER-R011.18
 
 ## Wire shape
 
