@@ -23,6 +23,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 |---|---|
 | `SCION-REPOSITORY-TRANSPORT-R002` | `tests/test_repository_hydration_conformance.py::test_direct_index_repository_call_fails_the_check`, `tests/test_repository_hydration_conformance.py::test_connector_plugin_runs_the_hydration_check` |
 | `SCION-REPOSITORY-TRANSPORT-R008` | `tests/test_streaming_state.py::test_every_edge_and_refusal_of_the_stream_machine` (L2). |
-| `SCION-REPOSITORY-TRANSPORT-R008.1` | `tests/test_streaming_state.py::test_each_legal_edge_moves_state` (L2). |
-| `SCION-REPOSITORY-TRANSPORT-R008.2` | `tests/test_streaming_state.py::test_double_connect_and_listen_while_closed_are_refused_without_leak` (L3). |
+| `SCION-REPOSITORY-TRANSPORT-R008.1` | `tests/test_streaming_state.py::test_each_legal_edge_moves_state` (L2), one parameter id per edge: `idle-connect`, `idle-close`, `connecting-opened`, `connecting-error`, `connecting-close`, `open-close`, `open-error`, `closing-closed`, `closing-error`, `failed-retry`, `failed-close`. |
+| `SCION-REPOSITORY-TRANSPORT-R008.2` | `tests/test_streaming_state.py::test_double_connect_and_listen_while_closed_are_refused_without_leak` (L3), plus `tests/test_streaming_state.py::test_every_illegal_pair_is_refused_with_the_typed_error` (L2), parametrized over every state and event pair outside the table with the id `<state>-<event>`. |
 | `SCION-REPOSITORY-TRANSPORT-R008.3` | `tests/test_streaming_state.py::test_failed_stream_retries_with_backoff_and_marks_lifecycle` (L3). |
+| `SCION-REPOSITORY-TRANSPORT-R008.4` | `tests/test_streaming_state.py::test_turtle_matches_the_table_and_extends_core` (L2). |

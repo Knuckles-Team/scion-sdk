@@ -1016,7 +1016,18 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 
 ### Connector lifecycle state machine
 
-`scion_sdk/connector_lifecycle.py::transition` is the one function for connector readiness (SCION-CONNECTOR-CONTROL-R917). `RunnerHealth` stores `lifecycle_state` as the only field. The health server, `serve_readiness`, the component health state and the upstream status render it. `scion_sdk/resilience.py::CircuitBreaker` (SCION-CONNECTOR-CONTROL-R918) feeds it. `scion_sdk/ontology/connector_lifecycle.ttl` describes the states as classes that extend the core vocabulary.
+`scion_sdk/connector_lifecycle.py::transition` is the one function for connector readiness (SCION-CONNECTOR-CONTROL-R917). It owns the closed states `Unconfigured`, `CredentialsPending`, `Warming`, `Ready`, `Degraded`, `Backoff` and `Stopped` (terminal), and the edge table of R917.1. Every other pair raises `LifecycleTransitionRefused` (R917.2). `ConnectorHealth.lifecycle_state` is the one stored field. `ready` is derived: only `Ready` answers 200, and `Warming` answers 503 until the first proven cycle.
+
+Entry points to attach points:
+
+- Sync loop → `scion_sdk/runner/supervisor.py` (cycle outcome) → `RunnerHealth.record_cycle_success` and `record_cycle_failure` in `scion_sdk/runner/health_state.py` → `transition` with `cycle_ok` and `cycle_fail(n)`.
+- Credential check → `RunnerHealth.record_credentials` → `transition` with `creds_ok` and `creds_bad`.
+- Registry reload → `RunnerHealth.sync_registry` → `transition` with `registry_loaded` and `removed`.
+- `GET /health/ready` → `health_server.py::_handler_factory` → `RunnerHealth.readiness` → renders `lifecycle_state`; `serve_readiness` in `scion_sdk/connector_hooks.py` and `scion_sdk/host/component_health.py` read the same field.
+- Upstream registry → `UpstreamRegistry.readiness` in `scion_sdk/mcp/upstreams/health.py` → one machine per upstream (R917.6).
+- `scion_sdk/resilience.py::CircuitBreaker.transition` (R918) → `cycle_fail` on `Open` and `cycle_ok` on `Closed`, wired in R918.3.
+
+Wiring row: R917.3 and R917.4. Hot-path proof row: R917.7. `scion_sdk/ontology/connector_lifecycle.ttl` describes the states, events, guards and the refusal as subclasses of the core `StateMachine`, `State`, `Transition`, `Event`, `Guard` and `TransitionRefused` classes, with no `owl:imports` bridge. The breaker machine (R918) has states `Closed`, `Open` and `HalfOpen`, one stored field `CircuitBreaker.state` and one `transition` in `scion_sdk/resilience.py`; `before_call` is called from `scion_sdk/http/retry.py`.
 
 ## Cross-repo seams
 

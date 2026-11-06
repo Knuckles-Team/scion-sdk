@@ -110,8 +110,8 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 |---|---|
 | `SCION-GOVERNED-WRITEBACK-R006` | `tests/test_writeback_sink_release.py::test_sink_executes_only_a_released_change_set`, `tests/test_writeback_sink_release.py::test_sink_executes_only_a_released_change_set` |
 | `SCION-GOVERNED-WRITEBACK-R007` | `tests/test_state_machine_descriptor.py::test_guard_refuses_illegal_transition_before_the_api_call` (L3). |
-| `SCION-GOVERNED-WRITEBACK-R007.1` | `tests/test_state_machine_descriptor.py::test_descriptor_rejects_undeclared_states_and_terminal_exits` (L2). |
-| `SCION-GOVERNED-WRITEBACK-R007.2` | `tests/test_state_machine_descriptor.py::test_next_state_follows_table_and_guards` (L2). |
+| `SCION-GOVERNED-WRITEBACK-R007.1` | `tests/test_state_machine_descriptor.py::test_descriptor_rejects_undeclared_states_and_terminal_exits` (L2), parametrized with the ids `duplicate_state`, `unknown_target`, `terminal_with_exit`, `undeclared_initial`, `unknown_guard`, `valid`. |
+| `SCION-GOVERNED-WRITEBACK-R007.2` | `tests/test_state_machine_descriptor.py::test_next_state_follows_table_and_guards` (L2), parametrized with one id per declared transition of the fixture descriptor (`<from>-<event>`) plus `undeclared_pair`, `guard_fails` and `terminal_refuses_every_event`. |
 | `SCION-GOVERNED-WRITEBACK-R007.3` | `tests/test_state_machine_writeback.py::test_illegal_transition_and_stale_record_refuse_with_zero_api_calls` (L3). |
 | `SCION-GOVERNED-WRITEBACK-R007.4` | `tests/test_state_machine_ontology.py::test_generated_classes_extend_core_and_cover_every_transition` (L2). |
 | `SCION-GOVERNED-WRITEBACK-R007.5` | `tests/test_state_machine_writeback.py::test_fixture_connector_blocks_illegal_external_transition` (L3). |
