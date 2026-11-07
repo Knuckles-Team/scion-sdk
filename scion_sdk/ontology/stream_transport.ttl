@@ -1,0 +1,82 @@
+# WebSocket stream vocabulary (SCION-REPOSITORY-TRANSPORT-R008.4).
+#
+# The stream adapter machine. Every class extends a core state-machine class
+# (kg:StateMachine, kg:State, kg:Transition, kg:Event, kg:TransitionRefused).
+# The file never imports the core ontology. A test reads the edge table in
+# scion_sdk/_stream_websocket.py and checks that this file names the same
+# states and edges.
+
+@prefix st:   <https://knuckles-team.github.io/scion-sdk/stream#> .
+@prefix kg:   <http://knuckles.team/kg#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<https://knuckles-team.github.io/scion-sdk/stream> a owl:Ontology ;
+    rdfs:label "WebSocket stream" ;
+    rdfs:comment "The WebSocket stream adapter machine: Idle to Closed." .
+
+st:WebSocketStream a owl:Class ; rdfs:subClassOf kg:StateMachine ;
+    rdfs:comment "One explicit state machine per stream adapter." .
+
+st:Idle a owl:Class ; rdfs:subClassOf kg:State .
+st:Connecting a owl:Class ; rdfs:subClassOf kg:State .
+st:Open a owl:Class ; rdfs:subClassOf kg:State .
+st:Closing a owl:Class ; rdfs:subClassOf kg:State .
+st:Closed a owl:Class ; rdfs:subClassOf kg:State .
+st:Failed a owl:Class ; rdfs:subClassOf kg:State .
+st:Closed rdfs:subClassOf kg:TerminalState .
+
+st:ConnectEvent a owl:Class ; rdfs:subClassOf kg:Event .
+st:OpenedEvent a owl:Class ; rdfs:subClassOf kg:Event .
+st:CloseEvent a owl:Class ; rdfs:subClassOf kg:Event .
+st:ClosedEvent a owl:Class ; rdfs:subClassOf kg:Event .
+st:ErrorEvent a owl:Class ; rdfs:subClassOf kg:Event .
+st:RetryEvent a owl:Class ; rdfs:subClassOf kg:Event .
+
+st:StreamTransitionRefused a owl:Class ; rdfs:subClassOf kg:TransitionRefused ;
+    rdfs:comment "Code STREAM_TRANSITION_REFUSED: the pair is not an edge of the table." .
+
+st:Edge_idle-connect a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Idle ;
+    kg:toState st:Connecting ;
+    kg:firedBy st:ConnectEvent .
+st:Edge_idle-close a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Idle ;
+    kg:toState st:Closed ;
+    kg:firedBy st:CloseEvent .
+st:Edge_connecting-opened a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Connecting ;
+    kg:toState st:Open ;
+    kg:firedBy st:OpenedEvent .
+st:Edge_connecting-error a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Connecting ;
+    kg:toState st:Failed ;
+    kg:firedBy st:ErrorEvent .
+st:Edge_connecting-close a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Connecting ;
+    kg:toState st:Closing ;
+    kg:firedBy st:CloseEvent .
+st:Edge_open-close a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Open ;
+    kg:toState st:Closing ;
+    kg:firedBy st:CloseEvent .
+st:Edge_open-error a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Open ;
+    kg:toState st:Failed ;
+    kg:firedBy st:ErrorEvent .
+st:Edge_closing-closed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Closing ;
+    kg:toState st:Closed ;
+    kg:firedBy st:ClosedEvent .
+st:Edge_closing-error a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Closing ;
+    kg:toState st:Closed ;
+    kg:firedBy st:ErrorEvent .
+st:Edge_failed-retry a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Failed ;
+    kg:toState st:Connecting ;
+    kg:firedBy st:RetryEvent .
+st:Edge_failed-close a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState st:Failed ;
+    kg:toState st:Closed ;
+    kg:firedBy st:CloseEvent .

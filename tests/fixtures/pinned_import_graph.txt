@@ -11,14 +11,14 @@ httpx2==2.13.1
 httpx==0.28.1
 idna==3.20
 mcp-types==2.3.0
-medulla==3.0.0
+medulla==3.2.0
 msgpack==1.2.3
 pycparser==3.11
 pydantic-core==2.50.1
 pydantic==2.14.1
 pyoxigraph==0.5.11
 pyyaml==6.0.3
-scion-sdk==0.9.1
+scion-sdk==0.10.0
 truststore==0.10.5
 typing-extensions==4.16.0
 typing-inspection==0.4.4

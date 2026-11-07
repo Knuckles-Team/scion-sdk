@@ -1,12 +1,12 @@
 {
   "distribution": "medulla",
-  "version": "3.0.0",
+  "version": "3.2.0",
   "source_remote": "https://github.com/Knuckles-Team/medulla.git",
-  "source_revision": "4bfa50ca8cd519a615dc26cc04d2075056eaa0f5",
-  "release_tag": "v3.0.0",
-  "wheel_filename": "medulla-3.0.0-cp39-abi3-manylinux_2_28_x86_64.whl",
-  "wheel_asset_id": "pypi:medulla==3.0.0",
-  "wheel_url": "https://files.pythonhosted.org/packages/ee/5f/660df9a52084f9ecd55aacce4d932f4a97bf1b44e2d091880bd680bc9564/medulla-3.0.0-cp39-abi3-manylinux_2_28_x86_64.whl",
-  "wheel_sha256": "c364f21c77878836e245568531da32059a750e9b99febdc5f87e2679020986b9",
+  "source_revision": "a4ce6478d9a64fb68c03fff2688504ee3e37572e",
+  "release_tag": "v3.2.0",
+  "wheel_filename": "medulla-3.2.0-cp39-abi3-manylinux_2_28_x86_64.whl",
+  "wheel_asset_id": "pypi:medulla==3.2.0",
+  "wheel_url": "https://files.pythonhosted.org/packages/22/7c/8d74d8a8ec3530787f9e31cca1f96e2d78b598d3e2aa00eb57c5668ed8ae/medulla-3.2.0-cp39-abi3-manylinux_2_28_x86_64.whl",
+  "wheel_sha256": "dcae94c38e2c6961af0345f4175ca0dbff3a6e33d7783fdb5e4d6222995ba1ba",
   "native_member": "medulla/numeric.abi3.so"
 }

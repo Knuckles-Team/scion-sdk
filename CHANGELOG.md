@@ -1,10 +1,29 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
+
+### Added
+
+- `scion_sdk.connector_lifecycle`: the connector lifecycle as one explicit state machine
+  (`Unconfigured`, `CredentialsPending`, `Warming`, `Ready`, `Degraded`, `Backoff`,
+  `Stopped`) with one `transition` function and the typed `LifecycleTransitionRefused`
+  (SCION-CONNECTOR-CONTROL-R917.1, R917.2, R917.5).
+- `CircuitBreaker` in `scion_sdk.resilience`: `Closed`, `Open` and `HalfOpen`, a typed
+  `CircuitOpen` before any network call, and `RetryPolicy(breaker=...)`
+  (SCION-CONNECTOR-CONTROL-R918).
+- `scion_sdk.state_machine`: `StateMachineDescriptor`, `next_state`,
+  `StateTransitionRefused` and `render_state_machine_turtle` for connectors that declare the
+  lifecycle of an external record (SCION-GOVERNED-WRITEBACK-R007.1, R007.2, R007.4).
+- `WebSocketStreamAdapter.state` with `retry()`; `StreamTransitionRefused`
+  (SCION-REPOSITORY-TRANSPORT-R008).
 
 ### Changed
 
 - Breaking, hard cutover (`SCION-CENTRALIZED-CAPABILITIES-R045`): `create_http_client` and `create_async_http_client` are one `build_http_client(options, async_=False)`; `configure_oauth_proxy` and `configure_oidc_proxy` are one `configure_proxy(inputs, flow)`; the four repeated write-back sink `_run` bodies are a `passes` table run by `run_sink`. The old names are removed with no alias; update imports.
+- `ConnectorHealth.lifecycle_state` replaces `credentials_ok`; `/health/ready` answers 200 only
+  when every connector is `Ready`, so a connector that has not proven a cycle is not ready.
+- `WebSocketStreamAdapter.connect` outside `Idle`, `listen` outside `Open` and a second
+  `disconnect` raise `StreamTransitionRefused`.
 
 ## 0.9.1
 
