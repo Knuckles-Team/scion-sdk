@@ -1,7 +1,7 @@
 """The SDK's units follow the declared layer order and form no import cycle.
 
-A unit is one top-level module or package of ``scion_sdk``; ``scion_sdk/layers.toml``
-orders the units, most stable first. Every absolute and relative import counts,
+A unit is one top-level module or package of ``scion_sdk``; the coupling policy
+``[[tool.pipelines_hooks.coupling.layers]]`` in ``pyproject.toml`` orders the units, most stable first. Every absolute and relative import counts,
 including function-local and ``TYPE_CHECKING`` imports: coupling, not load order,
 is the question (SCION-CENTRALIZED-CAPABILITIES-R044).
 """
@@ -18,7 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = "scion_sdk"
-LAYERS = ROOT / PACKAGE / "layers.toml"
+LAYERS = ROOT / "pyproject.toml"
 ROOT_UNIT = "__init__"
 
 #: The one cycle left: ``ports.decide_runner`` types its protocol with
@@ -106,9 +106,10 @@ def private_reaches(package_dir: Path) -> list[str]:
 
 
 def declared_layers(path: Path) -> list[tuple[str, tuple[str, ...]]]:
-    """The ``(name, units)`` of each layer in ``layers.toml``, most stable first."""
+    """The ``(name, units)`` of each coupling-policy layer, most stable first."""
     document = tomllib.loads(path.read_text(encoding="utf-8"))
-    return [(layer["name"], tuple(layer["units"])) for layer in document["layers"]]
+    layers = document["tool"]["pipelines_hooks"]["coupling"]["layers"]
+    return [(layer["name"], tuple(layer["units"])) for layer in layers]
 
 
 def package_units(package_dir: Path) -> set[str]:
