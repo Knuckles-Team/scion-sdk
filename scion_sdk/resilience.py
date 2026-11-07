@@ -17,11 +17,11 @@ from typing import TYPE_CHECKING, ClassVar, cast
 
 import anyio
 
-from scion_sdk._transition_refused import MachineTransitionRefused
 from scion_sdk.http.retry import RetryPolicy, is_tls_verification_failure
+from scion_sdk.transition_refused import MachineTransitionRefused
 
 if TYPE_CHECKING:
-    from scion_sdk.runner.health_state import RunnerHealth
+    from scion_sdk.connector_lifecycle import CycleHealth
 
 __all__ = [
     "BREAKER_COOLDOWN_ENV",
@@ -128,7 +128,7 @@ class CircuitBreaker:
         failure_threshold: int | None = None,
         cooldown_seconds: float | None = None,
         clock: Callable[[], float] = time.monotonic,
-        health: RunnerHealth | None = None,
+        health: CycleHealth | None = None,
         connector: str = "",
         environ: Mapping[str, str] | None = None,
     ) -> None:

@@ -16,14 +16,15 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import ClassVar
+from typing import ClassVar, Protocol
 
-from scion_sdk._transition_refused import MachineTransitionRefused
+from scion_sdk.transition_refused import MachineTransitionRefused
 
 __all__ = [
     "DEFAULT_DEGRADED_FAILURES",
     "DEGRADED_FAILURES_ENV",
     "EDGES",
+    "CycleHealth",
     "Edge",
     "LifecycleEvent",
     "LifecycleState",
@@ -31,6 +32,23 @@ __all__ = [
     "degraded_failures_threshold",
     "transition",
 ]
+
+
+class CycleHealth(Protocol):
+    """What a breaker or stream reports a connector's cycle outcomes to.
+
+    The runner's health state satisfies it; declaring it here lets lower
+    layers report outcomes without importing the runner.
+    """
+
+    def record_cycle_success(self, connector: str) -> None:
+        """Record one successful cycle for ``connector``."""
+
+    def record_cycle_failure(
+        self, connector: str, *, next_retry_seconds: float | None
+    ) -> None:
+        """Record one failed cycle for ``connector``."""
+
 
 #: Environment variable holding the consecutive-failure count at which
 #: ``Degraded`` becomes ``Backoff``.

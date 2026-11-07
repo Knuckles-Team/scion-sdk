@@ -588,6 +588,7 @@ units = [
     "config_mounts",
     "connector_hooks",
     "connector_identity",
+    "connector_lifecycle",
     "contract_fields",
     "contracts",
     "credentials",
@@ -612,8 +613,8 @@ units = [
     "schema_repair",
     "signing",
     "skills",
-    "streaming",
     "tls",
+    "transition_refused",
     "turtle_reader",
     "upstream_wire",
     "utc_records",
@@ -656,6 +657,7 @@ units = [
     "ingest",
     "manifest",
     "source_connectors",
+    "streaming",
     "taxonomy",
     "transports",
     "vendor_extractors",
@@ -665,7 +667,15 @@ units = [
 
 [[tool.pipelines_hooks.coupling.layers]]
 name = "serve"
-units = ["artifacts", "certify", "connector", "mcp", "sinks", "surface_contracts"]
+units = [
+    "artifacts",
+    "certify",
+    "connector",
+    "mcp",
+    "sinks",
+    "state_machine",
+    "surface_contracts",
+]
 
 [[tool.pipelines_hooks.coupling.layers]]
 name = "composition"

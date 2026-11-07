@@ -14,22 +14,35 @@ import ssl
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
-from typing import TYPE_CHECKING
+from typing import Protocol
 
 import httpx
-
-if TYPE_CHECKING:
-    from scion_sdk.resilience import CircuitBreaker
 
 from scion_sdk.http.retry_values import _require_retry_shape, _snapshot_set
 
 __all__ = [
     "IDEMPOTENT_METHODS",
     "RETRYABLE_STATUSES",
+    "CallBreaker",
     "RetryPolicy",
     "is_tls_verification_failure",
     "parse_retry_after",
 ]
+
+
+class CallBreaker(Protocol):
+    """What a retry policy consults around each attempt.
+
+    :class:`scion_sdk.resilience.CircuitBreaker` satisfies it; declaring it
+    here keeps the HTTP layer from importing the breaker module.
+    """
+
+    def before_call(self) -> None:
+        """Admit the attempt or raise to refuse it."""
+
+    def settle(self, *, ok: bool) -> None:
+        """Report the outcome of an admitted attempt."""
+
 
 #: Methods RFC 9110 defines as idempotent.
 IDEMPOTENT_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "PUT", "DELETE", "TRACE"})
@@ -100,7 +113,7 @@ class RetryPolicy:
     jitter: bool = True
     retry_statuses: frozenset[int] = RETRYABLE_STATUSES
     retry_methods: frozenset[str] = IDEMPOTENT_METHODS
-    breaker: CircuitBreaker | None = field(default=None, compare=False, repr=False)
+    breaker: CallBreaker | None = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
         _require_retry_shape(self.max_attempts, self.jitter)

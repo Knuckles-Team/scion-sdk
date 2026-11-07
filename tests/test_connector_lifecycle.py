@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from scion_sdk._transition_refused import MachineTransitionRefused
 from scion_sdk.connector_lifecycle import (
     DEFAULT_DEGRADED_FAILURES,
     DEGRADED_FAILURES_ENV,
@@ -16,6 +15,7 @@ from scion_sdk.connector_lifecycle import (
     degraded_failures_threshold,
     transition,
 )
+from scion_sdk.transition_refused import MachineTransitionRefused
 
 pytestmark = [
     pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917.1"),

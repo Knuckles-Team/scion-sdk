@@ -21,8 +21,8 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from scion_sdk._transition_refused import MachineTransitionRefused
 from scion_sdk.surface_contracts import CORE_NS
+from scion_sdk.transition_refused import MachineTransitionRefused
 
 __all__ = [
     "MACHINE_NS",

@@ -16,13 +16,13 @@ from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
-from scion_sdk._transition_refused import MachineTransitionRefused
 from scion_sdk.ingest.backoff import Backoff
 from scion_sdk.streaming._bus import StreamBus
 from scion_sdk.streaming._types import StreamMessage
+from scion_sdk.transition_refused import MachineTransitionRefused
 
 if TYPE_CHECKING:
-    from scion_sdk.runner.health_state import RunnerHealth
+    from scion_sdk.connector_lifecycle import CycleHealth
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class WebSocketStreamAdapter:
         url: str = "",
         connect: Callable[[str], Any] | None = None,
         *,
-        health: RunnerHealth | None = None,
+        health: CycleHealth | None = None,
         connector: str = "",
         backoff: Backoff | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
