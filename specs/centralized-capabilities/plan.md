@@ -218,6 +218,7 @@ R006.1 keeps upstream problem body fields out of governed public exceptions. The
 R006.3 limits governed diagnostics to the origin. The public URL redactor remains available when a caller chooses its separate field-based policy.
 
 R006.4 keeps GraphQL exception content out of public results and logs. Diagnostics retain the exception class and a correlation ID.
+R006.6 adds a closed `category` derived only from structured error fields (`extensions.code`, HTTP status), so a caller can tell not-found from forbidden from invalid input without any server text.
 
 ### North star
 
