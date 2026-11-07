@@ -202,6 +202,10 @@ These are required future tests. None ran during definition authoring.
 - `SCION-CONNECTOR-CONTROL-R025.5`: `tests/test_actor_binding_served.py::test_current_actor_resolves_system_outside_any_request`, `::test_a_bare_no_auth_server_serves_without_use_actor` and `::test_a_bare_authenticated_server_uses_the_token_identity_and_denies`.
 - `SCION-CONNECTOR-CONTROL-R025.6`: `tests/test_actor_binding_served.py::test_the_rate_limiter_runs_after_the_binding_and_keys_on_the_bound_actor`, `::test_the_trusted_local_principal_is_not_throttled_on_stdio`, `::test_the_trusted_local_principal_is_not_throttled_on_http_none` and `::test_an_untrusted_actor_keeps_its_rate_limit`.
 - `SCION-CONNECTOR-CONTROL-R025.7`: `tests/test_tool_response_redaction.py::test_a_tool_error_keeps_the_local_path_that_caused_it` and `::test_a_tool_response_redacts_secrets`.
+- `SCION-CONNECTOR-CONTROL-R025.7.1`: `tests/test_tool_response_redaction.py::test_a_served_tool_returning_a_raw_remote_dict_is_redacted` (planned; L3 over stdio: a served tool returns an upstream dict holding `runners_token`; the client receives `[REDACTED_SECRET]`).
+- `SCION-CONNECTOR-CONTROL-R025.7.2`: `tests/test_tool_response_redaction.py::test_suffix_secret_names_are_redacted` and `::test_descriptive_flag_and_cursor_names_are_kept` (planned; the vectors of contract `secret-redaction.md`).
+- `SCION-CONNECTOR-CONTROL-R025.7.3`: `tests/test_tool_response_redaction.py::test_a_minted_secret_is_returned_once_and_marked` and `::test_a_redacted_field_never_serializes_its_value` (planned).
+- `SCION-CONNECTOR-CONTROL-R025.7.4`: `tests/test_tool_response_redaction.py::test_trace_and_log_records_of_a_tool_call_hold_no_secret_value` (planned).
 - `SCION-CONNECTOR-CONTROL-R025.8`: `tests/test_middleware_typed_refusal.py::test_a_tool_refusal_keeps_its_message`, `::test_a_coded_refusal_keeps_its_code_and_reason`, `::test_a_permission_subclass_is_a_denial_not_an_internal_error` and `::test_an_unexpected_exception_is_still_an_internal_error`.
 
 All five tests serve a real `create_mcp_server` server. A fastmcp client calls it in memory or over streamable HTTP. No test fakes the identity layer.
