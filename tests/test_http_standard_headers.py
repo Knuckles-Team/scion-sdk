@@ -3,7 +3,7 @@
 import httpx
 import pytest
 
-from scion_sdk.http.client import create_http_client, standard_headers
+from scion_sdk.http.client import build_http_client, standard_headers
 from scion_sdk.http.options import HttpClientOptions
 
 
@@ -20,6 +20,6 @@ def test_standard_headers_and_case_insensitive_override():
     options = HttpClientOptions(
         base_url="https://example.com", headers={"user-agent": "consumer/1"}
     )
-    with create_http_client(options, transport=transport) as client:
+    with build_http_client(options, transport=transport) as client:
         assert client.get("/").status_code == 200
     assert observed == [["consumer/1"]]

@@ -1,7 +1,7 @@
 """The governed HTTP client connectors use to reach their vendor APIs.
 
 * :mod:`~scion_sdk.http.client`: :class:`HttpClientOptions`,
-  :func:`create_http_client` and :func:`create_async_http_client` (finite
+  :func:`build_http_client` (finite
   timeouts, mandatory verification, bounded retries, request logging).
 * :mod:`~scion_sdk.http.retry`: :class:`RetryPolicy` and
   ``Retry-After`` parsing.

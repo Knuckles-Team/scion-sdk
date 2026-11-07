@@ -26,7 +26,7 @@ from __future__ import annotations
 import ipaddress
 import logging
 import ssl
-from typing import Any
+from typing import Any, Literal, overload
 from urllib.parse import urlsplit
 
 import httpx
@@ -48,8 +48,7 @@ from scion_sdk.http.transport import AsyncGovernedTransport, GovernedTransport
 __all__ = [
     "HTTP_LOGGER_NAME",
     "AirgapViolation",
-    "create_async_http_client",
-    "create_http_client",
+    "build_http_client",
     "default_ssl_context",
     "standard_headers",
 ]
@@ -240,63 +239,75 @@ class _AsyncAirgapTransport(httpx.AsyncBaseTransport):
         await self._inner.aclose()
 
 
-def create_http_client(
-    options: HttpClientOptions, *, transport: httpx.BaseTransport | None = None
-) -> httpx.Client:
-    """A synchronous governed client.
+@overload
+def build_http_client(
+    options: HttpClientOptions,
+    *,
+    async_: Literal[False] = False,
+    transport: httpx.BaseTransport | None = None,
+) -> httpx.Client: ...
+
+
+@overload
+def build_http_client(
+    options: HttpClientOptions,
+    *,
+    async_: Literal[True],
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> httpx.AsyncClient: ...
+
+
+def build_http_client(
+    options: HttpClientOptions,
+    *,
+    async_: bool = False,
+    transport: httpx.BaseTransport | httpx.AsyncBaseTransport | None = None,
+) -> httpx.Client | httpx.AsyncClient:
+    """A governed client, synchronous or (``async_=True``) asynchronous.
 
     ``transport`` replaces the network transport (tests); it is still wrapped
     by the retrying, logging transport, and the TLS profile does not apply to it.
     """
     _check_base_host(options)
-    inner = transport or httpx.HTTPTransport(**_transport_kwargs(options))
-    governed: httpx.BaseTransport = GovernedTransport(
+    if async_:
+        base: Any = httpx.AsyncHTTPTransport
+        governed_type: Any = AsyncGovernedTransport
+        pinned_type: Any = AsyncDnsPinnedEgressTransport
+        airgap_type: Any = _AsyncAirgapTransport
+        session_transport_type: Any = _AsyncSessionTransport
+        session_client_type: Any = _AsyncSessionClient
+        client_type: Any = httpx.AsyncClient
+    else:
+        base = httpx.HTTPTransport
+        governed_type = GovernedTransport
+        pinned_type = DnsPinnedEgressTransport
+        airgap_type = _AirgapTransport
+        session_transport_type = _SessionTransport
+        session_client_type = _SessionClient
+        client_type = httpx.Client
+    inner = transport or base(**_transport_kwargs(options))
+    governed = governed_type(
         inner,
         policy=options.retry,
         logger=_logger,
         isolate_cookies=isolates_cookies(options.auth),
     )
     if options.pin_egress:
-        governed = DnsPinnedEgressTransport(
+        governed = pinned_type(
             governed,
             allowed_private_hosts=options.allowed_private_hosts,
             allow_loopback=options.allow_loopback,
             verify_peer=options.verify_pinned_peer,
         )
     proxy = options.tls.proxy_url if options.tls else None
-    final_transport: httpx.BaseTransport = _AirgapTransport(governed, proxy)
+    final_transport = airgap_type(governed, proxy)
     if isinstance(options.auth, SessionLoginAuth):
-        final_transport = _SessionTransport(final_transport, options.auth)
-        return _SessionClient(
+        final_transport = session_transport_type(final_transport, options.auth)
+        session_client: httpx.Client | httpx.AsyncClient = session_client_type(
             options.auth, transport=final_transport, **_client_kwargs(options)
         )
-    return httpx.Client(transport=final_transport, **_client_kwargs(options))
-
-
-def create_async_http_client(
-    options: HttpClientOptions, *, transport: httpx.AsyncBaseTransport | None = None
-) -> httpx.AsyncClient:
-    """An asynchronous governed client; see :func:`create_http_client`."""
-    _check_base_host(options)
-    inner = transport or httpx.AsyncHTTPTransport(**_transport_kwargs(options))
-    governed: httpx.AsyncBaseTransport = AsyncGovernedTransport(
-        inner,
-        policy=options.retry,
-        logger=_logger,
-        isolate_cookies=isolates_cookies(options.auth),
+        return session_client
+    client: httpx.Client | httpx.AsyncClient = client_type(
+        transport=final_transport, **_client_kwargs(options)
     )
-    if options.pin_egress:
-        governed = AsyncDnsPinnedEgressTransport(
-            governed,
-            allowed_private_hosts=options.allowed_private_hosts,
-            allow_loopback=options.allow_loopback,
-            verify_peer=options.verify_pinned_peer,
-        )
-    proxy = options.tls.proxy_url if options.tls else None
-    final_transport: httpx.AsyncBaseTransport = _AsyncAirgapTransport(governed, proxy)
-    if isinstance(options.auth, SessionLoginAuth):
-        final_transport = _AsyncSessionTransport(final_transport, options.auth)
-        return _AsyncSessionClient(
-            options.auth, transport=final_transport, **_client_kwargs(options)
-        )
-    return httpx.AsyncClient(transport=final_transport, **_client_kwargs(options))
+    return client

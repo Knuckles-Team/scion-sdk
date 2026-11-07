@@ -253,10 +253,10 @@ def _session_login(cookie: str, other=None):
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R028.5")
 def test_session_cookies_respect_path_and_auth_is_bound_to_origin() -> None:
-    from scion_sdk.http.client import create_http_client
+    from scion_sdk.http.client import build_http_client
 
     requests, serve, _auth, options = _session_login("SID=secret; Path=/api", None)
-    with create_http_client(options, transport=httpx.MockTransport(serve)) as client:
+    with build_http_client(options, transport=httpx.MockTransport(serve)) as client:
         client.get("https://one.example.test/api/resource")
         client.get("https://one.example.test/other")
         with pytest.raises(TokenRequestError, match="origin"):
@@ -272,8 +272,7 @@ async def test_session_cross_origin_redirect_is_never_dispatched(
     asynchronous: bool,
 ) -> None:
     from scion_sdk.http.client import (
-        create_async_http_client,
-        create_http_client,
+        build_http_client,
     )
 
     def other(request: httpx.Request) -> httpx.Response:
@@ -283,14 +282,14 @@ async def test_session_cross_origin_redirect_is_never_dispatched(
         "SID=secret; Domain=example.test; Path=/", other
     )
     if asynchronous:
-        async with create_async_http_client(
-            options, transport=httpx.MockTransport(serve)
+        async with build_http_client(
+            options, transport=httpx.MockTransport(serve), async_=True
         ) as client:
             with pytest.raises(TokenRequestError, match="origin"):
                 await client.get("/api", follow_redirects=True)
     else:
         with (
-            create_http_client(options, transport=httpx.MockTransport(serve)) as client,
+            build_http_client(options, transport=httpx.MockTransport(serve)) as client,
             pytest.raises(TokenRequestError, match="origin"),
         ):
             client.get("/api", follow_redirects=True)
@@ -319,7 +318,7 @@ def test_session_auth_refuses_plain_httpx_client() -> None:
 
 
 def test_session_allows_same_origin_redirect() -> None:
-    from scion_sdk.http.client import create_http_client
+    from scion_sdk.http.client import build_http_client
 
     def other(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/start":
@@ -329,7 +328,7 @@ def test_session_allows_same_origin_redirect() -> None:
     requests, serve, _auth, options = _session_login(
         "SID=secret; Path=/; Secure", other
     )
-    with create_http_client(options, transport=httpx.MockTransport(serve)) as client:
+    with build_http_client(options, transport=httpx.MockTransport(serve)) as client:
         assert client.get("/start", follow_redirects=True).status_code == 200
     assert requests[-1].url.path == "/target"
     assert requests[-1].headers["Cookie"] == "SID=secret"
@@ -337,11 +336,11 @@ def test_session_allows_same_origin_redirect() -> None:
 
 @pytest.mark.parametrize("without_auth", [False, True])
 def test_guarded_request_cannot_be_reused_with_plain_httpx(without_auth: bool) -> None:
-    from scion_sdk.http.client import create_http_client
+    from scion_sdk.http.client import build_http_client
 
     requests, serve, auth, options = _session_login("SID=secret; Path=/", None)
     request = httpx.Request("GET", "https://one.example.test/api")
-    with create_http_client(options, transport=httpx.MockTransport(serve)) as client:
+    with build_http_client(options, transport=httpx.MockTransport(serve)) as client:
         response = (
             client.send(request, auth=None) if without_auth else client.send(request)
         )

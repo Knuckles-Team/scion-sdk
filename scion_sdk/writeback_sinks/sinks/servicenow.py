@@ -17,7 +17,6 @@ from typing import Any
 from ..core import (
     PROVENANCE_TAG,
     WritebackClientMixin,
-    WritebackInvocation,
     WritebackResult,
     register_sink,
 )
@@ -91,6 +90,13 @@ class ServiceNowSink(WritebackClientMixin):
     enable_flag = "SERVICENOW_ENABLE_WRITE"
     client_module = "servicenow_api"
     client_label = "servicenow"
+    passes = (
+        ("creations", "_create"),
+        ("enrichments", "_enrich"),
+        ("inferences", "_relate"),
+        ("work_notes", "_work_note"),
+        ("retirements", "_retire"),
+    )
 
     def _attempt(
         self,
@@ -111,21 +117,6 @@ class ServiceNowSink(WritebackClientMixin):
             logger.debug("servicenow %s failed", action, exc_info=True)
             result.errors += 1
             return _ATTEMPT_FAILED
-
-    def _run(self, invocation: WritebackInvocation) -> WritebackResult:
-        ctx, ops, client, result, dry_run = invocation.unpack()
-        resolve = ctx.resolver("servicenow")
-        for c in ops.get("creations") or []:
-            self._create(ctx, client, result, c, resolve, dry_run=dry_run)
-        for item in ops.get("enrichments") or []:
-            self._enrich(ctx, client, result, item, resolve, dry_run=dry_run)
-        for edge in ops.get("inferences") or []:
-            self._relate(ctx, client, result, edge, resolve, dry_run=dry_run)
-        for item in ops.get("work_notes") or []:
-            self._work_note(ctx, client, result, item, resolve, dry_run=dry_run)
-        for item in ops.get("retirements") or []:
-            self._retire(ctx, client, result, item, resolve, dry_run=dry_run)
-        return result
 
     def _create(
         self,

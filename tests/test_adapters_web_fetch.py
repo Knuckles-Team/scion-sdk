@@ -91,7 +91,7 @@ async def test_fetch_rejects_loopback_without_explicit_allowlist() -> None:
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.42")
 async def test_fetch_rejects_public_hostname_resolving_to_private(monkeypatch) -> None:
     from scion_sdk.adapters import web_fetch
-    from scion_sdk.http.client import create_async_http_client
+    from scion_sdk.http.client import build_http_client
 
     seen: list[httpx.Request] = []
     monkeypatch.setattr(
@@ -106,8 +106,8 @@ async def test_fetch_rejects_public_hostname_resolving_to_private(monkeypatch) -
     )
     monkeypatch.setattr(
         web_fetch,
-        "create_async_http_client",
-        lambda options: create_async_http_client(options, transport=transport),
+        "build_http_client",
+        lambda options, **kw: build_http_client(options, transport=transport, **kw),
     )
     assert await fetch_page("https://public.example/article") is None
     assert seen == []
@@ -126,7 +126,7 @@ async def test_legacy_fetch_stops_on_oversized_or_compressed_response(
     monkeypatch,
 ) -> None:
     from scion_sdk.adapters import web_fetch
-    from scion_sdk.http.client import create_async_http_client
+    from scion_sdk.http.client import build_http_client
 
     class Chunks(httpx.AsyncByteStream):
         def __init__(self) -> None:
@@ -164,8 +164,8 @@ async def test_legacy_fetch_stops_on_oversized_or_compressed_response(
     monkeypatch.setattr(web_fetch, "DEFAULT_MAX_RESPONSE_BYTES", 8)
     monkeypatch.setattr(
         web_fetch,
-        "create_async_http_client",
-        lambda options: create_async_http_client(options, transport=transport),
+        "build_http_client",
+        lambda options, **kw: build_http_client(options, transport=transport, **kw),
     )
     url = "http://127.0.0.1/article"
     assert await fetch_page(url, allowed_private_hosts=("127.0.0.1",)) is None

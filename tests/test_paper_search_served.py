@@ -25,7 +25,7 @@ from scion_sdk.adapters.paper_search import (
     ProviderBinding,
 )
 from scion_sdk.adapters.paper_tool import register_paper_search_tool
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
 from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
@@ -43,7 +43,7 @@ class _HttpProvider:
             allow_loopback=True,
             retry=RetryPolicy(max_attempts=1),
         )
-        async with create_async_http_client(options) as client:
+        async with build_http_client(options, async_=True) as client:
             response = await client.get("/search")
         if response.status_code != 200:
             raise ProviderFailure("provider_failed")

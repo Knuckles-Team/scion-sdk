@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Breaking, hard cutover (`SCION-CENTRALIZED-CAPABILITIES-R045`): `create_http_client` and `create_async_http_client` are one `build_http_client(options, async_=False)`; `configure_oauth_proxy` and `configure_oidc_proxy` are one `configure_proxy(inputs, flow)`; the four repeated write-back sink `_run` bodies are a `passes` table run by `run_sink`. The old names are removed with no alias; update imports.
+
 ## 0.9.1
 
 ### Fixed

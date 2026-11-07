@@ -5,8 +5,7 @@ import pytest
 
 from scion_sdk.http.client import (
     AirgapViolation,
-    create_async_http_client,
-    create_http_client,
+    build_http_client,
 )
 from scion_sdk.http.options import HttpClientOptions
 
@@ -19,7 +18,7 @@ def test_airgap_governed_client_blocks_external_before_transport(monkeypatch):
     )
     options = HttpClientOptions(base_url="https://example.com")
     monkeypatch.setenv("AIRGAP_MODE", "true")
-    with create_http_client(options, transport=transport) as client:
+    with build_http_client(options, transport=transport) as client:
         with pytest.raises(AirgapViolation):
             client.get("/")
         assert client.get("https://127.0.0.1/").status_code == 200
@@ -40,8 +39,10 @@ async def test_airgap_async_client_blocks_external_before_transport(monkeypatch)
         lambda request: calls.append(request.url.host) or httpx.Response(200)
     )
     monkeypatch.setenv("AIRGAP_MODE", "true")
-    async with create_async_http_client(
-        HttpClientOptions(base_url="https://example.com"), transport=transport
+    async with build_http_client(
+        HttpClientOptions(base_url="https://example.com"),
+        transport=transport,
+        async_=True,
     ) as client:
         with pytest.raises(AirgapViolation):
             await client.get("/")
@@ -69,7 +70,7 @@ def test_airgap_refuses_proxy_even_for_local_destination(monkeypatch):
     )
     monkeypatch.setenv("AIRGAP_MODE", "true")
     with (
-        create_http_client(
+        build_http_client(
             HttpClientOptions(base_url="https://127.0.0.1", tls=profile),
             transport=transport,
         ) as client,

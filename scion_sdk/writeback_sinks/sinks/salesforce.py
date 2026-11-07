@@ -13,7 +13,6 @@ from typing import Any
 
 from ..core import (
     WritebackClientMixin,
-    WritebackInvocation,
     WritebackResult,
     register_sink,
 )
@@ -33,6 +32,10 @@ class SalesforceSink(WritebackClientMixin):
     enable_flag = "SALESFORCE_ENABLE_WRITE"
     client_module = "salesforce_agent"
     client_label = "salesforce"
+    passes = (
+        ("creations", "_op_creations"),
+        ("enrichments", "_op_enrichments"),
+    )
 
     def _create(self, client: Any, sobject: str, data: dict[str, Any]) -> bool:
         for name in ("create_record", "create", "insert"):
@@ -41,15 +44,6 @@ class SalesforceSink(WritebackClientMixin):
                 method(sobject, data)
                 return True
         return False
-
-    def _run(self, invocation: WritebackInvocation) -> WritebackResult:
-        ctx, ops, client, result, dry_run = invocation.unpack()
-        resolve = ctx.resolver("salesforce")
-        for c in ops.get("creations") or []:
-            self._op_creations(ctx, client, result, c, resolve, dry_run=dry_run)
-        for item in ops.get("enrichments") or []:
-            self._op_enrichments(ctx, client, result, item, resolve, dry_run=dry_run)
-        return result
 
     def _op_creations(
         self,

@@ -1,7 +1,7 @@
 """Class-based API client base and auth strategies (SCION-CONNECTOR-CONTROL-R014.10).
 
 Replaces ``agent_utilities.httpsupport`` for connectors that subclass a shared
-client instead of calling :func:`scion_sdk.http.create_http_client`:
+client instead of calling :func:`scion_sdk.http.build_http_client`:
 
 * :class:`AuthHeaderInjector` (anonymous base), :class:`TokenAuth`,
   :class:`BasicAuth` and :class:`QueryApiKeyAuth` contribute headers or query

@@ -7,7 +7,7 @@ import logging
 import httpx
 import pytest
 
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
 from scion_sdk.progress import ctx_progress
@@ -52,7 +52,7 @@ async def test_ctx_progress(caplog: pytest.LogCaptureFixture) -> None:
 
 def _governed(base_url: str) -> httpx.Client:
     options = HttpClientOptions(base_url=base_url, retry=RetryPolicy(backoff_base=0.01))
-    return create_http_client(options)
+    return build_http_client(options)
 
 
 def test_governed_client_is_conformant() -> None:

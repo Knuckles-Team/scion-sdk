@@ -30,7 +30,7 @@ from scion_sdk.auth.tokens import TokenRequestError
 from scion_sdk.config import csv_values, setting
 from scion_sdk.credentials.references import parse_secret_reference
 from scion_sdk.credentials.resolver import CredentialResolver
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.errors import HttpProblemError
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.responses import request_json
@@ -131,7 +131,7 @@ def client_credentials_auth(
         TokenRequestError: discovery failed.
     """
     origin = urlsplit(config.issuer or config.token_url)
-    client = create_http_client(
+    client = build_http_client(
         HttpClientOptions(
             base_url=f"{origin.scheme}://{origin.netloc}",
             tls=tls,
