@@ -16,7 +16,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from scion_sdk._utc_records import _FrozenRecord, _UtcTimestampedRecord
+from scion_sdk.utc_records import _FrozenRecord, _UtcTimestampedRecord
 
 __all__ = [
     "EARTH_OBSERVATION_SCHEMA_VERSION",

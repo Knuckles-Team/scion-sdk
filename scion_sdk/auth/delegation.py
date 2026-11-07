@@ -27,7 +27,6 @@ from typing import Any
 import anyio
 import httpx
 
-from scion_sdk._extras import require_mcp_extra
 from scion_sdk.auth.tokens import (
     AccessToken,
     TokenRequestError,
@@ -44,6 +43,7 @@ from scion_sdk.credentials.resolver import (
     CredentialUnavailableError,
 )
 from scion_sdk.exceptions import LoginRequiredError
+from scion_sdk.extras import require_mcp_extra
 
 __all__ = [
     "DelegatedTokenAuth",

@@ -6,7 +6,7 @@ import importlib
 
 
 def test__extras_exports() -> None:
-    module = importlib.import_module("scion_sdk._extras")
+    module = importlib.import_module("scion_sdk.extras")
     exported = (module.require_mcp_extra,)
     assert len(exported) == 1
     assert all(item is not None for item in exported)

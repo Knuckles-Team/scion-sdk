@@ -32,7 +32,7 @@ with the typed hooks of :mod:`scion_sdk.connector_hooks`
 
 from __future__ import annotations
 
-from scion_sdk._connector_decl import (
+from scion_sdk.connector._decl import (
     Connector,
     ConnectorContentDirs,
     ResolvedConnector,
@@ -40,7 +40,7 @@ from scion_sdk._connector_decl import (
     installed_connectors,
     resolve_connector,
 )
-from scion_sdk._connector_serve import build_server, run
+from scion_sdk.connector._serve import build_server, run
 
 __all__ = [
     "Connector",

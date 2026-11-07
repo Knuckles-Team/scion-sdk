@@ -7,8 +7,8 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from scion_sdk._stream_bus import StreamBus
-from scion_sdk._stream_types import StreamMessage
+from scion_sdk.streaming._bus import StreamBus
+from scion_sdk.streaming._types import StreamMessage
 
 logger = logging.getLogger(__name__)
 

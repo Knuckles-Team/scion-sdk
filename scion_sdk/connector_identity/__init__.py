@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from importlib.metadata import entry_points
 from pathlib import Path
 
-from scion_sdk._connector_metadata import (
+from scion_sdk.connector_identity._metadata import (
     CONNECTOR_ENTRY_POINT_GROUP,
     ConnectorIdentityError,
     _entry_point_group,

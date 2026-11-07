@@ -18,15 +18,16 @@ from dataclasses import dataclass, field
 from importlib import resources
 from typing import Any
 
-from . import _contract_fields as f
-from ._contract_fields import (
+from scion_sdk import contract_fields as f
+from scion_sdk.contract_fields import (
     AC,
     ACCESS_KINDS,
     COST_HINTS,
     PAGINATION_MODES,
     PUSHDOWN_OPS,
 )
-from ._turtle import RDF_TYPE, AccessContractError, parse_graph
+from scion_sdk.turtle_reader import RDF_TYPE, AccessContractError, parse_graph
+
 from .transports.contract import TransportContract
 
 __all__ = [

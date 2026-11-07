@@ -8,12 +8,12 @@ from typing import cast
 
 import pytest
 
-from scion_sdk._contract_fields import AUTH_MODELS, STREAM_MODES
 from scion_sdk.access_contract import (
     AccessContractError,
     TransportContract,
     parse_access_contracts,
 )
+from scion_sdk.contract_fields import AUTH_MODELS, STREAM_MODES
 
 
 def _contract(kind: str, pushdown: str = '"time_range"') -> str:

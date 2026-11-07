@@ -6,7 +6,6 @@ import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
-from scion_sdk._extras import require_mcp_extra
 from scion_sdk.earth_observations._stream_policy import (
     _authorized_offset,
     _stream_binding,
@@ -18,6 +17,7 @@ from scion_sdk.earth_observations.occurrence_context import (
     _context_identity,
     _occurrence_entities,
 )
+from scion_sdk.extras import require_mcp_extra
 from scion_sdk.ingest.live_declaration import source_meta
 
 require_mcp_extra("scion_sdk.earth_observations.stream")

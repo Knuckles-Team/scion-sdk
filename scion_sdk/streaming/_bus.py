@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 
-from scion_sdk._stream_types import StreamMessage, StreamSubscriber
+from scion_sdk.streaming._types import StreamMessage, StreamSubscriber
 
 logger = logging.getLogger(__name__)
 

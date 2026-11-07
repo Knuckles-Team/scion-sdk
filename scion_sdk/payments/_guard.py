@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from scion_sdk._payment_models import BudgetLimits, PaymentChallenge, _valid_amount
+from scion_sdk.payments._models import BudgetLimits, PaymentChallenge, _valid_amount
 
 
 class PaymentGuard:
