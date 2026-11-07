@@ -96,6 +96,7 @@ list remains valid.
 | CC-50 | `SCION-CENTRALIZED-CAPABILITIES-R006.2` | Fleet | Exercise connector error paths. | Errors contain no secrets or upstream bodies. |
 | CC-51 | `SCION-CENTRALIZED-CAPABILITIES-R006.3` | Integration | Exercise governed sync and async clients. | Logs and errors contain the origin but no request path, query value or raw transport exception. |
 | CC-52 | `SCION-CENTRALIZED-CAPABILITIES-R006.4` | Integration | Exercise GraphQL execution and introspection failures. | Logs and errors expose no untrusted exception content. |
+| CC-75 | `SCION-CENTRALIZED-CAPABILITIES-R006.6` | Unit | Raise GraphQL query errors with each `extensions.code` class and a sensitive message. | Each error carries its closed category; the message text appears nowhere; a code-less error is `unknown`. |
 | CC-53 | `SCION-CENTRALIZED-CAPABILITIES-R006.5` | Integration | Trigger GraphQL client close failure. | Logs contain no exception content and TLS cleanup completes. |
 | CC-54 | `SCION-CENTRALIZED-CAPABILITIES-R017.1` | Integration | Planned in tests/test_a2a_protocol.py: a loopback app with a durable `Storage` serves `tasks/list` and a foreign context. | The page lists the caller's contexts; a foreign context returns `-32001`. |
 | CC-55 | `SCION-CENTRALIZED-CAPABILITIES-R017.2` | Integration | Planned in tests/test_a2a_protocol.py: stream one turn, drop the connection, resubscribe with `after_seq`. | The tail replays once, in order, after the cursor. |
