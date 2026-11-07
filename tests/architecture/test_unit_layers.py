@@ -21,12 +21,6 @@ PACKAGE = "scion_sdk"
 LAYERS = ROOT / "pyproject.toml"
 ROOT_UNIT = "__init__"
 
-#: The one cycle left: ``ports.decide_runner`` types its protocol with
-#: ``scion_sdk.decide`` values while ``scion_sdk.decide`` implements the port.
-#: ``scion_sdk.decide`` is frozen until the owner rules where decisions live;
-#: the ruling removes this entry, and the test fails until it is removed.
-PENDING_OWNER_RULING = frozenset({frozenset({"decide", "ports"})})
-
 
 def _modules(package_dir: Path) -> dict[str, tuple[Path, bool]]:
     modules: dict[str, tuple[Path, bool]] = {}
@@ -185,7 +179,7 @@ def test_unit_imports_follow_layers_and_no_cycle_remains() -> None:
     assert (
         layer_findings(declared_layers(LAYERS), package_units(package_dir), edges) == []
     )
-    assert set(cycle_groups(edges)) == PENDING_OWNER_RULING
+    assert cycle_groups(edges) == []
 
 
 @pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R044")

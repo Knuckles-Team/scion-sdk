@@ -637,7 +637,7 @@ units = [
 
 [[tool.pipelines_hooks.coupling.layers]]
 name = "ports"
-units = ["decide", "ports"]
+units = ["ports"]
 
 [[tool.pipelines_hooks.coupling.layers]]
 name = "domain"
@@ -646,6 +646,7 @@ units = [
     "adapters",
     "compute",
     "data_prep",
+    "decide",
     "discovery",
     "earth_observations",
     "exchange",

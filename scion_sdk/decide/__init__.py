@@ -12,7 +12,7 @@ passes its deterministic rule as the received fallback::
 With no runner installed, or a point Medulla has not published, :func:`choose`
 is exactly the fallback. A process that also holds a verified Medulla session
 may :func:`install_runner` a real
-:class:`~scion_sdk.ports.decide_runner.DecisionRunner`;
+:class:`~scion_sdk.decide.runner.DecisionRunner`;
 :class:`~scion_sdk.decide.medulla.MedullaDecisionRunner` is installed at the
 connector-sync composition root
 (:func:`scion_sdk.runner.composition.default_services`) when the process was
@@ -34,7 +34,7 @@ from scion_sdk.decide.options import (
     unique_sorted,
 )
 from scion_sdk.decide.outcome import Choice
-from scion_sdk.ports.decide_runner import DecisionRunner, Fallback
+from scion_sdk.decide.runner import DecisionRunner, Fallback
 
 _RUNNER: ContextVar[DecisionRunner | None] = ContextVar(
     "scion_sdk_decide_runner", default=None
@@ -64,7 +64,7 @@ def _no_runner(fallback: Fallback) -> Choice:
 #: The rest of a ``choose``/``achoose`` call (``params``, ``candidates``): kept
 #: as ``**kwargs`` here, forwarded verbatim to a :class:`DecisionRunner`, so
 #: this dispatcher's signature does not restate
-#: :class:`~scion_sdk.ports.decide_runner.DecisionRunner`'s own
+#: :class:`~scion_sdk.decide.runner.DecisionRunner`'s own
 #: canonical one (defined once, in ``ports/``) a second time.
 def choose(
     question_id: str, options: Sequence[Option], fallback: Fallback, **kwargs: Any
