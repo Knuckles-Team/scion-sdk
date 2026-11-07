@@ -3,8 +3,8 @@ deterministic fallback on anything else.
 
 Ported (not imported -- the SDK must never depend on the agent control
 plane) from agent-utilities' equivalent transport/runner contract, trimmed
-to this package's two evaluate-only points and with no escalation/
-resolution path: neither of this package's decision points escalates.
+to a client adapter. The point catalog and the choice of an option are
+Medulla's; this runner only carries a question and reads the outcome.
 
 The contract every call site gets, exactly as before this module existed:
 
@@ -38,7 +38,6 @@ from scion_sdk.decide.outcome import (
 )
 from scion_sdk.decide.points import (
     EMPTY_BINDINGS,
-    POINTS,
     Bindings,
     DecisionPoint,
     LogMode,
@@ -53,7 +52,7 @@ __all__ = ["MedullaDecisionRunner"]
 
 @dataclass(frozen=True, slots=True)
 class _Prepared:
-    point: DecisionPoint
+    point: DecisionPoint | None
     request: dict[str, Any] | None
     offered: frozenset[str]
 
@@ -92,7 +91,7 @@ class MedullaDecisionRunner:
     transport: DecideTransport
     tenant: str
     bindings: Bindings = EMPTY_BINDINGS
-    points: Mapping[str, DecisionPoint] = field(default_factory=lambda: dict(POINTS))
+    points: Mapping[str, DecisionPoint] = field(default_factory=dict)
 
     def _prepare(
         self,
@@ -101,8 +100,10 @@ class MedullaDecisionRunner:
         params: Iterable[Mapping[str, Any]],
         candidates: Mapping[str, Any] | None,
     ) -> _Prepared:
-        point = self.points[question_id]
         offered = frozenset(o.option_id for o in options)
+        point = self.points.get(question_id)
+        if point is None:
+            return _Prepared(None, None, offered)
         binding = self.bindings.binding_for(point)
         if binding is None or not offered:
             return _Prepared(point, None, offered)
@@ -127,7 +128,7 @@ class MedullaDecisionRunner:
 
     async def _consult(self, prepared: _Prepared) -> Reading:
         """Ask EG and log its record; any failure is a reading, never a raise."""
-        if prepared.request is None:
+        if prepared.point is None or prepared.request is None:
             return _UNBOUND
         try:
             batch = await self.transport.decide(prepared.request)
