@@ -140,8 +140,8 @@ These future tests have not run. The producer, gate, and writer attachments are 
 - **Incompatible hot path:** Fail one package check through the same entry point. Assert refusal before the first pin write and unchanged manifests and lockfiles.
 - **Missing and stale evidence:** Remove a receipt or change the source, pin preimage, inventory, or artifact. Assert typed refusal and no pin changes.
 - **Invalid receipt sets:** Test failed, incomplete, cancelled, duplicate, extra, and cross-package receipts. Assert preflight refusal before any write and byte-identical pins.
-- **CC-105 / R007.4:** `tests/test_major_version_compatibility_served.py::test_fleet_preflight_refusal_preserves_all_pins` proves preflight refusal preserves every pin byte-for-byte.
-- **CC-106 / R007.6:** `tests/test_major_version_compatibility_served.py::test_writer_b_preimage_race_reports_partial_rollout` races B after A writes. It proves B does not write and requires reconciliation. It identifies A as applied and B as refused.
+- **CC-105 / R007.4:** `tests/test_major_version_compatibility_served.py::test_fleet_preflight_refusal_preserves_all_pins` proves preflight refusal preserves every pin byte-for-byte. (planned: the test file does not exist yet.)
+- **CC-106 / R007.6:** `tests/test_major_version_compatibility_served.py::test_writer_b_preimage_race_reports_partial_rollout` races B after A writes. It proves B does not write and requires reconciliation. It identifies A as applied and B as refused. (planned: the test file does not exist yet.)
 - **Existing acceptance:** Retain R007 fingerprint and live-contract comparison and R009-R013 package migration and import-scan tests.
 <!-- /spec-definition-patch -->
 
@@ -401,7 +401,7 @@ Hot-path proof for `SCION-CONNECTOR-CONTROL-R069`: `tests/test_transport_contrac
 
 ## SCION-CONNECTOR-CONTROL-R072
 
-`tests/test_certify_connector_rename.py` gives the fixture fingerprints an older connector name. `--check` refuses the checkout. `--write` rewrites the name from the manifest, and `--check` then passes.
+`tests/test_certify_connector_rename.py` gives the fixture fingerprints an older connector name. `--check` refuses the checkout. `--write` rewrites the name from the manifest, and `--check` then passes. (planned: the file was removed with the declaration rework and is to be re-added.)
 
 ## Never-drop splitter, successor parity and actor forwarding (R020.3, R020.4, R902)
 
@@ -448,13 +448,13 @@ R045.3 uses a captured tool's canonical body and checks byte boundaries and
 non-ASCII text against the named divisor.
 
 - **R039 external evidence:** The container-manager test
-  `tests/test_access_contracts.py::test_served_deployment_access_contract_matches_fixture`
+  `tests/test_access_contracts.py::test_served_deployment_access_contract_matches_fixture` (planned: the test file does not exist yet.)
   uses a synthetic Kubernetes provider and a real MCP tool call. Its owner
   repository merged commit `db08ad5123a1b12ef715d237d2d3aa6e49aac330` after
   green checks. This is not a local test binding or engine mapping proof.
 
 - **R038 external evidence:** The uptime-kuma-agent test
-  `tests/test_service_health.py::test_served_health_contract` calls the served
+  `tests/test_service_health.py::test_served_health_contract` calls the served (planned: the test file does not exist yet.)
   MCP tool with a synthetic provider and checks its response and access
   contract. Owner merge `1915fce3ef886c82ce17edbf9cb0d92bdfe50dfb` passed
   its PR checks. This is not SDK-local evidence or engine mapping proof.
