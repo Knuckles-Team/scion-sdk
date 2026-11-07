@@ -1,5 +1,5 @@
 {
-  "graph_sha256": "b36d5623ad6c48f6560958fbb8ecb2724a355ae464727e876c3dae5ad8298892",
+  "graph_sha256": "dc6d4a0bcd2c1fb8410d9790ab6bd2c491918a9ac2e17338bcb21acd7487b358",
   "installed_distributions": [
     "annotated-types==0.8.0",
     "anyio==4.15.1",
@@ -21,7 +21,7 @@
     "pydantic==2.14.1",
     "pyoxigraph==0.5.11",
     "pyyaml==6.0.3",
-    "scion-sdk==0.10.0",
+    "scion-sdk==0.10.1",
     "truststore==0.10.5",
     "typing-extensions==4.16.0",
     "typing-inspection==0.4.4"
