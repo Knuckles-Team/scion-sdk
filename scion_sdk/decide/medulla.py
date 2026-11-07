@@ -42,8 +42,8 @@ from scion_sdk.decide.points import (
     DecisionPoint,
     LogMode,
 )
+from scion_sdk.decide.runner import Fallback
 from scion_sdk.decide.transport import DecideTransport
-from scion_sdk.ports.decide_runner import Fallback
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class MedullaDecisionRunner:
     :func:`scion_sdk.decide.choose` documents for no runner
     installed at all.
 
-    Satisfies :class:`scion_sdk.ports.decide_runner.DecisionRunner`.
+    Satisfies :class:`scion_sdk.decide.runner.DecisionRunner`.
     """
 
     transport: DecideTransport
@@ -144,7 +144,7 @@ class MedullaDecisionRunner:
     #: ``choose`` keeps only its three most-used parameters typed by name and
     #: forwards the rest (``params``, ``candidates``) as ``**kwargs`` to
     #: :meth:`achoose` -- the single implementation -- instead of restating
-    #: :class:`scion_sdk.ports.decide_runner.DecisionRunner`'s
+    #: :class:`scion_sdk.decide.runner.DecisionRunner`'s
     #: canonical signature a second time in this class.
     def choose(
         self,
@@ -172,8 +172,8 @@ class MedullaDecisionRunner:
 
     #: Kept ``**kwargs``, like :meth:`choose`, so this -- the single real
     #: implementation -- does not restate
-    #: :class:`scion_sdk.ports.decide_runner.DecisionRunner`'s
-    #: canonical signature (``ports/decide_runner.py``, defined once) a
+    #: :class:`scion_sdk.decide.runner.DecisionRunner`'s
+    #: canonical signature (``decide/runner.py``, defined once) a
     #: second time; ``params``/``candidates`` are read out with the same
     #: defaults the protocol declares.
     async def achoose(

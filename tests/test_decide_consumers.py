@@ -26,7 +26,7 @@ from scion_sdk.decide.options import (
     text_param,
     unique_sorted,
 )
-from scion_sdk.ports.decide_runner import Fallback
+from scion_sdk.decide.runner import Fallback
 
 
 @dataclass
