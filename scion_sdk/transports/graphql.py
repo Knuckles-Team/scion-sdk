@@ -36,6 +36,7 @@ from scion_sdk.transports._graphql_pagination import (
 )
 from scion_sdk.transports._graphql_support import (
     RETRYABLE_STATUS,
+    ErrorClassifier,
     GraphQLAuth,
     GraphQLExecutionError,
     _retry_or_failure,
@@ -67,6 +68,9 @@ class GraphQLClient:
         fetch_schema: Fetch the schema by introspection on first use and
             validate documents locally; :attr:`schema` then holds it.
         sleep: Injected for tests.
+        error_classifier: Optional pure function from the query-error entries
+            to one closed category, for servers that send no error codes;
+            only the returned category is kept.
     """
 
     def __init__(
@@ -82,6 +86,7 @@ class GraphQLClient:
         backoff: float = 0.5,
         fetch_schema: bool = False,
         sleep: Callable[[float], None] = time.sleep,
+        error_classifier: ErrorClassifier | None = None,
     ) -> None:
         if not endpoint:
             raise ParameterError("GraphQL endpoint is required")
@@ -96,6 +101,7 @@ class GraphQLClient:
         self.backoff = backoff
         self.fetch_schema = fetch_schema
         self._sleep = sleep
+        self._classifier = error_classifier
         self.last_partial_error_count = 0
         self._client: Any = None
 
@@ -185,6 +191,7 @@ class GraphQLClient:
                     max_retries=self.max_retries,
                     backoff=self.backoff,
                     sleep=self._sleep,
+                    classifier=self._classifier,
                 )
             if failure is not None:
                 raise failure
