@@ -1,31 +1,23 @@
 """The SDK's own consumers of EG's ``Decide`` layer (SCION-CONNECTOR-CONTROL-R006,
 SCION-GOVERNED-WRITEBACK-R001).
 
-Every decision point here used to be, and remains, an ad-hoc rule. It now
-asks EG first and keeps that rule as the deterministic fallback::
+The SDK is the Medulla client adapter for decisions: the transport, the runner
+that calls ``Decide`` and the outcome reading. The decision-point catalog, the
+candidate heuristics and the choice of an option are Medulla's. A call site
+passes its deterministic rule as the received fallback::
 
     from scion_sdk import decide
-    choice = decide.choose("au.connector.tool", options, fallback=lambda: picked)
+    choice = decide.choose("connector.tool", options, fallback=lambda: picked)
 
-With no runner installed (no engine reachable from this process), :func:`choose`
-is exactly the fallback, reason ``no_runner``. A process that also holds a
-verified EG session may :func:`install_runner` a real
-:class:`~scion_sdk.ports.decide_runner.DecisionRunner` --
-:class:`~scion_sdk.decide.medulla.MedullaDecisionRunner`
-is the SDK's own Medulla-backed one, installed at the connector-sync composition
-root (:func:`scion_sdk.runner.composition.default_services`) when
-this process was given a tenant to decide as; tests install fakes. This
-mirrors agent-utilities' own equivalent ``Decide`` consumer contract so the
-SAME EG question is asked whichever side calls it, but is implemented
-independently: the SDK never imports ``agent_utilities`` (the agent control
-plane) -- only the port, the Medulla-backed runner, and the three evaluate-only
-call sites in :mod:`scion_sdk.decide.consumers` (connector-internal
-tool choice, inbound event triage, and write-back proposals).
-
-Connector inbound event triage asks about a batch of events the SDK's own
-connectors receive (for example a ``subscriptions/listen`` delivery), which
-is distinct from ``agent_utilities``' unrelated fleet-event dispatch; see
-:func:`scion_sdk.decide.consumers.triage_event`.
+With no runner installed, or a point Medulla has not published, :func:`choose`
+is exactly the fallback. A process that also holds a verified Medulla session
+may :func:`install_runner` a real
+:class:`~scion_sdk.ports.decide_runner.DecisionRunner`;
+:class:`~scion_sdk.decide.medulla.MedullaDecisionRunner` is installed at the
+connector-sync composition root
+(:func:`scion_sdk.runner.composition.default_services`) when the process was
+given a tenant to decide as; tests install fakes. The call shapes are in
+:mod:`scion_sdk.decide.consumers`.
 """
 
 from __future__ import annotations

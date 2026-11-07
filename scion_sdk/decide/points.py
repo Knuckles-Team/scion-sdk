@@ -1,12 +1,11 @@
-"""The two connector decision points the SDK asks EG's ``Decide``.
+"""The wire shapes of a decision point the SDK asks Medulla ``Decide``.
 
-Ported (not imported) from agent-utilities' equivalent points registry,
-trimmed to only the two questions this package's call sites ask -- the SDK
-does not carry agent-utilities' full decision-point catalog. A point is
-only consulted when a :class:`Binding` pins its feature schema; an unbound
-point runs its deterministic fallback without ever reaching EG. That keeps
-EG off every hot path until an operator has published the schema (and,
-later, a fitted head).
+The catalog of points (their ids, kinds, safety class, log mode and feature
+schemas) is Medulla's: ``MEDULLA-DECISION-ENGINE`` owns it. The SDK holds
+only the shapes it needs to carry a point to Medulla and read the answer
+back. A point is only consulted when a :class:`Binding` pins its feature
+schema; an unbound or unknown point runs the caller's received fallback
+without ever reaching Medulla.
 """
 
 from __future__ import annotations
@@ -46,24 +45,6 @@ class DecisionPoint:
         return f"decide.schema.{self.question_id}"
 
 
-#: Which of a connector's tools serves one request; evaluate-only, sampled.
-CONNECTOR_TOOL = DecisionPoint("au.connector.tool", "route", sample_every=16)
-#: Which write-back proposal (or none); every record is durable.
-CONNECTOR_WRITEBACK = DecisionPoint(
-    "au.connector.writeback", "route", safety="write_back", log_mode=LogMode.ALWAYS
-)
-#: Which action triages one inbound connector change-event batch; evaluate-only,
-#: sampled. The connector's own deterministic read of the batch is the fallback
-#: and the only candidates ever offered, so this point can never ask for
-#: anything the deterministic rule did not already consider.
-CONNECTOR_TRIAGE = DecisionPoint("au.connector.triage", "route", sample_every=16)
-
-#: Every decision point this package can ask, by question id.
-POINTS: dict[str, DecisionPoint] = {
-    p.question_id: p for p in (CONNECTOR_TOOL, CONNECTOR_WRITEBACK, CONNECTOR_TRIAGE)
-}
-
-
 @dataclass(frozen=True, slots=True)
 class Binding:
     """The pinned components one point decides under.
@@ -101,21 +82,11 @@ class StaticBindings:
 EMPTY_BINDINGS = StaticBindings({})
 
 
-def point(question_id: str) -> DecisionPoint:
-    """The registered point for ``question_id`` (``KeyError`` names it)."""
-    return POINTS[question_id]
-
-
 __all__ = [
-    "CONNECTOR_TOOL",
-    "CONNECTOR_TRIAGE",
-    "CONNECTOR_WRITEBACK",
     "EMPTY_BINDINGS",
-    "POINTS",
     "Binding",
     "Bindings",
     "DecisionPoint",
     "LogMode",
     "StaticBindings",
-    "point",
 ]
