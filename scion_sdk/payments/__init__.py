@@ -11,8 +11,8 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 
-from scion_sdk._payment_guard import PaymentGuard
-from scion_sdk._payment_models import (
+from scion_sdk.payments._guard import PaymentGuard
+from scion_sdk.payments._models import (
     BudgetLimits,
     PaymentChallenge,
     PaymentProof,

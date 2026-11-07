@@ -79,7 +79,7 @@ from __future__ import annotations
 import contextlib
 import sys
 
-from scion_sdk._lock_unavailable import LockUnavailable
+from scion_sdk.file_lock._unavailable import LockUnavailable
 
 _IS_WINDOWS = sys.platform == "win32"
 
@@ -136,7 +136,7 @@ if sys.platform != "win32":
             fcntl.flock(fd, fcntl.LOCK_UN)
 
 else:  # pragma: no cover - exercised only on Windows (or the import-fault sim)
-    from scion_sdk._file_lock_windows import (  # noqa: F401 - public re-exports
+    from scion_sdk.file_lock._windows import (  # noqa: F401 - public re-exports
         lock_exclusive,
         lock_exclusive_nb,
         lock_shared,

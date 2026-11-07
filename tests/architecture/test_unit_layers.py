@@ -69,10 +69,9 @@ def _resolve(target: str, modules: Mapping[str, object]) -> str | None:
     return target if target in modules else None
 
 
-def unit_imports(package_dir: Path) -> dict[tuple[str, str], list[str]]:
-    """``{(importer unit, imported unit): ["file:line", ...]}`` across units."""
+def _cross_unit_imports(package_dir: Path) -> Iterator[tuple[str, str, str]]:
+    """``(importer unit, imported module, "file:line")`` for each import across units."""
     modules = _modules(package_dir)
-    edges: dict[tuple[str, str], list[str]] = defaultdict(list)
     for module, (path, is_package) in modules.items():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
@@ -83,8 +82,27 @@ def unit_imports(package_dir: Path) -> dict[tuple[str, str], list[str]]:
                 if resolved is None or _unit(resolved) == _unit(module):
                     continue
                 where = f"{path.relative_to(package_dir.parent)}:{node.lineno}"
-                edges[(_unit(module), _unit(resolved))].append(where)
+                yield _unit(module), resolved, where
+
+
+def unit_imports(package_dir: Path) -> dict[tuple[str, str], list[str]]:
+    """``{(importer unit, imported unit): ["file:line", ...]}`` across units."""
+    edges: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for importer, module, where in _cross_unit_imports(package_dir):
+        edges[(importer, _unit(module))].append(where)
     return edges
+
+
+def private_reaches(package_dir: Path) -> list[str]:
+    """Each import of a leading-underscore module that belongs to another unit."""
+    return sorted(
+        f"{where}: {importer} imports {module}"
+        for importer, module, where in _cross_unit_imports(package_dir)
+        if any(
+            part.startswith("_") and not part.startswith("__")
+            for part in module.split(".")[1:]
+        )
+    )
 
 
 def declared_layers(path: Path) -> list[tuple[str, tuple[str, ...]]]:
@@ -170,16 +188,22 @@ def test_unit_imports_follow_layers_and_no_cycle_remains() -> None:
 
 
 @pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R044")
+def test_no_unit_imports_another_units_private_module() -> None:
+    assert private_reaches(ROOT / PACKAGE) == []
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R044")
 def test_layer_check_names_each_violation(tmp_path: Path) -> None:
     package_dir = tmp_path / PACKAGE
     for relative, text in {
         "__init__.py": "",
         "base.py": "",
         "_hidden.py": "",
-        "high/__init__.py": "from scion_sdk import base\nfrom . import inner\n",
+        "high/__init__.py": "from scion_sdk import base\nfrom . import inner, _own\n",
+        "high/_own.py": "",
         "high/inner.py": "from scion_sdk.low import thing\n",
         "low.py": "from scion_sdk.high import inner\nthing = 1\n",
-        "stray.py": "import scion_sdk.base\n",
+        "stray.py": "import scion_sdk.base\nfrom scion_sdk import _hidden\n",
     }.items():
         (package_dir / relative).parent.mkdir(parents=True, exist_ok=True)
         (package_dir / relative).write_text(text, encoding="utf-8")
@@ -202,3 +226,6 @@ def test_layer_check_names_each_violation(tmp_path: Path) -> None:
         "scion_sdk/low.py:1: low (base) imports high (top), a later layer"
     ]
     assert cycle_groups(edges) == [frozenset({"high", "low"})]
+    assert private_reaches(package_dir) == [
+        "scion_sdk/stray.py:2: stray imports scion_sdk._hidden"
+    ]

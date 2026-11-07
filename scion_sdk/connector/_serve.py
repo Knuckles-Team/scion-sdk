@@ -8,7 +8,7 @@ import sys
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
 
-from scion_sdk._connector_decl import ResolvedConnector, resolve_connector
+from scion_sdk.connector._decl import ResolvedConnector, resolve_connector
 from scion_sdk.connector_hooks import (
     RegistrationContext,
     serve_readiness,

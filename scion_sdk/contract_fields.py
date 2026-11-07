@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from ._turtle import AccessContractError, Term
-from .credentials.references import SecretReferenceError, parse_secret_reference
+from scion_sdk.credentials.references import (
+    SecretReferenceError,
+    parse_secret_reference,
+)
+from scion_sdk.turtle_reader import AccessContractError, Term
 
 AC = "https://knuckles-team.github.io/agent-connector-sdk/access#"
 ACCESS_KINDS = frozenset(
