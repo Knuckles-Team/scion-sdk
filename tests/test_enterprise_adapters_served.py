@@ -25,7 +25,7 @@ async def test_backend_swap_and_unsupported():
 
     from fastmcp import Client
 
-    from scion_sdk.http.client import create_async_http_client
+    from scion_sdk.http.client import build_http_client
     from scion_sdk.http.options import HttpClientOptions
     from scion_sdk.http.retry import RetryPolicy
     from scion_sdk.identity import use_actor
@@ -47,7 +47,7 @@ async def test_backend_swap_and_unsupported():
             )
 
         async def read(self, req):
-            async with create_async_http_client(self.options) as http:
+            async with build_http_client(self.options, async_=True) as http:
                 response = await http.get("/accounts")
                 response.raise_for_status()
                 accounts = tuple(

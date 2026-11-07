@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 import httpx
@@ -15,11 +16,7 @@ from scion_sdk.mcp.auth.policy import (
     AuthConfigurationError,
     AuthInputs,
 )
-from scion_sdk.mcp.auth.proxies import (
-    configure_oauth_proxy,
-    configure_oidc_proxy,
-    configure_remote_oauth,
-)
+from scion_sdk.mcp.auth.proxies import configure_proxy, configure_remote_oauth
 from scion_sdk.mcp.auth.static import configure_static_auth
 
 __all__ = ["configure_auth"]
@@ -27,8 +24,8 @@ __all__ = ["configure_auth"]
 _BUILDERS: dict[str, Callable[[AuthInputs], Any]] = {
     "static": configure_static_auth,
     "jwt": configure_jwt_auth,
-    "oauth-proxy": configure_oauth_proxy,
-    "oidc-proxy": configure_oidc_proxy,
+    "oauth-proxy": partial(configure_proxy, flow="oauth"),
+    "oidc-proxy": partial(configure_proxy, flow="oidc"),
     "remote-oauth": configure_remote_oauth,
 }
 

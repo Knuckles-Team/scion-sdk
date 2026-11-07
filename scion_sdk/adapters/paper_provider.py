@@ -15,7 +15,7 @@ from scion_sdk.adapters.paper_models import (
     ProviderReference,
     _Model,
 )
-from scion_sdk.runner.backoff import _finite_number
+from scion_sdk.ingest.backoff import _finite_number
 
 __all__ = ["PaperProvider", "ProviderFailure", "ProviderPage", "ProviderPaper"]
 

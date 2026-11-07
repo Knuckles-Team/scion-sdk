@@ -9,7 +9,7 @@ When one is served, :func:`apply_served_security_profile`:
 * installs :class:`ServedSecurityMiddleware`, which rejects every MCP request that
   lacks a verified identity, a tenant, an active session, or the scopes the
   operator requires (``CONNECTOR_REQUIRED_SCOPES``). Subject and tenant come from
-  :func:`scion_sdk.mcp.actor_binding.token_actor`, the same resolution the
+  :func:`scion_sdk.identity.transport.token_actor`, the same resolution the
   request binding uses.
 
 ``create_mcp_server`` applies it to every server. The only way out is an explicit
@@ -28,7 +28,7 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from mcp.shared.exceptions import MCPError
 
 from scion_sdk.config import csv_values, setting
-from scion_sdk.mcp.actor_binding import token_actor
+from scion_sdk.identity.transport import token_actor
 
 __all__ = [
     "SERVED_TRANSPORTS",

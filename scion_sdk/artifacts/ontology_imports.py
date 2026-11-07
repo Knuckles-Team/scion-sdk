@@ -18,7 +18,6 @@ from functools import partial
 
 from medulla.generated.connector_pack import PackAnnotations
 
-from scion_sdk._turtle import AccessContractError, parse_graph
 from scion_sdk.artifacts._ontology_edits import _ImportSeparators
 from scion_sdk.artifacts._ontology_lexer import (
     _OWL_IMPORTS_IRI,
@@ -27,6 +26,7 @@ from scion_sdk.artifacts._ontology_lexer import (
 )
 from scion_sdk.artifacts._ontology_rewrite import _rewrite_import_match
 from scion_sdk.contracts import CapturedArtifact
+from scion_sdk.turtle_reader import AccessContractError, parse_graph
 
 __all__ = ["IMPORT_REQUIREMENT_PREFIX", "scope_ontology_imports"]
 

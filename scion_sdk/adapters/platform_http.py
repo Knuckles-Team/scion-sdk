@@ -17,7 +17,7 @@ from scion_sdk.adapters.platform_models import (
     Reason,
 )
 from scion_sdk.http.bodies import aread_bounded
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.egress import EgressPolicyError, PinnedEgressViolation
 from scion_sdk.http.errors import (
     HttpProblemError,
@@ -94,7 +94,7 @@ class PlatformHttpBackend:
         body = b""
         try:
             async with (
-                create_async_http_client(self._options) as client,
+                build_http_client(self._options, async_=True) as client,
                 client.stream(
                     "GET",
                     self._path,

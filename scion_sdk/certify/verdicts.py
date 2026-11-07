@@ -9,12 +9,12 @@ from enum import StrEnum
 from typing import Any
 
 from scion_sdk.certify.checkout import ConnectorCheckout
-from scion_sdk.certify.fingerprints import output_schema_digest, tool_name
 from scion_sdk.certify.read_only_check import (
     ReadOnlyOutcome,
     ToolFixture,
     check_read_only,
 )
+from scion_sdk.manifest.fingerprints import output_schema_digest, tool_name
 from scion_sdk.manifest.live_contract import validate_preset_tool_contract
 from scion_sdk.manifest.tool_schema import ToolSchemaContractError, read_field
 from scion_sdk.ports.errors import MalformedArtifactError

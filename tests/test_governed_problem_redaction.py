@@ -7,7 +7,7 @@ import json
 import httpx
 import pytest
 
-from scion_sdk.http.client import create_async_http_client, create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.errors import HttpProblemError, HttpRateLimitedError
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.responses import arequest_json, request_json
@@ -55,7 +55,7 @@ def _check(error: HttpProblemError, status: int) -> None:
 @pytest.mark.parametrize("status", (401, 429, 500))
 def test_sync_governed_error_drops_problem_body(status: int) -> None:
     with (
-        create_http_client(_options(), transport=httpx.MockTransport(_reply)) as client,
+        build_http_client(_options(), transport=httpx.MockTransport(_reply)) as client,
         pytest.raises(HttpProblemError) as caught,
     ):
         request_json(client, "GET", f"/data/{status}")
@@ -65,8 +65,8 @@ def test_sync_governed_error_drops_problem_body(status: int) -> None:
 @pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R006.1")
 @pytest.mark.parametrize("status", (401, 429, 500))
 async def test_async_governed_error_drops_problem_body(status: int) -> None:
-    async with create_async_http_client(
-        _options(), transport=httpx.MockTransport(_reply)
+    async with build_http_client(
+        _options(), transport=httpx.MockTransport(_reply), async_=True
     ) as client:
         with pytest.raises(HttpProblemError) as caught:
             await arequest_json(client, "GET", f"/data/{status}")

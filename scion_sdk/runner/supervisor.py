@@ -13,7 +13,7 @@ import logging
 import anyio
 from anyio.abc import TaskGroup, TaskStatus
 
-from scion_sdk.ports.connector_registry import ConnectorRegistry
+from scion_sdk.runner.connector_registry import ConnectorRegistry
 from scion_sdk.runner.descriptors import ConnectorDescriptor
 from scion_sdk.runner.errors import RunnerConfigurationError
 from scion_sdk.runner.health_reporting import (

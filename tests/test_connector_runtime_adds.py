@@ -23,7 +23,7 @@ from scion_sdk.contracts import (
     default_external_access,
 )
 from scion_sdk.exceptions import ApiError, AuthError, ParameterError
-from scion_sdk.http.support import (
+from scion_sdk.httpsupport.api_client import (
     AuthHeaderInjector,
     BaseApiClient,
     BasicAuth,

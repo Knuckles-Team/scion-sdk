@@ -9,6 +9,7 @@ from scion_sdk import decide
 from scion_sdk.credentials.resolution import default_credential_resolver
 from scion_sdk.decide.medulla import MedullaDecisionRunner
 from scion_sdk.decide.points import Bindings
+from scion_sdk.decide.runner import DecisionRunner
 from scion_sdk.decide.transport import GeneratedTransport
 from scion_sdk.discovery import (
     ARTIFACT_KIND_GROUP,
@@ -21,7 +22,6 @@ from scion_sdk.discovery import (
     sdk_reference_extensions,
 )
 from scion_sdk.ports.artifact_kind import ArtifactKind
-from scion_sdk.ports.decide_runner import DecisionRunner
 from scion_sdk.ports.sink import Sink
 from scion_sdk.ports.transport import Transport
 from scion_sdk.runner.descriptors import RunnerSettings

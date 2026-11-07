@@ -8,7 +8,6 @@ import uuid
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from scion_sdk._extras import require_mcp_extra
 from scion_sdk.earth_observations.weather import (
     WeatherProvider,
     WeatherRequest,
@@ -18,8 +17,9 @@ from scion_sdk.earth_observations.weather_location import (
     WeatherQuality,
     _located_records,
 )
-from scion_sdk.ingest._stream_checkpoint import _authorize_generation
+from scion_sdk.extras import require_mcp_extra
 from scion_sdk.ingest.live_declaration import source_meta
+from scion_sdk.ingest.stream_checkpoint import authorize_generation
 
 require_mcp_extra("scion_sdk.earth_observations.weather_stream")
 
@@ -112,7 +112,7 @@ def register_weather_stream(
     async def _serve(
         ctx: Context, mode: str, state: dict[str, Any] | None
     ) -> dict[str, Any]:
-        await _authorize_generation(
+        await authorize_generation(
             authorize,
             tenant=request.tenant,
             context=ctx,

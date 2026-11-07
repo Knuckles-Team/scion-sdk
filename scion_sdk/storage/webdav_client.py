@@ -1,7 +1,7 @@
 """WebDAV path operations over the governed client (SCION-CENTRALIZED-CAPABILITIES-R042.5).
 
 :class:`DavClient` speaks WebDAV (RFC 4918) to one collection root. Every
-request goes through :func:`scion_sdk.http.client.create_http_client` with
+request goes through :func:`scion_sdk.http.client.build_http_client` with
 address pinning, so the egress guard and the TLS profile apply. Multistatus
 bodies are bounded and parsed with a parser that refuses document type
 declarations and entities. :class:`scion_sdk.storage.webdav.WebDavBackend`
@@ -23,7 +23,7 @@ import httpx
 from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import fromstring as safe_fromstring
 
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.storage.base import (
     AlreadyExistsError,
@@ -134,7 +134,7 @@ class DavClient:
             allow_loopback=transport is None and _is_loopback(host),
         )
         self._root_path = unquote(urlsplit(root).path)
-        self._http = create_http_client(options, transport=transport)
+        self._http = build_http_client(options, transport=transport)
         self._max_xml_bytes = max_xml_bytes
 
     # -- plumbing -------------------------------------------------------------

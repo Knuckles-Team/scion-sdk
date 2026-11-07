@@ -40,7 +40,7 @@ from scion_sdk.config import setting
 from scion_sdk.credentials.resolution import resolve_secret_reference
 from scion_sdk.credentials.resolver import CredentialResolver
 from scion_sdk.exceptions import AuthError
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
 from scion_sdk.tls.resolve import resolve_tls_profile
@@ -340,7 +340,7 @@ def _assemble_client(
     profile = resolve_tls_profile(tls, resolver=resolver)
     resources.callback(profile.cleanup)
     origin = urlsplit(base_url)
-    token_client = create_http_client(
+    token_client = build_http_client(
         HttpClientOptions(
             base_url=f"{origin.scheme}://{origin.netloc}",
             tls=profile,
@@ -355,7 +355,7 @@ def _assemble_client(
         )
     else:
         built = auth.build(BuildContext(base_url, token_client, resolver))
-    client = create_http_client(
+    client = build_http_client(
         HttpClientOptions(
             base_url=base_url,
             tls=profile,

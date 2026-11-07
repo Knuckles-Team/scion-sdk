@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from fastmcp.server.auth import OAuthProxy, RemoteAuthProvider
@@ -18,7 +20,7 @@ from scion_sdk.mcp.auth.policy import (
 )
 from scion_sdk.mcp.auth.verifiers import hardened_jwt_verifier
 
-__all__ = ["configure_oauth_proxy", "configure_oidc_proxy", "configure_remote_oauth"]
+__all__ = ["configure_proxy", "configure_remote_oauth"]
 
 _MAX_AUTHORIZATION_SERVERS = 16
 
@@ -37,11 +39,29 @@ def _upstream_verifier(inputs: AuthInputs) -> Any:
     )
 
 
-def configure_oauth_proxy(inputs: AuthInputs) -> OAuthProxy:
-    """OAuth proxy in front of an upstream authorization server."""
-    _require(
-        inputs,
-        (
+@dataclass(frozen=True)
+class _ProxyFlow:
+    """What differs between the proxy flows; the build steps are shared."""
+
+    mode: str
+    proxy: type
+    required: tuple[str, ...]
+    #: Upstream endpoint keyword -> (argument name, error label), in order.
+    endpoints: tuple[tuple[str, str, str], ...]
+    client_id: str
+    credential_arg: str
+    credential_label: str
+    credential_keyword: str
+    base_url: str
+    base_url_label: str
+    flow_settings: Callable[[AuthInputs], dict[str, Any]]
+
+
+_FLOWS: dict[str, _ProxyFlow] = {
+    "oauth": _ProxyFlow(
+        mode="oauth-proxy",
+        proxy=OAuthProxy,
+        required=(
             "oauth_upstream_auth_endpoint",
             "oauth_upstream_token_endpoint",
             "oauth_upstream_client_id",
@@ -51,52 +71,69 @@ def configure_oauth_proxy(inputs: AuthInputs) -> OAuthProxy:
             "token_issuer",
             "token_audience",
         ),
-        "oauth-proxy",
-    )
-    args = inputs.args
-    return OAuthProxy(
-        upstream_authorization_endpoint=secure_auth_url(
-            args.oauth_upstream_auth_endpoint, field="OAuth authorization endpoint"
+        endpoints=(
+            (
+                "upstream_authorization_endpoint",
+                "oauth_upstream_auth_endpoint",
+                "OAuth authorization endpoint",
+            ),
+            (
+                "upstream_token_endpoint",
+                "oauth_upstream_token_endpoint",
+                "OAuth token endpoint",
+            ),
         ),
-        upstream_token_endpoint=secure_auth_url(
-            args.oauth_upstream_token_endpoint, field="OAuth token endpoint"
-        ),
-        upstream_client_id=args.oauth_upstream_client_id,
-        upstream_client_secret=resolve_auth_secret(
-            args.oauth_upstream_client_secret_ref, inputs, what="OAuth client secret"
-        ),
-        token_verifier=_upstream_verifier(inputs),
-        base_url=secure_auth_url(args.oauth_base_url, field="OAuth base URL"),
-        allowed_client_redirect_uris=allowed_redirect_uris(args),
-    )
-
-
-def configure_oidc_proxy(inputs: AuthInputs) -> OIDCProxy:
-    """OIDC proxy configured from a discovery document."""
-    _require(
-        inputs,
-        (
+        client_id="oauth_upstream_client_id",
+        credential_arg="oauth_upstream_client_secret_ref",
+        credential_label="OAuth client secret",
+        credential_keyword="upstream_client_secret",
+        base_url="oauth_base_url",
+        base_url_label="OAuth base URL",
+        flow_settings=lambda inputs: {"token_verifier": _upstream_verifier(inputs)},
+    ),
+    "oidc": _ProxyFlow(
+        mode="oidc-proxy",
+        proxy=OIDCProxy,
+        required=(
             "oidc_config_url",
             "oidc_client_id",
             "oidc_client_secret_ref",
             "oidc_base_url",
             "token_audience",
         ),
-        "oidc-proxy",
-    )
+        endpoints=(("config_url", "oidc_config_url", "OIDC configuration URL"),),
+        client_id="oidc_client_id",
+        credential_arg="oidc_client_secret_ref",
+        credential_label="OIDC client secret",
+        credential_keyword="client_secret",
+        base_url="oidc_base_url",
+        base_url_label="OIDC base URL",
+        flow_settings=lambda inputs: {"audience": inputs.args.token_audience},
+    ),
+}
+
+
+def configure_proxy(inputs: AuthInputs, flow: str) -> Any:
+    """The OAuth (``"oauth"``) or OIDC (``"oidc"``) proxy for the configured flow."""
+    spec = _FLOWS[flow]
+    _require(inputs, spec.required, spec.mode)
     args = inputs.args
-    return OIDCProxy(
-        config_url=secure_auth_url(
-            args.oidc_config_url, field="OIDC configuration URL"
-        ),
-        client_id=args.oidc_client_id,
-        client_secret=resolve_auth_secret(
-            args.oidc_client_secret_ref, inputs, what="OIDC client secret"
-        ),
-        audience=args.token_audience,
-        base_url=secure_auth_url(args.oidc_base_url, field="OIDC base URL"),
-        allowed_client_redirect_uris=allowed_redirect_uris(args),
+    settings: dict[str, Any] = {
+        keyword: secure_auth_url(getattr(args, name), field=label)
+        for keyword, name, label in spec.endpoints
+    }
+    settings["upstream_client_id" if flow == "oauth" else "client_id"] = getattr(
+        args, spec.client_id
     )
+    settings[spec.credential_keyword] = resolve_auth_secret(
+        getattr(args, spec.credential_arg), inputs, what=spec.credential_label
+    )
+    settings.update(spec.flow_settings(inputs))
+    settings["base_url"] = secure_auth_url(
+        getattr(args, spec.base_url), field=spec.base_url_label
+    )
+    settings["allowed_client_redirect_uris"] = allowed_redirect_uris(args)
+    return spec.proxy(**settings)
 
 
 def configure_remote_oauth(inputs: AuthInputs) -> RemoteAuthProvider:

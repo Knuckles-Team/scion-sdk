@@ -2,7 +2,7 @@
 
 This is the typed policy check :func:`check_egress_destination` and the
 pinned-address transport :func:`pinned_egress_transport` that
-:mod:`scion_sdk.http.client` wires into ``create_http_client``
+:mod:`scion_sdk.http.client` wires into ``build_http_client``
 (SCION-CONNECTOR-CONTROL-R028.2); both are usable on their own by any call site
 that must decide whether a destination is a permitted egress target, or must
 hold a connection to an already-resolved, already-approved address.

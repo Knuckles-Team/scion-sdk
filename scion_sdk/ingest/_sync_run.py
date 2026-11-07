@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from scion_sdk.ingest.model import Entity, Relationship
-from scion_sdk.ingest.sources import IngestSourceSpec
+from scion_sdk.manifest.sources import IngestSourceSpec
 
 from ._sync_models import SourceCheckpointState, record_digest
 

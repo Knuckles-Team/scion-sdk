@@ -17,8 +17,8 @@ from scion_sdk.artifacts.tool_facts import (
     _tool_body,
     facts_from_declaration,
 )
-from scion_sdk.certify.fingerprints import tool_fingerprint
 from scion_sdk.contracts import CapturedArtifact, ServerIdentity
+from scion_sdk.manifest.fingerprints import tool_fingerprint
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.ports.session import McpSession
 

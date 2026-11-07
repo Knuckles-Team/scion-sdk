@@ -13,9 +13,6 @@ pa = pytest.importorskip(
     reason="NE-114 Arrow contract requires the explicit [dataprep] extra",
 )
 
-from scion_sdk.data_prep._classification import (  # noqa: E402
-    DataClassification,
-)
 from scion_sdk.data_prep.certification import (  # noqa: E402
     AdapterObservation,
     ArtifactPolicy,
@@ -27,6 +24,9 @@ from scion_sdk.data_prep.certification import (  # noqa: E402
     GreatExpectationsAdapter,
     SignedResultSummary,
     run_certification_job,
+)
+from scion_sdk.data_prep.classification import (  # noqa: E402
+    DataClassification,
 )
 
 pytestmark = [

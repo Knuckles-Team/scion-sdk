@@ -26,7 +26,6 @@ from medulla.generated.source_ingestion import (
 from pydantic import ValidationError
 
 import scion_sdk.contracts as sdk_contracts
-from scion_sdk.artifacts.pack import CapturedConnectorPack
 from scion_sdk.contracts import (
     SEAM_SCHEMA_VERSION,
     CapabilityDescriptor,
@@ -35,7 +34,7 @@ from scion_sdk.contracts import (
     ServerIdentity,
     StreamDescriptor,
 )
-from scion_sdk.ports.sink import Sink
+from scion_sdk.ports.sink import CapturedConnectorPack, Sink
 from scion_sdk.sinks.medulla import (
     MedullaSink,
     PackImportAuthorityResolver,

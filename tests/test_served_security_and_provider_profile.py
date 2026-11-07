@@ -12,8 +12,8 @@ from typing import Any
 import pytest
 from mcp.shared.exceptions import MCPError
 
-from scion_sdk.credentials import provider_profile as pp
-from scion_sdk.credentials.provider_profile import (
+from scion_sdk.auth import provider_profile as pp
+from scion_sdk.auth.provider_profile import (
     ProviderProfileError,
     load_provider_profiles,
     resolve_provider_profile,

@@ -12,7 +12,7 @@ from scion_sdk.access_contract import (
     AccessContract,
     parse_access_contracts,
 )
-from scion_sdk.artifacts.resource_descriptor import ResourceDescriptor
+from scion_sdk.manifest.resource_descriptor import ResourceDescriptor
 
 
 def render_source_contract(

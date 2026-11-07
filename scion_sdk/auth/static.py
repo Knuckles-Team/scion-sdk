@@ -32,6 +32,9 @@ class BearerAuth(httpx.Auth):
 class ApiKeyAuth(httpx.Auth):
     """Sends an API key in a header (optionally prefixed) or a query parameter."""
 
+    #: A governed client for an API-key identity keeps no cookies.
+    isolates_cookies = True
+
     def __init__(
         self, key: str, *, header: str = "", query: str = "", prefix: str = ""
     ) -> None:

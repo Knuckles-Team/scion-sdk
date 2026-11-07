@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from scion_sdk.artifacts.resource_derivation import derive_descriptors, scan_ontology
-from scion_sdk.artifacts.resource_descriptor import ResourceDescriptor
+from scion_sdk.manifest.resource_derivation import derive_descriptors, scan_ontology
+from scion_sdk.manifest.resource_descriptor import ResourceDescriptor
 
 if TYPE_CHECKING:
     from scion_sdk.mcp.content import ConnectorContent
@@ -19,7 +19,7 @@ def _ontology_texts(content: ConnectorContent) -> list[str]:
 def _merge_descriptor(
     descriptor: ResourceDescriptor, sources: Any, terms: Any
 ) -> dict[str, Any]:
-    from scion_sdk.artifacts.resource_descriptor import (
+    from scion_sdk.manifest.resource_descriptor import (
         ResourceDeclarationError,
     )
 
@@ -74,7 +74,7 @@ def _apply_source(
 
 
 def _source_class(descriptor: Any, source: Any, mapping: Any, *, terms: Any) -> Any:
-    from scion_sdk.artifacts.resource_descriptor import (
+    from scion_sdk.manifest.resource_descriptor import (
         ResourceDeclarationError,
     )
 
@@ -93,7 +93,7 @@ def _source_class(descriptor: Any, source: Any, mapping: Any, *, terms: Any) -> 
 def _mapped_fields(descriptor: Any, mapping: Any) -> dict[str, Any]:
     from dataclasses import replace
 
-    from scion_sdk.artifacts.resource_descriptor import FieldBinding
+    from scion_sdk.manifest.resource_descriptor import FieldBinding
 
     fields = {field.name: field for field in descriptor.fields}
     if mapping:
@@ -112,8 +112,8 @@ def _register_resource_descriptors(mcp: Any, content: ConnectorContent) -> int:
     from scion_sdk.ingest.live_declaration import (
         build_declaration,
         load_sources_module,
-        register_live_declaration,
     )
+    from scion_sdk.mcp.declaration_resource import register_live_declaration
     from scion_sdk.mcp.tool_surface import registered_tools
 
     declared = load_sources_module(content.package_root)

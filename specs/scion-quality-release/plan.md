@@ -100,7 +100,7 @@ Gates are the repository pre-commit and pre-push hooks (`uvx pre-commit run -c .
 
 Console scripts and connector imports reach the owners below; each row's Caller chain names its own path.
 
-- `scion_sdk/connector.py` (line 1): cited by 2 rows; its importers are named in each row's Caller chain.
+- `scion_sdk/connector/__init__.py` (line 1): cited by 2 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/__init__.py` (line 18): cited by 1 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/cli.py` (line 18): cited by 1 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/testing/conformance.py` (line 47): cited by 1 rows; its importers are named in each row's Caller chain.

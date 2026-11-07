@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from scion_sdk.http import egress
-from scion_sdk.http.client import create_async_http_client, create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.egress import (
     PinnedEgressViolation,
     normalize_private_hosts,
@@ -47,7 +47,7 @@ def _client(seen, base_url="https://api.example.com", **kw):
         retry=RetryPolicy(max_attempts=1),
         **kw,
     )
-    return create_http_client(options, transport=httpx.MockTransport(handler))
+    return build_http_client(options, transport=httpx.MockTransport(handler))
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R014.16")
@@ -152,7 +152,7 @@ def test_peer_mismatch_is_refused(monkeypatch) -> None:
         return httpx.Response(200, extensions={"network_stream": Stream()})
 
     options = HttpClientOptions(base_url="https://api.example.com", pin_egress=True)
-    client = create_http_client(options, transport=httpx.MockTransport(handler))
+    client = build_http_client(options, transport=httpx.MockTransport(handler))
     with pytest.raises(PinnedEgressViolation):
         client.get("/")
 
@@ -169,8 +169,8 @@ async def test_async_client_pins(monkeypatch) -> None:
     options = HttpClientOptions(
         base_url="https://api.example.com", pin_egress=True, verify_pinned_peer=False
     )
-    async with create_async_http_client(
-        options, transport=httpx.MockTransport(handler)
+    async with build_http_client(
+        options, transport=httpx.MockTransport(handler), async_=True
     ) as client:
         await client.get("/")
         monkeypatch.setattr(socket, "getaddrinfo", _answers("10.0.0.5"))
@@ -248,8 +248,8 @@ async def test_mapped_shared_address_refuses_async_transport(monkeypatch):
     options = HttpClientOptions(
         base_url="https://api.example.com", pin_egress=True, verify_pinned_peer=False
     )
-    async with create_async_http_client(
-        options, transport=httpx.MockTransport(handler)
+    async with build_http_client(
+        options, transport=httpx.MockTransport(handler), async_=True
     ) as client:
         with pytest.raises(PinnedEgressViolation):
             await client.get("/")
@@ -299,8 +299,8 @@ async def test_async_pinned_dns_is_cancellable_without_transport(monkeypatch):
         base_url="https://api.example.com", pin_egress=True, verify_pinned_peer=False
     )
     try:
-        async with create_async_http_client(
-            options, transport=httpx.MockTransport(handler)
+        async with build_http_client(
+            options, transport=httpx.MockTransport(handler), async_=True
         ) as client:
             original_request = client.build_request("GET", "/")
             task = asyncio.create_task(client.send(original_request))
@@ -329,8 +329,8 @@ async def test_async_pinning_preserves_request_body_and_authority(monkeypatch):
     options = HttpClientOptions(
         base_url="https://api.example.com", pin_egress=True, verify_pinned_peer=False
     )
-    async with create_async_http_client(
-        options, transport=httpx.MockTransport(handler)
+    async with build_http_client(
+        options, transport=httpx.MockTransport(handler), async_=True
     ) as client:
         assert (await client.post("/items", content=b"payload")).status_code == 200
     assert seen[0].content == b"payload"

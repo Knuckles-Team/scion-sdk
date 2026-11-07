@@ -41,7 +41,7 @@ from scion_sdk.auth.values import header_safe, resolved_credential
 from scion_sdk.credentials.references import SecretReferenceError
 from scion_sdk.credentials.resolver import CredentialUnavailableError
 from scion_sdk.exceptions import LoginRequiredError
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.errors import HttpProblemError
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
@@ -84,7 +84,7 @@ def token_client(token_server: ScriptedHttpServer) -> Iterator[httpx.Client]:
     options = HttpClientOptions(
         base_url=token_server.base_url, retry=RetryPolicy(max_attempts=1)
     )
-    with create_http_client(options) as client:
+    with build_http_client(options) as client:
         yield client
 
 

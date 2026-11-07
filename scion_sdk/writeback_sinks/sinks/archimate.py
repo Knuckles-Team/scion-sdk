@@ -14,7 +14,6 @@ from typing import Any
 
 from ..core import (
     WritebackClientMixin,
-    WritebackInvocation,
     WritebackResult,
     register_sink,
 )
@@ -40,15 +39,10 @@ class ArchimateSink(WritebackClientMixin):
     risk_tier = "standard"
     client_module = "archimate_mcp"
     client_label = "archimate"
-
-    def _run(self, invocation: WritebackInvocation) -> WritebackResult:
-        ctx, ops, client, result, dry_run = invocation.unpack()
-        resolve = ctx.resolver("archimate")
-        for c in ops.get("creations") or []:
-            self._op_creations(ctx, client, result, c, resolve, dry_run=dry_run)
-        for edge in ops.get("inferences") or []:
-            self._op_inferences(ctx, client, result, edge, resolve, dry_run=dry_run)
-        return result
+    passes = (
+        ("creations", "_op_creations"),
+        ("inferences", "_op_inferences"),
+    )
 
     def _op_creations(
         self,

@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from scion_sdk.ingest.sources import IngestSourceSpec
-from scion_sdk.runner.backoff import Backoff
+from scion_sdk.ingest.backoff import Backoff
+from scion_sdk.manifest.sources import IngestSourceSpec
 
 
 class _SourceCalls:

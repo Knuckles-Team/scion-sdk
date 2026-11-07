@@ -12,13 +12,12 @@ from medulla.generated.connector_pack import (
 )
 
 from scion_sdk.artifacts.pack import (
-    CapturedConnectorPack,
     build_connector_content_pack,
     build_content_pack,
 )
 from scion_sdk.ports.artifact_kind import ArtifactKind
 from scion_sdk.ports.session import McpSession
-from scion_sdk.ports.sink import Sink
+from scion_sdk.ports.sink import CapturedConnectorPack, Sink
 from scion_sdk.runner.errors import SinkReceiptError
 
 if TYPE_CHECKING:

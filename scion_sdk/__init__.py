@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from scion_sdk._version import __version__
+from scion_sdk.version import __version__
 
 __all__ = ["Connector", "__version__", "run"]
 

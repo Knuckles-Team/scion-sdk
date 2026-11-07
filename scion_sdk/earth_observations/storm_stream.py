@@ -9,7 +9,6 @@ from typing import Any
 
 import anyio
 
-from scion_sdk._extras import require_mcp_extra
 from scion_sdk.earth_observations._stream_policy import (
     _authorized_offset,
     _stream_binding,
@@ -17,6 +16,7 @@ from scion_sdk.earth_observations._stream_policy import (
 )
 from scion_sdk.earth_observations.records import WeatherEvent
 from scion_sdk.earth_observations.storm import NoaaStormArchive
+from scion_sdk.extras import require_mcp_extra
 from scion_sdk.ingest.live_declaration import source_meta
 
 require_mcp_extra("scion_sdk.earth_observations.storm_stream")

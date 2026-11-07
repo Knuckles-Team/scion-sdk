@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from scion_sdk._extras import require_mcp_extra
+from scion_sdk.extras import require_mcp_extra
 
 require_mcp_extra("scion_sdk.adapters.paper_tool")
 

@@ -9,7 +9,7 @@ session collects the server's change notifications and can open a
 # ruff: noqa: E402
 from __future__ import annotations
 
-from scion_sdk._extras import require_mcp_extra
+from scion_sdk.extras import require_mcp_extra
 
 require_mcp_extra("scion_sdk.transports.mcp")
 

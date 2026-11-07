@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
+from medulla.connector_pack import ConnectorPackArchive
 from medulla.generated.connector_pack import PackImportResult
 from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
@@ -12,9 +13,17 @@ from medulla.generated.source_ingestion import (
     SourceIngestStatus,
 )
 
-from scion_sdk.artifacts.pack import CapturedConnectorPack
+__all__ = ["CapturedConnectorPack", "Sink", "SinkReadiness"]
 
-__all__ = ["Sink", "SinkReadiness"]
+
+@dataclass(frozen=True)
+class CapturedConnectorPack:
+    """SDK capture metadata around one generated, immutable pack archive."""
+
+    connector: str
+    server_package_version: str
+    archive: ConnectorPackArchive
+    resource_uris: frozenset[str]
 
 
 @dataclass(frozen=True)

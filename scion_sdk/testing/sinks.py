@@ -25,8 +25,7 @@ from medulla.generated.source_ingestion import (
     SourceIngestStatus,
 )
 
-from scion_sdk.artifacts.pack import CapturedConnectorPack
-from scion_sdk.ports.sink import Sink
+from scion_sdk.ports.sink import CapturedConnectorPack, Sink
 from scion_sdk.testing.readiness import _in_memory_readiness
 from scion_sdk.testing.results import ConformanceResult
 

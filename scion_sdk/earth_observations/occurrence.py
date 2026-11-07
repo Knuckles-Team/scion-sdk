@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 
 from scion_sdk.earth_observations.records import OrganismObservation
-from scion_sdk.http._bounded_provider import _BoundedProvider, _fetch
+from scion_sdk.http.bounded_provider import BoundedProvider, fetch_bounded
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.taxonomy.provider import _valid_id
 
@@ -21,7 +21,7 @@ class OccurrenceProviderError(RuntimeError):
     """A bounded occurrence request could not be accepted."""
 
 
-class OccurrenceProvider(_BoundedProvider[OccurrenceProviderName]):
+class OccurrenceProvider(BoundedProvider[OccurrenceProviderName]):
     """Read explicit IDs under a host's egress, quota and license policy."""
 
     def __init__(
@@ -78,7 +78,7 @@ class OccurrenceProvider(_BoundedProvider[OccurrenceProviderName]):
             if self.provider == "gbif"
             else f"observations/{identifier}"
         )
-        payload = await _fetch(self.http, path, self.max_bytes)
+        payload = await fetch_bounded(self.http, path, self.max_bytes)
         data = json.loads(payload)
         raw = _source_record(self.provider, identifier, data)
         license_tag = raw["license"]

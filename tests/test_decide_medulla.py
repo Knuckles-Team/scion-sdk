@@ -15,17 +15,12 @@ from scion_sdk.decide import Option
 from scion_sdk.decide.medulla import MedullaDecisionRunner
 from scion_sdk.decide.outcome import Reading, read_batch, request_for, sampled
 from scion_sdk.decide.points import (
-    CONNECTOR_TOOL,
-    CONNECTOR_TRIAGE,
-    CONNECTOR_WRITEBACK,
     EMPTY_BINDINGS,
-    POINTS,
     Binding,
     Bindings,
     DecisionPoint,
     LogMode,
     StaticBindings,
-    point,
 )
 from scion_sdk.decide.transport import (
     DEFAULT_SYNC_TIMEOUT_S,
@@ -42,8 +37,15 @@ _A_SENDER_ALWAYS_PUBLISHED = "send_cypher_query"
 
 OPTIONS = [Option("search"), Option("get")]
 
+#: Test-local descriptors: the real catalog is Medulla's, so the SDK ships none.
+CONNECTOR_TOOL = DecisionPoint("connector.tool", "route", sample_every=16)
+CONNECTOR_WRITEBACK = DecisionPoint(
+    "connector.writeback", "route", safety="write_back", log_mode=LogMode.ALWAYS
+)
+POINTS = {p.question_id: p for p in (CONNECTOR_TOOL, CONNECTOR_WRITEBACK)}
+
 _SCHEMA = {
-    "component_id": "decide.schema.au.connector.tool",
+    "component_id": "decide.schema.connector.tool",
     "kind": "feature_schema",
     "definition_digest": "sha256:" + "0" * 64,
 }
@@ -106,7 +108,7 @@ class FakeTransport:
 def _runner(transport: FakeTransport, *, bound: bool = True) -> MedullaDecisionRunner:
     bindings = StaticBindings(
         {
-            "au.connector.tool": Binding(
+            "connector.tool": Binding(
                 feature_schema=_SCHEMA, policy={"policy": "default"}
             )
         }
@@ -114,14 +116,14 @@ def _runner(transport: FakeTransport, *, bound: bool = True) -> MedullaDecisionR
         else {}
     )
     return MedullaDecisionRunner(
-        transport=transport, tenant="tenant-t", bindings=bindings
+        transport=transport, tenant="tenant-t", bindings=bindings, points=POINTS
     )
 
 
 def test_an_unbound_point_never_calls_eg_and_falls_back() -> None:
     transport = FakeTransport(answer=acted("search"))
     choice = _runner(transport, bound=False).choose(
-        "au.connector.tool", OPTIONS, lambda: "get"
+        "connector.tool", OPTIONS, lambda: "get"
     )
     assert (choice.option_id, choice.decided, choice.reason) == (
         "get",
@@ -134,7 +136,7 @@ def test_an_unbound_point_never_calls_eg_and_falls_back() -> None:
 
 def test_a_decision_is_made_and_recorded() -> None:
     transport = FakeTransport(answer=acted("search"))
-    choice = _runner(transport).choose("au.connector.tool", OPTIONS, lambda: "get")
+    choice = _runner(transport).choose("connector.tool", OPTIONS, lambda: "get")
     assert (choice.option_id, choice.decided, choice.reason) == (
         "search",
         True,
@@ -143,7 +145,7 @@ def test_a_decision_is_made_and_recorded() -> None:
     assert transport.op_names() == ["commit"]
     request = transport.requests[0]
     assert request["question"] == {
-        "question_id": "au.connector.tool",
+        "question_id": "connector.tool",
         "kind": "route",
         "safety": "ordinary",
     }
@@ -154,7 +156,7 @@ def test_a_decision_is_made_and_recorded() -> None:
 
 def test_an_abstention_falls_back() -> None:
     transport = FakeTransport(answer=abstained())
-    choice = _runner(transport).choose("au.connector.tool", OPTIONS, lambda: "get")
+    choice = _runner(transport).choose("connector.tool", OPTIONS, lambda: "get")
     assert (choice.option_id, choice.decided) == ("get", False)
     assert choice.reason == "abstained: insufficient_confidence"
     assert transport.op_names() == ["commit"], "an abstained record is still durable"
@@ -162,7 +164,7 @@ def test_an_abstention_falls_back() -> None:
 
 def test_a_transport_failure_falls_back_with_a_named_reason() -> None:
     transport = FakeTransport(fail=ConnectionError("engine down"))
-    choice = _runner(transport).choose("au.connector.tool", OPTIONS, lambda: "get")
+    choice = _runner(transport).choose("connector.tool", OPTIONS, lambda: "get")
     assert choice.option_id == "get"
     assert not choice.decided
     assert choice.reason.startswith("unavailable: ConnectionError: engine down")
@@ -171,7 +173,7 @@ def test_a_transport_failure_falls_back_with_a_named_reason() -> None:
 
 def test_an_option_eg_was_not_offered_is_never_obeyed() -> None:
     transport = FakeTransport(answer=acted("delete-everything"))
-    choice = _runner(transport).choose("au.connector.tool", OPTIONS, lambda: "get")
+    choice = _runner(transport).choose("connector.tool", OPTIONS, lambda: "get")
     assert (choice.option_id, choice.decided) == ("get", False)
     assert choice.reason == "foreign_option: delete-everything"
 
@@ -179,21 +181,19 @@ def test_an_option_eg_was_not_offered_is_never_obeyed() -> None:
 def test_the_writeback_point_always_logs_never_only_samples() -> None:
     transport = FakeTransport(answer=abstained())
     bindings = StaticBindings(
-        {"au.connector.writeback": Binding(feature_schema=_SCHEMA, policy={})}
+        {"connector.writeback": Binding(feature_schema=_SCHEMA, policy={})}
     )
     runner = MedullaDecisionRunner(
-        transport=transport, tenant="tenant-t", bindings=bindings
+        transport=transport, tenant="tenant-t", bindings=bindings, points=POINTS
     )
-    runner.choose("au.connector.writeback", [Option("no_write")], lambda: "no_write")
+    runner.choose("connector.writeback", [Option("no_write")], lambda: "no_write")
     assert transport.requests[0]["question"]["safety"] == "write_back"
     assert transport.op_names() == ["commit"]
 
 
 async def test_the_async_path_shares_the_contract() -> None:
     transport = FakeTransport(answer=acted("search"))
-    choice = await _runner(transport).achoose(
-        "au.connector.tool", OPTIONS, lambda: "get"
-    )
+    choice = await _runner(transport).achoose("connector.tool", OPTIONS, lambda: "get")
     assert (choice.option_id, choice.decided) == ("search", True)
     assert transport.op_names() == ["commit"]
 
@@ -249,7 +249,7 @@ async def test_generated_transport_calls_egs_real_send_decide() -> None:
     request: dict[str, Any] = {
         "tenant_id": "tenant-t",
         "question": {
-            "question_id": "au.connector.tool",
+            "question_id": "connector.tool",
             "kind": "route",
             "safety": "ordinary",
         },
@@ -305,7 +305,7 @@ def test_request_for_binds_tenant_question_and_declared_candidates() -> None:
     )
     assert request["tenant_id"] == "tenant-t"
     assert request["question"] == {
-        "question_id": "au.connector.tool",
+        "question_id": "connector.tool",
         "kind": "route",
         "safety": "ordinary",
     }
@@ -323,16 +323,24 @@ def test_sampled_keeps_a_reproducible_fraction_by_record_digest() -> None:
     assert sampled(CONNECTOR_TOOL, skipped) is False
 
 
-def test_points_registry_and_bindings() -> None:
-    assert POINTS["au.connector.tool"] is CONNECTOR_TOOL
-    assert point("au.connector.writeback") is CONNECTOR_WRITEBACK
-    assert point("au.connector.triage") is CONNECTOR_TRIAGE
-    assert CONNECTOR_TOOL.log_mode is LogMode.SAMPLED
-    assert CONNECTOR_WRITEBACK.log_mode is LogMode.ALWAYS
-    assert CONNECTOR_TRIAGE.log_mode is LogMode.SAMPLED
-    assert CONNECTOR_TOOL.schema_component_id == "decide.schema.au.connector.tool"
-    assert EMPTY_BINDINGS.binding_for(CONNECTOR_TOOL) is None
+def test_the_sdk_ships_no_point_catalog_and_an_unknown_point_falls_back() -> None:
+    import scion_sdk.decide.points as points_module
 
+    assert not hasattr(points_module, "POINTS")
+    transport = FakeTransport(answer=acted("search"))
+    runner = MedullaDecisionRunner(transport=transport, tenant="tenant-t")
+    choice = runner.choose("connector.tool", OPTIONS, lambda: "get")
+    assert (choice.option_id, choice.decided, choice.reason) == (
+        "get",
+        False,
+        "unbound",
+    )
+    assert transport.requests == []
+
+
+def test_points_and_bindings() -> None:
+    assert CONNECTOR_TOOL.schema_component_id == "decide.schema.connector.tool"
+    assert EMPTY_BINDINGS.binding_for(CONNECTOR_TOOL) is None
     custom: DecisionPoint = DecisionPoint("x.y", "route")
     bindings: Bindings = StaticBindings({"x.y": Binding(feature_schema={}, policy={})})
     assert bindings.binding_for(custom) is not None

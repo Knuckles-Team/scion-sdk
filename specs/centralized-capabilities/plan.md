@@ -74,16 +74,16 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 |---|---|---|---|---|
 | `SCION-CENTRALIZED-CAPABILITIES-R001` | Governed HTTP client and retry | `SCION-CONNECTOR-CONTROL-R780.3`, `SCION-CONNECTOR-CONTROL-R028` | `http/client.py`, `http/retry.py`, `http/transport.py` | pipelines `sdk-conformance` (`PIPE-GATES-R013`): direct `requests`, hand-built `httpx` clients, own retry loops. Warns; `--strict` blocks. |
 | `SCION-CENTRALIZED-CAPABILITIES-R002` | Egress guard and pinned addresses | `SCION-CONNECTOR-CONTROL-R014.5`, `SCION-CONNECTOR-CONTROL-R014.16`, `SCION-CONNECTOR-CONTROL-R028.1`, `SCION-CONNECTOR-CONTROL-R033` | `http/egress.py`, `http/safe_post.py` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R003` | API client base and auth strategies | `SCION-CONNECTOR-CONTROL-R014.10`, `SCION-CONNECTOR-CONTROL-R028.3` | `http/support.py`, `httpsupport/auth.py`, `httpsupport/client_protocol.py` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R003` | API client base and auth strategies | `SCION-CONNECTOR-CONTROL-R014.10`, `SCION-CONNECTOR-CONTROL-R028.3` | `httpsupport/api_client.py`, `httpsupport/auth.py`, `httpsupport/client_protocol.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R004` | Pagination helpers | `SCION-CENTRALIZED-CAPABILITIES-R004` | `http/pagination.py`, `httpsupport/pagination.py` (mode `next_url`) | Unit tests `tests/httpsupport/test_pagination_next_url.py`. No connector scan. |
 | `SCION-CENTRALIZED-CAPABILITIES-R005` | Rate-limit telemetry and concurrency | `SCION-CENTRALIZED-CAPABILITIES-R005` | `httpsupport/rate_limit.py`, `mcp/concurrency.py` | Unit tests `tests/httpsupport/test_rate_limiter.py`. No connector scan. |
 | `SCION-CENTRALIZED-CAPABILITIES-R006` | Error redaction and typed problems | `SCION-CONNECTOR-CONTROL-R780.2`, `SCION-CONNECTOR-CONTROL-R014.6`, `SCION-CONNECTOR-CONTROL-R014.12` | `exceptions.py`, `http/errors.py`, `http/problems.py`, `http/redaction.py`, `httpsupport/redaction.py`, `privacy_pii.py` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R007` | Payment challenge handling | `SCION-CONNECTOR-CONTROL-R049`, `SCION-FINANCE-SOURCES-R900` | `payments.py` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R007` | Payment challenge handling | `SCION-CONNECTOR-CONTROL-R049`, `SCION-FINANCE-SOURCES-R900` | `payments/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R008` | TLS profiles | `SCION-CONNECTOR-CONTROL-R017`, `SCION-CONNECTOR-CONTROL-R780.4` | `tls/resolve.py`, `tls/profile.py`, `tls/context.py` | pipelines `sdk-conformance` (`PIPE-GATES-R013`): verification off, silenced warning, hand-built SSL context. Warns; `--strict` blocks. The SDK static scan in the owner row stays. |
 | `SCION-CENTRALIZED-CAPABILITIES-R009` | Credential and secret-reference resolution | `SCION-CONNECTOR-CONTROL-R014.4`, `SCION-CONNECTOR-CONTROL-R035`, `SCION-CONNECTOR-CONTROL-R900` | `credentials/references.py`, `credentials/resolver.py`, `credentials/openbao.py`, `credentials/provider.py` | pipelines `sdk-conformance` (`PIPE-GATES-R013`): hand-parsed `env://` and `openbao://` references. Warns; `--strict` blocks. |
-| `SCION-CENTRALIZED-CAPABILITIES-R010` | Selected-provider credential profile | `SCION-CONNECTOR-CONTROL-R014.19`, `SCION-CONNECTOR-CONTROL-R027` | `credentials/provider_profile.py` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R011` | Token providers and source credentials | `SCION-CONNECTOR-CONTROL-R031`, `SCION-CONNECTOR-CONTROL-R900`, `SCION-CONNECTOR-CONTROL-R014.9` | `auth/tokens.py`, `auth/client_credentials.py`, `auth/static.py`, `credentials/source.py` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R012` | OIDC delegation and actor identity | `SCION-CONNECTOR-CONTROL-R014.8`, `SCION-CONNECTOR-CONTROL-R902`, `SCION-CONNECTOR-CONTROL-R780.1` | `auth/delegation.py`, `auth/oidc.py`, `identity.py`, `mcp/auth/` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R010` | Selected-provider credential profile | `SCION-CONNECTOR-CONTROL-R014.19`, `SCION-CONNECTOR-CONTROL-R027` | `auth/provider_profile.py` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R011` | Token providers and source credentials | `SCION-CONNECTOR-CONTROL-R031`, `SCION-CONNECTOR-CONTROL-R900`, `SCION-CONNECTOR-CONTROL-R014.9` | `auth/tokens.py`, `auth/client_credentials.py`, `auth/static.py`, `auth/source_credentials.py` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R012` | OIDC delegation and actor identity | `SCION-CONNECTOR-CONTROL-R014.8`, `SCION-CONNECTOR-CONTROL-R902`, `SCION-CONNECTOR-CONTROL-R780.1` | `auth/delegation.py`, `auth/oidc.py`, `identity/`, `mcp/auth/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R013` | Browser OAuth with PKCE | `SCION-CONNECTOR-CONTROL-R014.11`, `SCION-CONNECTOR-CONTROL-R046` | `auth/browser.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R014` | MCP server factory and served security | `SCION-CONNECTOR-CONTROL-R014.17`, `SCION-CONNECTOR-CONTROL-R014.18` | `mcp/server.py`, `mcp/served_security.py`, `mcp/middleware.py`, extra `mcp` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R015` | Tool surface and tool context | `SCION-CONNECTOR-CONTROL-R020`, `SCION-CONNECTOR-CONTROL-R026`, `SCION-CONNECTOR-CONTROL-R032`, `SCION-CONNECTOR-CONTROL-R050` | `mcp/tool_surface.py`, `mcp/method_tools.py`, `mcp/context.py`, `mcp/action_dispatch.py` | unchecked |
@@ -93,19 +93,19 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 | `SCION-CENTRALIZED-CAPABILITIES-R019` | Ingest bindings and source adapters | `SCION-SOURCE-INGEST-R001`, `SCION-SOURCE-INGEST-R005`, `SCION-SOURCE-INGEST-R017` | `ingest/`, `adapters/`, `runner/syncing.py`, `ports/source_adapter.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R020` | Database sources | `SCION-SOURCE-INGEST-R900`, `SCION-SOURCE-INGEST-R004`, `SCION-CONNECTOR-CONTROL-R901` | `source_connectors/universal.py`, `identifiers.py`, extras `db`, `mssql` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R021` | Feed and document sources | `SCION-SOURCE-INGEST-R800`, `SCION-SOURCE-INGEST-R005` | `source_connectors/connectors/rss.py`, `arxiv.py`, `web.py`, `rest.py`, extra `feeds` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R022` | Message streams | `SCION-CONNECTOR-CONTROL-R782`, `SCION-FINANCE-SOURCES-R900.1` | `streaming.py`, `adapters/event_feed.py`, extra `stream` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R022` | Message streams | `SCION-CONNECTOR-CONTROL-R782`, `SCION-FINANCE-SOURCES-R900.1` | `streaming/`, `adapters/event_feed.py`, extra `stream` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R023` | Market data | `SCION-FINANCE-SOURCES-R001`, `SCION-FINANCE-SOURCES-R900` | `finance/market_data.py`, `finance/`, extra `market` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R024` | Data preparation | `SCION-SOURCE-INGEST-R803` | `data_prep/`, extra `dataprep` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R025` | Embedding client | `SCION-CONNECTOR-CONTROL-R014.22` | `embeddings.py`, extras `vector`, `vector-chroma` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R025` | Embedding client | `SCION-CONNECTOR-CONTROL-R014.22` | `embeddings/`, extras `vector`, `vector-chroma` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R026` | Vendor extractors | `SCION-SOURCE-INGEST-R006` | `vendor_extractors/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R027` | Ontology and content packs | `SCION-CONNECTOR-CONTROL-R067`, `SCION-CONNECTOR-CONTROL-R021`, `SCION-CONNECTOR-CONTROL-R022`, `SCION-CONNECTOR-CONTROL-R019` | `ontology/`, `artifacts/pack.py`, `artifacts/ontology_imports.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R028` | Connector manifest and integrity | `SCION-CONNECTOR-CONTROL-R015`, `SCION-CONNECTOR-CONTROL-R015.1`, `SCION-CONNECTOR-CONTROL-R650`, `SCION-CONNECTOR-CONTROL-R045.11` | `manifest/`, extra `integrity` | SDK duplicate-definition scan in the owner row (`testing/duplicate_symbol_scan.py`). No pipelines gate runs it. |
 | `SCION-CENTRALIZED-CAPABILITIES-R029` | Certification and fingerprints | `SCION-CONNECTOR-CONTROL-R003`, `SCION-CONNECTOR-CONTROL-R007`, `SCION-CONNECTOR-CONTROL-R015`, `SCION-CONNECTOR-CONTROL-R045.11` | `certify/`, script `connector-certify` | `connector-certify` check run by the connector. Pipelines gate runs none. |
-| `SCION-CENTRALIZED-CAPABILITIES-R030` | Connector identity | `SCION-CONNECTOR-CONTROL-R071` | `connector_identity.py` | Owner-row check `ConnectorIdentityError`. Pipelines name gate named in the owner row. |
+| `SCION-CENTRALIZED-CAPABILITIES-R030` | Connector identity | `SCION-CONNECTOR-CONTROL-R071` | `connector_identity/` | Owner-row check `ConnectorIdentityError`. Pipelines name gate named in the owner row. |
 | `SCION-CENTRALIZED-CAPABILITIES-R031` | Governed write-back | `SCION-GOVERNED-WRITEBACK-R002`, `SCION-GOVERNED-WRITEBACK-R003` | `writeback/`, `writeback_sinks/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R032` | Runner and CLI bootstrap | `SCION-CONNECTOR-CONTROL-R014.14`, `SCION-SOURCE-INGEST-R805` | `runner/`, `mcp/env_drift.py`, script `connector-sync` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R033` | Health and observability | `SCION-CONNECTOR-CONTROL-R065`, `SCION-CONNECTOR-CONTROL-R050` | `runner/health_state.py`, `runner/health_server.py`, `runner/logs.py`, `progress.py` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R034` | Configuration, paths, and locks | `SCION-CONNECTOR-CONTROL-R016`, `SCION-CONNECTOR-CONTROL-R029`, `SCION-CONNECTOR-CONTROL-R014.7`, `SCION-CONNECTOR-CONTROL-R014.2`, `SCION-CONNECTOR-CONTROL-R034`, `SCION-CONNECTOR-CONTROL-R780.5` | `config.py`, `utilities.py`, `paths.py`, `file_lock.py`, `library_state.py` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R034` | Configuration, paths, and locks | `SCION-CONNECTOR-CONTROL-R016`, `SCION-CONNECTOR-CONTROL-R029`, `SCION-CONNECTOR-CONTROL-R014.7`, `SCION-CONNECTOR-CONTROL-R014.2`, `SCION-CONNECTOR-CONTROL-R034`, `SCION-CONNECTOR-CONTROL-R780.5` | `config.py`, `utilities.py`, `paths/`, `file_lock/`, `library_state.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R035` | Privacy, entitlements, and external access | `SCION-CONNECTOR-CONTROL-R014.6`, `SCION-CONNECTOR-CONTROL-R014.13`, `SCION-CONNECTOR-CONTROL-R014.15`, `SCION-CONNECTOR-CONTROL-R025`, `SCION-CONNECTOR-CONTROL-R036` | `privacy*.py`, `entitlements.py`, `contracts.py`, `access_contract.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R036` | Repository transport and planned source client | `SCION-SCM-R001`, `SCION-REPOSITORY-TRANSPORT-R001` | `repository/` (source client pending) | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R037` | Plugin entry-point groups | `SCION-CONNECTOR-CONTROL-R014.20` | `pyproject.toml` entry-point groups | unchecked |
@@ -228,6 +228,102 @@ Every connector that connects through arbora onboards itself. Its ontology exten
 No new rows. The open rows serve P2, where one SDK ingest connector proves the loop.
 
 Fleet migration: most connectors use the central SDK pattern and the rest migrate one by one. A connector counts as migrated when it passes the SDK conformance gate (`PIPE-GATES-R013`). One connector waits on an SDK capability gap. The gap is recorded here and closed before that connector moves. A connector must not roll to a new release until every consumer runs an SDK version that accepts its source declarations.
+
+### Release 0.10.0 and the removed-path map (R046)
+
+Pre-untangled design for these rows, one line per answer.
+
+- Owner. This repository, the package root and the release workflow. Each consumer owns only its own import edits.
+- Cohesion. The table, the absence test and the changelog change together, so they sit in one row family. The wheel build stays apart.
+- Dependency direction. Consumers import public modules of a unit. No new import points upward; the table removes the private reaches.
+- Interface depth. The public surface of each unit is its package `__init__` plus the modules named in the table's "New path" column.
+- Special cases. None. Every removed name takes the same treatment: absent, with no alias.
+- State. A release has no lifecycle here. The tag is the event, and CI on that commit gates publication.
+- Environment. None. The post-publish check is a published gate command with no host data.
+
+Sequence. `.1` first (it fixes the table), then `.2`, then tag `v0.10.0`, then `.3`. Consumers adopt in the order: erpnext-agent (it needs the write-back model path), the connectors in one train of small PRs, then arbora.
+
+**The removed-path map.** The first table lists every import path that changes. The last six lines are functions and a command. The second table is the consumer census taken on each repository's default branch: the old names it imports now. A census line that is not in the first table is a bug in the table.
+
+| Old path | New path |
+|---|---|
+| `scion_sdk.credentials.provider_profile` | `scion_sdk.auth.provider_profile` |
+| `scion_sdk.credentials.source` | `scion_sdk.auth.source_credentials` |
+| `scion_sdk.testing.successor_parity` | `scion_sdk.certify.successor_parity` |
+| `scion_sdk._connector_decl` | `scion_sdk.connector._decl` |
+| `scion_sdk._connector_serve` | `scion_sdk.connector._serve` |
+| `scion_sdk._connector_metadata` | `scion_sdk.connector_identity._metadata` |
+| `scion_sdk._contract_fields` | `scion_sdk.contract_fields` |
+| `scion_sdk.data_prep._classification` | `scion_sdk.data_prep.classification` |
+| `scion_sdk.ports.decide_runner` | `scion_sdk.decide.runner` |
+| `scion_sdk._embedding_providers` | `scion_sdk.embeddings._providers` |
+| `scion_sdk._extras` | `scion_sdk.extras` |
+| `scion_sdk._lock_unavailable` | `scion_sdk.file_lock._unavailable` |
+| `scion_sdk._file_lock_windows` | `scion_sdk.file_lock._windows` |
+| `scion_sdk.http._bounded_provider` | `scion_sdk.http.bounded_provider` |
+| `scion_sdk.http.support` | `scion_sdk.httpsupport.api_client` |
+| `scion_sdk.http.support_mixins` | `scion_sdk.httpsupport.api_client_mixins` |
+| `scion_sdk.http.support_rate` | `scion_sdk.httpsupport.api_client_rate` |
+| `scion_sdk.runner.backoff` | `scion_sdk.ingest.backoff` |
+| `scion_sdk.ingest._stream_checkpoint` | `scion_sdk.ingest.stream_checkpoint` |
+| `scion_sdk.certify.fingerprints` | `scion_sdk.manifest.fingerprints` |
+| `scion_sdk.ingest.for_each` | `scion_sdk.manifest.for_each` |
+| `scion_sdk.artifacts.resource_derivation` | `scion_sdk.manifest.resource_derivation` |
+| `scion_sdk.artifacts.resource_descriptor` | `scion_sdk.manifest.resource_descriptor` |
+| `scion_sdk.artifacts.resource_descriptor_model` | `scion_sdk.manifest.resource_descriptor_model` |
+| `scion_sdk.ingest.sources` | `scion_sdk.manifest.sources` |
+| `scion_sdk._platform_paths` | `scion_sdk.paths._platform` |
+| `scion_sdk._payment_guard` | `scion_sdk.payments._guard` |
+| `scion_sdk._payment_models` | `scion_sdk.payments._models` |
+| `scion_sdk.writeback.models` | `scion_sdk.ports.writeback_models` |
+| `scion_sdk._privacy_urls` | `scion_sdk.privacy._urls` |
+| `scion_sdk.ports.connector_registry` | `scion_sdk.runner.connector_registry` |
+| `scion_sdk._stream_bus` | `scion_sdk.streaming._bus` |
+| `scion_sdk._stream_types` | `scion_sdk.streaming._types` |
+| `scion_sdk._stream_websocket` | `scion_sdk.streaming._websocket` |
+| `scion_sdk._surface_agents` | `scion_sdk.surface_contracts._agents` |
+| `scion_sdk._surface_complete` | `scion_sdk.testing.surface_draft` |
+| `scion_sdk._turtle` | `scion_sdk.turtle_reader` |
+| `scion_sdk._utc_records` | `scion_sdk.utc_records` |
+| `scion_sdk._version` | `scion_sdk.version` |
+| `create_http_client` | `build_http_client(options)` |
+| `create_async_http_client` | `build_http_client(options, async_=True)` |
+| `configure_oauth_proxy` | `configure_proxy(inputs, flow)` |
+| `configure_oidc_proxy` | `configure_proxy(inputs, flow)` |
+| `connector_tool / triage_event (decide)` | `bounded_choice(question_id, ...)` |
+| `scion_sdk._surface_complete CLI` | `python -m scion_sdk.testing.surface_draft complete <package>` |
+
+| Repository | Old names it imports | Files |
+|---|---|---|
+| `adguard-home-agent` | `scion_sdk.http.support` | 3 |
+| `ansible-tower-mcp` | `create_http_client` | 4 |
+| `archivebox-api` | `create_http_client` | 7 |
+| `aris-mcp` | `create_http_client` | 1 |
+| `arr-mcp` | `create_http_client` | 1 |
+| `audiobookshelf-mcp` | `scion_sdk.credentials.provider_profile` | 1 |
+| `bellwether-mcp` | `create_async_http_client` | 1 |
+| `caddy-mcp` | `create_http_client`, `scion_sdk._connector_serve` | 4 |
+| `container-manager-mcp` | `create_http_client` | 1 |
+| `craft-suite-api` | `create_async_http_client`, `create_http_client` | 1 |
+| `egeria-mcp` | `create_http_client` | 1 |
+| `erpnext-agent` | `create_async_http_client`, `scion_sdk._connector_serve`, `scion_sdk.writeback.models` | 5 |
+| `firefly-iii-mcp` | `create_http_client`, `scion_sdk.http.client.create_http_client` | 3 |
+| `freshrss-agent` | `create_http_client` | 2 |
+| `immich-api` | `create_http_client` | 5 |
+| `keycloak-agent` | `create_http_client` | 1 |
+| `mattermost-mcp` | `create_http_client` | 2 |
+| `microsoft-agent` | `create_async_http_client`, `create_http_client` | 6 |
+| `objectstore-mcp` | `scion_sdk._connector_serve` | 1 |
+| `openbao-mcp` | `create_http_client` | 2 |
+| `paperless-ngx-mcp` | `create_http_client` | 2 |
+| `portainer-agent` | `scion_sdk.http.support` | 1 |
+| `scholarx` | `create_async_http_client` | 2 |
+| `technitium-dns-mcp` | `scion_sdk._connector_serve` | 1 |
+| `tunnel-manager` | `scion_sdk._connector_serve` | 1 |
+| `vaultwarden-mcp` | `create_http_client` | 2 |
+| `webarchiver` | `create_async_http_client`, `scion_sdk._turtle` | 2 |
+| `world-reference-mcp` | `create_async_http_client` | 1 |
+| `arbora` | `create_async_http_client`, `create_http_client` | 13 |
 
 ## Phase 2: Task approach
 

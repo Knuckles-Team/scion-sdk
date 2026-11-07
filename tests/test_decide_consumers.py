@@ -16,9 +16,8 @@ from scion_sdk import decide
 from scion_sdk.decide import Choice, DecisionRunner, Option
 from scion_sdk.decide.consumers import (
     NO_WRITE,
-    connector_tool,
+    bounded_choice,
     propose_writeback,
-    triage_event,
 )
 from scion_sdk.decide.options import (
     Q32_ONE,
@@ -27,7 +26,7 @@ from scion_sdk.decide.options import (
     text_param,
     unique_sorted,
 )
-from scion_sdk.ports.decide_runner import Fallback
+from scion_sdk.decide.runner import Fallback
 
 
 @dataclass
@@ -89,44 +88,62 @@ def eg() -> Iterator[FakeRunner]:
 
 def test_no_runner_installed_is_exactly_the_fallback() -> None:
     assert decide.current_runner() is None
-    choice = decide.choose("au.connector.tool", [Option("a")], lambda: "a")
+    choice = decide.choose("connector.tool", [Option("a")], lambda: "a")
     assert choice == Choice("a", False, "no_runner")
 
 
 async def test_no_runner_installed_is_exactly_the_fallback_async() -> None:
     assert decide.current_runner() is None
-    choice = await decide.achoose("au.connector.tool", [Option("a")], lambda: "a")
+    choice = await decide.achoose("connector.tool", [Option("a")], lambda: "a")
     assert choice == Choice("a", False, "no_runner")
 
 
 def test_connector_tool_with_no_runner_returns_the_connector_s_pick() -> None:
     assert decide.current_runner() is None
-    assert connector_tool("jira", ["search", "get"], "get") == "get"
+    assert (
+        bounded_choice("connector.tool", ["search", "get"], "get", connector="jira")
+        == "get"
+    )
 
 
 def test_connector_tool_never_consults_decide_for_an_unlisted_pick(
     eg: FakeRunner,
 ) -> None:
     """A pick outside ``tools`` is a caller bug, not a decision -- no EG call."""
-    assert connector_tool("jira", ["search", "get"], "missing") == "missing"
+    assert (
+        bounded_choice("connector.tool", ["search", "get"], "missing", connector="jira")
+        == "missing"
+    )
     assert eg.calls == []
 
 
 def test_connector_tool_honors_an_executed_offered_option(eg: FakeRunner) -> None:
     eg.answer = _acted("search")
-    assert connector_tool("jira", ["search", "get"], "get") == "search"
-    assert eg.calls == [("au.connector.tool", ("get", "search"))]
+    assert (
+        bounded_choice("connector.tool", ["search", "get"], "get", connector="jira")
+        == "search"
+    )
+    assert eg.calls == [("connector.tool", ("get", "search"))]
 
 
 def test_connector_tool_falls_back_when_decide_abstains(eg: FakeRunner) -> None:
     eg.answer = _abstained
-    assert connector_tool("jira", ["search", "get"], "get") == "get"
+    assert (
+        bounded_choice("connector.tool", ["search", "get"], "get", connector="jira")
+        == "get"
+    )
 
 
 def test_triage_with_no_runner_returns_the_deterministic_pick() -> None:
     assert decide.current_runner() is None
     assert (
-        triage_event("freshrss-agent", ["provision", "sync", "skip"], "sync") == "sync"
+        bounded_choice(
+            "connector.triage",
+            ["provision", "sync", "skip"],
+            "sync",
+            connector="freshrss-agent",
+        )
+        == "sync"
     )
 
 
@@ -134,24 +151,36 @@ def test_triage_never_consults_decide_for_an_undeclared_classification(
     eg: FakeRunner,
 ) -> None:
     """A pick outside ``actions`` is a caller bug, not a decision -- no EG call."""
-    assert triage_event("freshrss-agent", ["provision", "sync"], "unclassified") == (
-        "unclassified"
-    )
+    assert bounded_choice(
+        "connector.triage",
+        ["provision", "sync"],
+        "unclassified",
+        connector="freshrss-agent",
+    ) == ("unclassified")
     assert eg.calls == []
 
 
 def test_triage_honors_an_executed_offered_action(eg: FakeRunner) -> None:
     eg.answer = _acted("provision")
-    assert triage_event("freshrss-agent", ["provision", "sync", "skip"], "sync") == (
-        "provision"
-    )
-    assert eg.calls == [("au.connector.triage", ("provision", "skip", "sync"))]
+    assert bounded_choice(
+        "connector.triage",
+        ["provision", "sync", "skip"],
+        "sync",
+        connector="freshrss-agent",
+    ) == ("provision")
+    assert eg.calls == [("connector.triage", ("provision", "skip", "sync"))]
 
 
 def test_triage_falls_back_when_decide_abstains(eg: FakeRunner) -> None:
     eg.answer = _abstained
     assert (
-        triage_event("freshrss-agent", ["provision", "sync", "skip"], "sync") == "sync"
+        bounded_choice(
+            "connector.triage",
+            ["provision", "sync", "skip"],
+            "sync",
+            connector="freshrss-agent",
+        )
+        == "sync"
     )
 
 
@@ -160,24 +189,29 @@ def test_triage_proposal_never_reaches_write_back(eg: FakeRunner) -> None:
     """A triage proposal is observational: it returns a plain action string,
     never a write-back change-set, and never asks the write-back question."""
     eg.answer = _acted("provision")
-    chosen = triage_event("freshrss-agent", ["provision", "sync", "skip"], "sync")
+    chosen = bounded_choice(
+        "connector.triage",
+        ["provision", "sync", "skip"],
+        "sync",
+        connector="freshrss-agent",
+    )
     assert chosen == "provision" and isinstance(chosen, str)
-    assert eg.calls == [("au.connector.triage", ("provision", "skip", "sync"))]
-    assert all(question != "au.connector.writeback" for question, _ in eg.calls)
+    assert eg.calls == [("connector.triage", ("provision", "skip", "sync"))]
+    assert all(question != "connector.writeback" for question, _ in eg.calls)
 
 
 @pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001")
 def test_writeback_with_no_runner_defaults_to_no_write() -> None:
     assert decide.current_runner() is None
     proposals = {"close-incident": {"server": "servicenow-mcp", "tool": "t"}}
-    assert propose_writeback(proposals) == (NO_WRITE, None)
+    assert propose_writeback("connector.writeback", proposals) == (NO_WRITE, None)
 
 
 @pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001")
 def test_writeback_is_only_ever_a_proposal(eg: FakeRunner) -> None:
     proposals = {"close-incident": {"server": "servicenow-mcp", "tool": "t"}}
     eg.answer = _acted("close-incident")
-    assert propose_writeback(proposals) == (
+    assert propose_writeback("connector.writeback", proposals) == (
         "close-incident",
         proposals["close-incident"],
     )
@@ -186,13 +220,13 @@ def test_writeback_is_only_ever_a_proposal(eg: FakeRunner) -> None:
 def test_writeback_falls_back_to_no_write_when_decide_abstains(eg: FakeRunner) -> None:
     proposals = {"close-incident": {"server": "servicenow-mcp", "tool": "t"}}
     eg.answer = _abstained
-    assert propose_writeback(proposals) == (NO_WRITE, None)
+    assert propose_writeback("connector.writeback", proposals) == (NO_WRITE, None)
 
 
 def test_writeback_custom_default_is_the_fallback(eg: FakeRunner) -> None:
     proposals = {"close-incident": {"a": 1}, "escalate": {"b": 2}}
     eg.answer = _abstained
-    assert propose_writeback(proposals, default="escalate") == (
+    assert propose_writeback("connector.writeback", proposals, default="escalate") == (
         "escalate",
         proposals["escalate"],
     )

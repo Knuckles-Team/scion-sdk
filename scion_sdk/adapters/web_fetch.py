@@ -52,7 +52,7 @@ from scion_sdk.contracts import (
     StreamDescriptor,
 )
 from scion_sdk.http.bodies import DEFAULT_MAX_RESPONSE_BYTES, aread_bounded
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.errors import ResponseTooLargeError
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.ports.errors import SourceContractError
@@ -146,7 +146,7 @@ async def fetch_page(
 async def _read_web_text(options: HttpClientOptions) -> str | None:
     """Read one identity-encoded response within the shared byte bound."""
     async with (
-        create_async_http_client(options) as client,
+        build_http_client(options, async_=True) as client,
         client.stream("GET", "") as response,
     ):
         if response.status_code >= 400:

@@ -74,3 +74,9 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
 - [ ] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
 - [ ] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
+- [ ] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
+- [ ] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
+- [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.
+- [ ] T074 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.1 Removed-path table with an absence test. Size: S, 1 PR, 2 hours.
+- [ ] T075 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.2 Version 0.10.0 and the changelog entry. Size: S, 1 PR, 1 hour.
+- [ ] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.

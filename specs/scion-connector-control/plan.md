@@ -1000,6 +1000,18 @@ tasks.md holds one task line per active row, ordered producer first; rows that s
 
 none
 
+### Ranked call (SCION-CONNECTOR-CONTROL-R006.1)
+
+Pre-untangled design, one line per answer.
+
+- Owner. This repository, unit `decide`, as the client adapter. The order is medulla's choice.
+- Cohesion. `ranked_choice` sits beside `bounded_choice` and `propose_writeback`: all three pass a question id and a received fallback.
+- Dependency direction. `decide` imports `ports` types downward; callers import `scion_sdk.decide`.
+- Interface depth. One function and one record; the runner method stays private to the unit.
+- Special cases. None. A tool, a skill and an operation differ only by the question id.
+- State. None; the call is stateless and evaluate-only.
+- Environment. None.
+
 ## Build contract
 
 Gates are the repository pre-commit and pre-push hooks (`uvx pre-commit run -c .config/pre-commit.yaml --hook-stage manual --all-files`): KISS limits from `.config/kiss.toml`, duplicate scans, type check, orphan-module and public-API-tested checks, and the spec hook. No scanner gaming and no duplicate implementation.
@@ -1010,7 +1022,7 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 
 - `scion_sdk/__init__.py` (line 18): cited by 44 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/artifacts/pack.py` (line 58): cited by 29 rows; its importers are named in each row's Caller chain.
-- `scion_sdk/_connector_serve.py` (line 23): cited by 26 rows; its importers are named in each row's Caller chain.
+- `scion_sdk/connector/_serve.py` (line 23): cited by 26 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/testing/fleet_migration.py` (line 40): cited by 26 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/artifacts/tool_facts.py` (line 40): cited by 26 rows; its importers are named in each row's Caller chain.
 

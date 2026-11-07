@@ -12,6 +12,7 @@ from medulla.generated.write_back import (
 )
 from pydantic import JsonValue
 
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 from scion_sdk.writeback._transport_common import (
     applied_attempt,
     check_prior_effect,
@@ -24,7 +25,6 @@ from scion_sdk.writeback.errors import (
     OutcomeUncertainError,
     SourceVersionConflictError,
 )
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
 
 __all__ = ["FixtureUncertainty", "InMemoryWriteBackTransport"]
 

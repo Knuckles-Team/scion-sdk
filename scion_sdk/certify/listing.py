@@ -22,7 +22,7 @@ from typing import Any
 
 import anyio
 
-from scion_sdk.artifacts.resource_descriptor import RESOURCES_URI
+from scion_sdk.manifest.resource_descriptor import RESOURCES_URI
 from scion_sdk.manifest.tool_schema import read_field
 from scion_sdk.ports.session import McpSession, TransportEndpoint
 from scion_sdk.ports.transport import Transport

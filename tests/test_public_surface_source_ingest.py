@@ -6,7 +6,7 @@ import importlib
 
 
 def test__extras_exports() -> None:
-    module = importlib.import_module("scion_sdk._extras")
+    module = importlib.import_module("scion_sdk.extras")
     exported = (module.require_mcp_extra,)
     assert len(exported) == 1
     assert all(item is not None for item in exported)
@@ -36,7 +36,7 @@ def test_auth_browser_exports() -> None:
 
 
 def test_credentials_provider_profile_exports() -> None:
-    module = importlib.import_module("scion_sdk.credentials.provider_profile")
+    module = importlib.import_module("scion_sdk.auth.provider_profile")
     exported = (module.ResolvedProviderProfile,)
     assert len(exported) == 1
     assert all(item is not None for item in exported)
@@ -54,7 +54,7 @@ def test_http_egress_exports() -> None:
 
 
 def test_http_support_exports() -> None:
-    module = importlib.import_module("scion_sdk.http.support")
+    module = importlib.import_module("scion_sdk.httpsupport.api_client")
     exported = (
         module.DEFAULT_ERROR_MAP,
         module.DEFAULT_MAX_RETRIES_429,

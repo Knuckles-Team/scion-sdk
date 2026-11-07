@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from scion_sdk import exceptions, identity, utilities
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
 from scion_sdk.tls.resolve import resolve_tls_profile
@@ -52,7 +52,7 @@ def test_governed_client_retries_an_idempotent_request() -> None:
         base_url="https://api.example.test",
         retry=RetryPolicy(max_attempts=2, backoff_base=0, jitter=False),
     )
-    with create_http_client(options, transport=httpx.MockTransport(handler)) as client:
+    with build_http_client(options, transport=httpx.MockTransport(handler)) as client:
         assert client.get("/v1/ping").status_code == 200
     assert len(calls) == 2
     with pytest.raises(ValueError):

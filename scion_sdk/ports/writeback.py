@@ -10,7 +10,7 @@ from medulla.generated.write_back import (
     WriteBackAttempt,
 )
 
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 
 __all__ = ["WriteBackPort"]
 
