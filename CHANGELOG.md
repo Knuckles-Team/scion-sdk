@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.1
+
+### Added
+
+- A GraphQL query error now carries a closed `category` (`not_found`, `forbidden`,
+  `invalid_input`, `conflict`, `server_error` or `unknown`) and an `error_count` on
+  `GraphQLExecutionError` and its `payload()`. The category comes from `extensions.code`,
+  else the HTTP status, else an optional connector-supplied `error_classifier` on
+  `GraphQLClient`. Server message text is still never returned or logged
+  (SCION-CENTRALIZED-CAPABILITIES-R006.6).
+
 ## 0.10.0
 
 ### Added
