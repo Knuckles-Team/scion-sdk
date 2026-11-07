@@ -78,6 +78,10 @@ repos:
 - repo: https://github.com/Knuckles-Team/pipelines
   rev: main # sanctioned exception to immutable pins; shared gate repository tracked at head
   hooks:
+  - id: state-machine-shape
+    stages: [pre-commit, pre-push]
+  - id: state-machine-census
+    stages: [manual]
   # One secret-and-identity check; `tracked-privacy` needs the operator-owned
   # identity catalog, which CI supplies through PROHIBITED_IDENTITY_CATALOG.
   - id: secrets
