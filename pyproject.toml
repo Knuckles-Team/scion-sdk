@@ -325,7 +325,7 @@ public_modules = [
     "scion_sdk.auth.source_credentials",
     "scion_sdk.data_prep",
     "scion_sdk.data_prep._base",
-    "scion_sdk.data_prep._classification",
+    "scion_sdk.data_prep.classification",
     "scion_sdk.data_prep.certification",
     "scion_sdk.data_prep.certification.adapters",
     "scion_sdk.data_prep.certification.job",

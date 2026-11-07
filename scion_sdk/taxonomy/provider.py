@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from contextlib import AbstractAsyncContextManager
 from typing import Any, Literal
 
-from scion_sdk.http._bounded_provider import _BoundedProvider, _fetch
+from scion_sdk.http.bounded_provider import BoundedProvider, fetch_bounded
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.taxonomy.records import (
     TaxonRecord,
@@ -43,7 +43,7 @@ class TaxonomyProviderError(RuntimeError):
     """A provider page could not be obtained or validated."""
 
 
-class TaxonomyProvider(_BoundedProvider[Provider]):
+class TaxonomyProvider(BoundedProvider[Provider]):
     """Read admitted IDs under caller-supplied provider and quota policies."""
 
     def __init__(
@@ -86,7 +86,7 @@ class TaxonomyProvider(_BoundedProvider[Provider]):
             if self.provider == "ncbi"
             else f"species/{identifier}"
         )
-        payload = await _fetch(self.http, path, self.max_bytes)
+        payload = await fetch_bounded(self.http, path, self.max_bytes)
         return _normalize(self.provider, identifier, json.loads(payload))
 
 
