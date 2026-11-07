@@ -39,7 +39,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
-from scion_sdk.ingest.for_each import ForEach
+from scion_sdk.manifest.for_each import ForEach
 from scion_sdk.schema_drift import EvolutionPolicy
 
 __all__ = ["ToolPreset"]

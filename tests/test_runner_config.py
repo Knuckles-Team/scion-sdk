@@ -12,9 +12,9 @@ from pydantic import ValidationError
 from runner_support import DeclaredSession, freshrss_descriptor
 
 from scion_sdk.credentials.resolver import EnvironmentCredentialResolver
+from scion_sdk.ingest.backoff import Backoff
 from scion_sdk.ports.change_source import ChangeEvent
-from scion_sdk.ports.connector_registry import ConnectorRegistry
-from scion_sdk.runner.backoff import Backoff
+from scion_sdk.runner.connector_registry import ConnectorRegistry
 from scion_sdk.runner.descriptors import (
     ConnectorDescriptor,
     EndpointSpec,

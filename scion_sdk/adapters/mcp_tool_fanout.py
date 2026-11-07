@@ -28,7 +28,7 @@ from scion_sdk.adapters.mcp_tool_records import (
     raw_records,
 )
 from scion_sdk.contracts import RecordPage
-from scion_sdk.ingest.for_each import MAX_FAN_OUT, ForEachRefusal
+from scion_sdk.manifest.for_each import MAX_FAN_OUT, ForEachRefusal
 from scion_sdk.manifest.presets import ToolPreset
 from scion_sdk.ports.errors import SourceContractError
 from scion_sdk.ports.session import McpSession

@@ -12,12 +12,12 @@ from medulla.generated.write_back import (
     WriteBackOutcome,
 )
 
+from scion_sdk.ports.writeback_models import SourceSnapshot
 from scion_sdk.writeback.errors import (
     AuthorizationDeniedError,
     ChangeSetValidationError,
     SourceVersionConflictError,
 )
-from scion_sdk.writeback.models import SourceSnapshot
 
 __all__ = [
     "require_authorized",

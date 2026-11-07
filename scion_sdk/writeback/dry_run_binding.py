@@ -7,8 +7,8 @@ from typing import NamedTuple
 
 from medulla.generated.write_back import SourceChangeSet
 
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 from scion_sdk.writeback.errors import ChangeSetValidationError
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
 
 __all__ = ["ExpectedPreview", "expected_preview", "require_preview_binding"]
 

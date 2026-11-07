@@ -12,17 +12,17 @@ from fastmcp import FastMCP
 from pydantic import ValidationError
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
-from scion_sdk.ingest.for_each import MAX_FAN_OUT, ForEach
 from scion_sdk.ingest.source_sync import (
     SourceCheckpointState,
     SourceSyncRunner,
     SyncBudget,
 )
-from scion_sdk.ingest.sources import (
+from scion_sdk.manifest.declaration import contract_from_declaration
+from scion_sdk.manifest.for_each import MAX_FAN_OUT, ForEach
+from scion_sdk.manifest.sources import (
     IngestSourceDeclaration,
     IngestSourceSpec,
 )
-from scion_sdk.manifest.declaration import contract_from_declaration
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.transports.mcp import McpTransport
 
@@ -248,7 +248,7 @@ def test_preset_adapter_refuses_unknown_parent() -> None:
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.28")
 def test_check_for_each_and_parent_presets_refuse_by_code() -> None:
     from scion_sdk.adapters import mcp_tool_fanout
-    from scion_sdk.ingest.for_each import ForEachRefusal, check_for_each
+    from scion_sdk.manifest.for_each import ForEachRefusal, check_for_each
     from scion_sdk.manifest.presets import ToolPreset
 
     link = ForEach(source="b", argument="x")

@@ -15,7 +15,7 @@ The SDK emits no refusal. A missing `connector_contracts.py` serves no resource,
 
 ## Authoritative types
 
-[`scion_sdk/ontology/surface_contract.ttl`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/ontology/surface_contract.ttl) and [`scion_sdk/surface_contracts.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/surface_contracts.py).
+[`scion_sdk/ontology/surface_contract.ttl`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/ontology/surface_contract.ttl) and [`scion_sdk/surface_contracts/__init__.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/surface_contracts/__init__.py).
 
 ## Test vectors
 

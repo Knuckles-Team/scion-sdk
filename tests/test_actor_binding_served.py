@@ -33,12 +33,12 @@ from scion_sdk.identity import (
     require_authenticated_actor,
     use_actor,
 )
-from scion_sdk.mcp.actor_binding import (
+from scion_sdk.identity.transport import (
     PRINCIPAL_GRANTS_SETTING,
-    ActorBindingMiddleware,
     request_actor,
     token_actor,
 )
+from scion_sdk.mcp.actor_binding import ActorBindingMiddleware
 from scion_sdk.mcp.middleware import (
     ActorRateLimitingMiddleware,
     build_middleware,

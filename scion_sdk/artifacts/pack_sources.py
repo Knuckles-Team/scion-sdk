@@ -7,12 +7,12 @@ from medulla.connector_pack import ConnectorPackEntryContent
 from medulla.generated.connector_pack import PackEntryKind
 
 from scion_sdk.artifacts.common import json_object
-from scion_sdk.artifacts.resource_descriptor import (
+from scion_sdk.artifacts.source_contract import render_source_contract
+from scion_sdk.contracts import CapturedArtifact
+from scion_sdk.manifest.resource_descriptor import (
     RESOURCES_URI,
     _check_captured_descriptor,
 )
-from scion_sdk.artifacts.source_contract import render_source_contract
-from scion_sdk.contracts import CapturedArtifact
 from scion_sdk.ports.errors import MalformedArtifactError
 
 

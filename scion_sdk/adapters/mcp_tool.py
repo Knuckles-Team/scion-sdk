@@ -43,7 +43,7 @@ from scion_sdk.contracts import (
     RecordPage,
     StreamDescriptor,
 )
-from scion_sdk.ingest.for_each import MAX_FAN_OUT
+from scion_sdk.manifest.for_each import MAX_FAN_OUT
 from scion_sdk.manifest.live_contract import validate_preset_tool_contract
 from scion_sdk.manifest.model import ResourceSpec, SchemaMapping, SyncSpec
 from scion_sdk.manifest.presets import ToolPreset

@@ -10,7 +10,7 @@ from scion_sdk.ingest.model import (
     EntityRef,
     Relationship,
 )
-from scion_sdk.ingest.sources import EdgeSpec, IngestSourceSpec
+from scion_sdk.manifest.sources import EdgeSpec, IngestSourceSpec
 
 from ._sync_models import SourceSyncError
 

@@ -16,7 +16,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from scion_sdk.artifacts.resource_descriptor import (
+from scion_sdk.manifest.resource_descriptor import (
     FieldBinding,
     ResourceDescriptor,
 )

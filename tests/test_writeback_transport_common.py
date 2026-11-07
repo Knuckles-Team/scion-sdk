@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from medulla.generated.write_back import WriteBackEffectStatus
 
+from scion_sdk.ports.writeback_models import SourceSnapshot
 from scion_sdk.testing.writeback import make_writeback_fixture
 from scion_sdk.writeback._transport_common import (
     applied_attempt,
@@ -22,7 +23,6 @@ from scion_sdk.writeback.errors import (
     ChangeSetValidationError,
     IdempotencyConflictError,
 )
-from scion_sdk.writeback.models import SourceSnapshot
 
 
 def _fixture():

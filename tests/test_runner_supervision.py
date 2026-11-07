@@ -38,9 +38,9 @@ from runner_support import (
     services,
 )
 
-from scion_sdk.artifacts.pack import CapturedConnectorPack
 from scion_sdk.credentials.resolver import EnvironmentCredentialResolver
 from scion_sdk.ports.session import McpSession, TransportEndpoint
+from scion_sdk.ports.sink import CapturedConnectorPack
 from scion_sdk.runner.descriptors import EndpointSpec
 from scion_sdk.runner.endpoints import CredentialEndpoints
 from scion_sdk.runner.errors import SinkReceiptError

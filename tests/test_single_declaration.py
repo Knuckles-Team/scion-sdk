@@ -17,7 +17,6 @@ from scion_sdk.ingest.live_declaration import (
     META_KEY,
     RESOURCES_URI,
     build_declaration,
-    register_live_declaration,
     source_meta,
 )
 from scion_sdk.manifest.declaration import (
@@ -28,6 +27,7 @@ from scion_sdk.manifest.declaration import (
 )
 from scion_sdk.mcp._content_prompts import _register_prompt
 from scion_sdk.mcp.content import PROMPT_META_KEY
+from scion_sdk.mcp.declaration_resource import register_live_declaration
 from scion_sdk.mcp.tool_surface import registered_tools
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.runner.descriptors import ConnectorDescriptor, EndpointSpec
@@ -141,7 +141,7 @@ def test_invalid_declaration_is_refused() -> None:
     with pytest.raises(ContractError):
         contract_from_declaration(
             __import__(
-                "scion_sdk.ingest.sources", fromlist=["x"]
+                "scion_sdk.manifest.sources", fromlist=["x"]
             ).IngestSourceDeclaration.model_validate(bad)
         )
 

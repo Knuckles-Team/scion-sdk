@@ -13,16 +13,16 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from scion_sdk.ingest.sources import (
-    IngestSourceDeclaration,
-    IngestSourceSpec,
-)
 from scion_sdk.manifest.model import (
     ResourceSpec,
     SchemaMapping,
     SyncSpec,
 )
 from scion_sdk.manifest.presets import ToolPreset
+from scion_sdk.manifest.sources import (
+    IngestSourceDeclaration,
+    IngestSourceSpec,
+)
 
 __all__ = [
     "ContractError",

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from scion_sdk.ingest.sources import IngestSourceSpec
+from scion_sdk.manifest.sources import IngestSourceSpec
 
 #: The tool ``meta`` key holding a tool's source declarations.
 META_KEY = "connector_sources"

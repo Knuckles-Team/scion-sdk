@@ -13,13 +13,13 @@ from scion_sdk.credentials.provider import (
     CredentialScopeError,
 )
 from scion_sdk.credentials.references import parse_secret_reference
-from scion_sdk.ingest.sources import IngestSourceDeclaration
 from scion_sdk.manifest.release_signature import (
     ReleaseSignature,
     ReleaseSigningError,
     sign_release,
     verify_release,
 )
+from scion_sdk.manifest.sources import IngestSourceDeclaration
 
 
 class FixtureResolver:

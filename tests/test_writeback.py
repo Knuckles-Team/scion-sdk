@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from scion_sdk.ports.audit_reservation import AuditReservationPort
 from scion_sdk.ports.authorization_verifier import AuthorizationVerifier
 from scion_sdk.ports.writeback import WriteBackPort
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 from scion_sdk.ports.writeback_transport import WriteBackTransport
 from scion_sdk.testing.results import assert_conformant
 from scion_sdk.testing.writeback import (
@@ -37,7 +38,6 @@ from scion_sdk.writeback.memory import (
     FixtureUncertainty,
     InMemoryWriteBackTransport,
 )
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
 from scion_sdk.writeback.service import GovernedWriteBack
 from scion_sdk.writeback.validation import (
     require_authorized,

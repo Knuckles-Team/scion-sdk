@@ -6,12 +6,12 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
-from scion_sdk.certify.fingerprints import (
+from scion_sdk.contracts import CapturedArtifact
+from scion_sdk.manifest.fingerprints import (
     EmptyToolSchemaError,
     tool_fingerprint,
     tool_name,
 )
-from scion_sdk.contracts import CapturedArtifact
 from scion_sdk.ports.artifact_kind import ArtifactKind
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.testing.results import ConformanceResult, SessionFactory

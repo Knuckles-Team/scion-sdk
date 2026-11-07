@@ -9,7 +9,6 @@ from rdflib import Graph
 
 from scion_sdk.credentials.provider import CredentialProvider
 from scion_sdk.credentials.references import parse_secret_reference
-from scion_sdk.ingest.sources import IngestSourceDeclaration
 from scion_sdk.manifest import (
     MAX_RELEASE_LOCK_BYTES,
     create_release_key_lock,
@@ -20,6 +19,7 @@ from scion_sdk.manifest.release_signature import (
     sign_release,
     verify_release,
 )
+from scion_sdk.manifest.sources import IngestSourceDeclaration
 
 
 class Resolver:

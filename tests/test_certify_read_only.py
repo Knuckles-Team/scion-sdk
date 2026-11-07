@@ -13,10 +13,10 @@ from scion_sdk.certify.read_only_check import (
 )
 from scion_sdk.certify.verdicts import ToolStatus
 from scion_sdk.ingest.live_declaration import (
-    register_live_declaration,
     source_meta,
 )
 from scion_sdk.manifest.live_contract import validate_live_tool_contract
+from scion_sdk.mcp.declaration_resource import register_live_declaration
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.transports.mcp import McpTransport
 

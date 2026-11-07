@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from scion_sdk.artifacts.pack import CapturedConnectorPack
+from scion_sdk.ports.sink import CapturedConnectorPack
 
 
 def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
