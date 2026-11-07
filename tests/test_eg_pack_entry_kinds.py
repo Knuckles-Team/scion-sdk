@@ -27,7 +27,7 @@ from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.testing.results import SessionFactory
 
 ROOT = Path(__file__).resolve().parent.parent
-EG_FLOOR = Version("3.0.0")
+EG_FLOOR = Version("3.2.0")
 
 
 def _declared_eg_requirement() -> Requirement:
