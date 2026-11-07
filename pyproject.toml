@@ -571,6 +571,103 @@ public_modules = [
 [tool.pipelines_hooks]
 packages = ["scion_sdk"]
 
+# Unit layers of scion_sdk, most stable first (SCION-CENTRALIZED-CAPABILITIES-R044).
+# A unit is one top-level module or package of scion_sdk; "__init__" is the package
+# root. An import goes to a unit in the same or an earlier layer, units form no
+# cycle, and every unit is named in exactly one layer; there is no allowance list.
+# A shared value type lives in the most stable unit that names it. Read by the
+# coupling gate (PIPE-GATES-R088) and, until that ships, by
+# tests/architecture/test_unit_layers.py.
+[[tool.pipelines_hooks.coupling.layers]]
+name = "foundation"
+units = [
+    "config",
+    "config_git",
+    "config_mounts",
+    "connector_hooks",
+    "connector_identity",
+    "contract_fields",
+    "contracts",
+    "credentials",
+    "current_plan",
+    "entitlements",
+    "exceptions",
+    "exposure",
+    "extras",
+    "file_lock",
+    "host",
+    "identifiers",
+    "identity",
+    "library_state",
+    "paths",
+    "payments",
+    "privacy_pii",
+    "privacy_reference",
+    "privacy_rules",
+    "progress",
+    "schema_contract",
+    "schema_drift",
+    "schema_repair",
+    "signing",
+    "skills",
+    "streaming",
+    "tls",
+    "turtle_reader",
+    "upstream_wire",
+    "utc_records",
+    "utilities",
+    "version",
+    "voice_supply_chain",
+]
+
+[[tool.pipelines_hooks.coupling.layers]]
+name = "transport"
+units = [
+    "a2a",
+    "auth",
+    "embeddings",
+    "http",
+    "httpsupport",
+    "privacy",
+    "repository",
+    "resilience",
+    "source",
+    "storage",
+]
+
+[[tool.pipelines_hooks.coupling.layers]]
+name = "ports"
+units = ["decide", "ports"]
+
+[[tool.pipelines_hooks.coupling.layers]]
+name = "domain"
+units = [
+    "access_contract",
+    "adapters",
+    "compute",
+    "data_prep",
+    "discovery",
+    "earth_observations",
+    "exchange",
+    "finance",
+    "ingest",
+    "manifest",
+    "source_connectors",
+    "taxonomy",
+    "transports",
+    "vendor_extractors",
+    "writeback",
+    "writeback_sinks",
+]
+
+[[tool.pipelines_hooks.coupling.layers]]
+name = "serve"
+units = ["artifacts", "certify", "connector", "mcp", "sinks", "surface_contracts"]
+
+[[tool.pipelines_hooks.coupling.layers]]
+name = "composition"
+units = ["__init__", "cli", "runner", "testing"]
+
 [tool.pipelines_hooks.env_sprawl]
 allow_files = ["scion_sdk/config.py"]
 
