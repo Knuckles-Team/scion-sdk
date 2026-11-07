@@ -15,7 +15,7 @@ from pydantic import ValidationError
 if TYPE_CHECKING:
     from rdflib import Graph
 
-    from scion_sdk.ingest.sources import IngestSourceDeclaration
+    from scion_sdk.manifest.sources import IngestSourceDeclaration
 
 __all__ = ["release_identity_digest"]
 
@@ -32,7 +32,7 @@ def _require_string_keys(value: Any) -> None:
 
 
 def _validated_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
-    from scion_sdk.ingest.sources import IngestSourceDeclaration
+    from scion_sdk.manifest.sources import IngestSourceDeclaration
 
     try:
         return IngestSourceDeclaration.model_validate(payload).model_dump(mode="python")

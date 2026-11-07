@@ -8,7 +8,7 @@ import anyio
 import pytest
 from pydantic import ValidationError
 
-from scion_sdk.ingest.sources import IngestSourceDeclaration
+from scion_sdk.manifest.sources import IngestSourceDeclaration
 from scion_sdk.ports.access_check import (
     AccessCheckAnswer,
     AccessCheckPort,

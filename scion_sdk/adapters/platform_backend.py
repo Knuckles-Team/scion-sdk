@@ -17,8 +17,8 @@ from scion_sdk.adapters.platform_models import (
     Provenance,
     Reason,
 )
-from scion_sdk.certify.fingerprints import output_schema_digest
 from scion_sdk.identity import ActorContext
+from scion_sdk.manifest.fingerprints import output_schema_digest
 
 
 def platform_record_schema_digest(model: type[BaseModel]) -> str:

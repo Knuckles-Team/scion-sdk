@@ -17,7 +17,8 @@ from scion_sdk.certify.listing import (
     split_upstream_tools,
     upstream_reports,
 )
-from scion_sdk.ingest.live_declaration import register_live_declaration, source_meta
+from scion_sdk.ingest.live_declaration import source_meta
+from scion_sdk.mcp.declaration_resource import register_live_declaration
 from scion_sdk.mcp.upstreams import attach_upstreams
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.transports.mcp import McpTransport

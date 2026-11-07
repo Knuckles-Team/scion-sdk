@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from medulla.connector_pack import (
-    ConnectorPackArchive,
     ConnectorPackArchiveBuilder,
     ConnectorPackEntryContent,
 )
@@ -20,22 +18,20 @@ from scion_sdk.artifacts.pack_sources import (
     _source_contract_entries,
     _validate_resource_descriptors,
 )
-from scion_sdk.artifacts.resource_descriptor import (
+from scion_sdk.contracts import CapturedArtifact, ServerIdentity
+from scion_sdk.manifest.resource_descriptor import (
     RESOURCES_URI,
 )
-from scion_sdk.contracts import CapturedArtifact, ServerIdentity
-from scion_sdk.ingest.sources import IngestSourceDeclaration
+from scion_sdk.manifest.sources import IngestSourceDeclaration
 from scion_sdk.ports.artifact_kind import ArtifactKind
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.ports.session import McpSession, TransportEndpoint
+from scion_sdk.ports.sink import CapturedConnectorPack
 
 if TYPE_CHECKING:
     from scion_sdk.mcp.content import ConnectorContent
 
-__all__ = [
-    "CapturedConnectorPack",
-    "build_content_pack",
-]
+__all__ = ["build_content_pack"]
 
 _RESOURCE_KINDS = {
     # MCP Apps are an extension of the generic resource entry, not a new
@@ -52,16 +48,6 @@ _KINDS = {
     "skill": PackEntryKind.SKILL,
     "prompt": PackEntryKind.PROMPT,
 }
-
-
-@dataclass(frozen=True)
-class CapturedConnectorPack:
-    """SDK capture metadata around one generated, immutable pack archive."""
-
-    connector: str
-    server_package_version: str
-    archive: ConnectorPackArchive
-    resource_uris: frozenset[str]
 
 
 def _canonical_json_bytes(value: object) -> bytes:
@@ -110,7 +96,7 @@ def _entry_content(entry: CapturedArtifact) -> ConnectorPackEntryContent:
     elif pack_kind is PackEntryKind.RESOURCE and uri.startswith("data://"):
         from pydantic import TypeAdapter
 
-        from scion_sdk.artifacts.resource_descriptor import ResourceDescriptor
+        from scion_sdk.manifest.resource_descriptor import ResourceDescriptor
 
         output_schema = _canonical_json_bytes(
             TypeAdapter(ResourceDescriptor).json_schema()

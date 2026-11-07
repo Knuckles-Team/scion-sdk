@@ -29,8 +29,12 @@ from scion_sdk.exceptions import (
     ParameterError,
     UnauthorizedError,
 )
-from scion_sdk.http.support_mixins import _ResponseDecoding, _VerbMethods
-from scion_sdk.http.support_rate import RateLimitSnapshot, _backoff_seconds, _rate_limit
+from scion_sdk.httpsupport.api_client_mixins import _ResponseDecoding, _VerbMethods
+from scion_sdk.httpsupport.api_client_rate import (
+    RateLimitSnapshot,
+    _backoff_seconds,
+    _rate_limit,
+)
 from scion_sdk.httpsupport.auth import (
     AuthHeaderInjector,
     BasicAuth,

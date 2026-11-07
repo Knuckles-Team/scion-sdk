@@ -26,7 +26,7 @@ from typing import Any, Literal
 from fastmcp import FastMCP
 from fleet_declarations import DECLARATIONS
 
-from scion_sdk.artifacts.resource_descriptor import RESOURCES_URI
+from scion_sdk.manifest.resource_descriptor import RESOURCES_URI
 from scion_sdk.mcp.change_events import serve_change_subscriptions
 from scion_sdk.mcp.content import ConnectorContent, register_connector_content
 

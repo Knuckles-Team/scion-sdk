@@ -11,7 +11,6 @@ from scion_sdk.certify.checkout import (
     ConnectorCheckout,
     checkout_from_resources,
 )
-from scion_sdk.certify.fingerprints import tool_name
 from scion_sdk.certify.listing import (
     ToolListing,
     ToolListingError,
@@ -20,15 +19,16 @@ from scion_sdk.certify.listing import (
     upstream_reports,
 )
 from scion_sdk.certify.read_only_check import ToolFixture
+from scion_sdk.certify.successor_parity import compare_successor_tools
 from scion_sdk.certify.verdicts import ToolStatus, ToolVerdict, tool_verdicts
 from scion_sdk.manifest.declaration import ContractError
+from scion_sdk.manifest.fingerprints import tool_name
 from scion_sdk.manifest.tool_schema import (
     ToolSchemaContractError,
     canonical_input_schema,
 )
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.ports.transport import Transport
-from scion_sdk.testing.successor_parity import compare_successor_tools
 
 __all__ = ["CertificationReport", "UpstreamReport", "certify_connector"]
 

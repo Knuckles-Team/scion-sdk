@@ -23,7 +23,7 @@ from scion_sdk.ingest.source_sync import (
     KvSourceCheckpoints,
     SourceSyncRunner,
 )
-from scion_sdk.ingest.sources import IngestSourceSpec
+from scion_sdk.manifest.sources import IngestSourceSpec
 
 ITEMS = [{"id": f"item-{i}", "name": f"Item {i}", "rank": i} for i in range(1, 4)]
 SPEC = IngestSourceSpec(

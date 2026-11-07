@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from scion_sdk.ingest.live_declaration import source_meta
 from scion_sdk.ingest.model import EntityRef, IngestBinding
 from scion_sdk.ingest.request import build_request
-from scion_sdk.ingest.sources import EdgeSpec, IngestSourceSpec
+from scion_sdk.manifest.sources import EdgeSpec, IngestSourceSpec
 from tests.test_source_sync import _Checkpoints, _Ingest, _runner, _Session
 
 INCIDENTS = [

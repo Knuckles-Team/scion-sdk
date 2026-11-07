@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from scion_sdk.ingest.backoff import Backoff, _finite_number
 from scion_sdk.ingest.model import Entity
-from scion_sdk.runner.backoff import Backoff, _finite_number
 
 
 def _validate_budget(budget: Any) -> None:

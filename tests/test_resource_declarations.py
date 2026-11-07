@@ -13,12 +13,12 @@ from fastmcp import Client
 from pydantic import BaseModel
 
 from scion_sdk.artifacts.pack import build_connector_content_pack
-from scion_sdk.artifacts.resource_derivation import (
+from scion_sdk.manifest.resource_derivation import (
     OntologyTerms,
     derive_descriptors,
     scan_ontology,
 )
-from scion_sdk.artifacts.resource_descriptor import (
+from scion_sdk.manifest.resource_descriptor import (
     RESOURCES_URI,
     FieldBinding,
     ResourceDeclarationError,

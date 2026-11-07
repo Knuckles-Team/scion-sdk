@@ -6,7 +6,7 @@ record identity field and the pagination form. medulla federates the
 rows at query time from this declaration. The SDK never copies source rows.
 
 A mapping is ``declared`` when the connector wrote it and ``proposed`` when
-:mod:`scion_sdk.artifacts.resource_derivation` matched names. A
+:mod:`scion_sdk.manifest.resource_derivation` matched names. A
 proposed mapping is a candidate a steward approves; this module never marks
 one approved.
 """
@@ -17,7 +17,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from scion_sdk.artifacts.resource_descriptor_model import (
+from scion_sdk.manifest.resource_descriptor_model import (
     FieldBinding,
     ResourceDeclarationError,
     ResourceDescriptor,

@@ -11,6 +11,10 @@ or ``openbao://`` reference, never a value.
 * :mod:`~scion_sdk.auth.delegation`: RFC 8693 token exchange on behalf
   of the MCP caller.
 * :mod:`~scion_sdk.auth.tokens`: token endpoint requests.
+* :mod:`~scion_sdk.auth.source_credentials`: typed outbound credentials
+  looked up by source name.
+* :mod:`~scion_sdk.auth.provider_profile`: the reference-only provider
+  profile a launcher selects with ``AGENT_PROVIDER_PROFILE``.
 
 Replaces ``agent_utilities.mcp.client_credentials``,
 ``agent_utilities.mcp.delegated_auth`` and ``mcp_auth_config``.

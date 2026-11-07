@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from scion_sdk.ingest import source_budget as _budget
 from scion_sdk.ingest.errors import IngestError
-from scion_sdk.ingest.for_each import MAX_FAN_OUT
+from scion_sdk.manifest.for_each import MAX_FAN_OUT
 
 #: The KV namespace every source checkpoint lives in.
 CHECKPOINT_NAMESPACE = "scion-sdk"

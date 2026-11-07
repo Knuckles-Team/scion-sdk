@@ -10,8 +10,8 @@ import re
 
 from scion_sdk.artifacts.annotations import _annotations_from_mcp
 from scion_sdk.artifacts.common import json_object, mime_type, require_kind
-from scion_sdk.artifacts.resource_descriptor import RESOURCES_URI
 from scion_sdk.contracts import CapturedArtifact, ServerIdentity
+from scion_sdk.manifest.resource_descriptor import RESOURCES_URI
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.ports.session import McpSession
 

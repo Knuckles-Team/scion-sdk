@@ -45,8 +45,6 @@ __all__ = [
     "SurfaceLink",
     "ToolStep",
     "ToolUseContract",
-    "complete",
-    "complete_prompts",
     "load_surface",
     "prompt_agent_findings",
     "render_surface_turtle",
@@ -521,7 +519,7 @@ def surface_findings(
         found += _link_gaps(declaration, tools, prompts, skills)
         found += _location_gaps(declaration, tools)
     if prompt_documents is not None:
-        from scion_sdk._surface_agents import agent_gaps
+        from scion_sdk.surface_contracts._agents import agent_gaps
 
         documents = {n: d for n, d in prompt_documents.items() if n in prompts}
         found += agent_gaps(declaration, documents, tools, skills)
@@ -536,49 +534,6 @@ def prompt_agent_findings(
     name: str = "prompt",
 ) -> list[str]:
     """List what one prompt document lacks as a complete agent definition."""
-    from scion_sdk._surface_agents import prompt_gaps
+    from scion_sdk.surface_contracts._agents import prompt_gaps
 
     return prompt_gaps(name, document, declaration, served_tools, skills)
-
-
-def complete(package: str) -> str:
-    """Draft a complete ``connector_contracts.py`` for the connector ``package``.
-
-    Hand-written entries are kept; served tools, prompts, skills and sources
-    that nothing declares get a drafted entry. The output is deterministic.
-    """
-    from scion_sdk._surface_complete import draft_contracts
-
-    return draft_contracts(package)
-
-
-def complete_prompts(package: str) -> dict[str, str]:
-    """Draft the missing operator and business-role prompt files of ``package``."""
-    from scion_sdk._surface_complete import draft_prompts
-
-    return draft_prompts(package)
-
-
-def main(argv: list[str] | None = None) -> int:
-    """``complete <package> [--write]``: print or write the drafted declaration."""
-    import sys
-
-    args = sys.argv[1:] if argv is None else argv
-    if (
-        len(args) not in (2, 3)
-        or args[0] != "complete"
-        or args[2:] not in ([], ["--write"])
-    ):
-        sys.stderr.write(
-            "usage: python -m scion_sdk.surface_contracts complete <package> [--write]\n"
-        )
-        return 2
-    from scion_sdk._surface_complete import write_drafts
-
-    for path, text in write_drafts(args[1], write=bool(args[2:])):
-        sys.stdout.write(f"# {path}\n{text}\n")
-    return 0
-
-
-if __name__ == "__main__":  # pragma: no cover - module entry
-    raise SystemExit(main())

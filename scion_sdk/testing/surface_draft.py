@@ -1,11 +1,11 @@
 """Draft a complete surface declaration for an existing connector (R916.7, R916.8).
 
-:func:`draft_contracts` builds the connector server in process, lists what it
+:func:`complete` builds the connector server in process, lists what it
 serves, and merges that with the package's ``connector_contracts.py``. Every
 hand-written entry is kept by value. Each served tool without a contract step
 gets one :class:`ToolUseContract`; each served prompt and skill without a link
 gets one :class:`SurfaceLink`; each declared source without a location gets
-one :class:`DataLocation`. :func:`draft_prompts` drafts an operator prompt and
+one :class:`DataLocation`. :func:`complete_prompts` drafts an operator prompt and
 a business-role prompt when the connector has none. Output is deterministic.
 """
 
@@ -15,6 +15,7 @@ import asyncio
 import importlib.util
 import json
 import re
+import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, fields
 from pathlib import Path
@@ -387,7 +388,7 @@ def _code(value: Any, indent: int = 0) -> str:
 
 _HEADER = '''"""Surface contracts: tool use, links, data locations and business roles.
 
-Drafted by ``python -m scion_sdk.surface_contracts complete``; edit freely.
+Drafted by ``python -m scion_sdk.testing.surface_draft complete``; edit freely.
 """
 '''
 
@@ -421,7 +422,7 @@ def render_source(declaration: SurfaceDeclaration) -> str:
     return "\n".join(p for p in parts if p)
 
 
-def draft_contracts(package: str) -> str:
+def complete(package: str) -> str:
     """The complete ``connector_contracts.py`` source of ``package``."""
     return render_source(_plan(package).declaration)
 
@@ -430,7 +431,7 @@ def _prompt_text(document: Mapping[str, Any]) -> str:
     return json.dumps(document, indent=2, sort_keys=True) + "\n"
 
 
-def draft_prompts(package: str) -> dict[str, str]:
+def complete_prompts(package: str) -> dict[str, str]:
     """Missing prompt files of ``package`` as ``prompts/<name>.json`` → JSON text."""
     plan = _plan(package)
     return {
@@ -455,3 +456,24 @@ def write_drafts(package: str, *, write: bool) -> list[tuple[str, str]]:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(text, encoding="utf-8")
     return drafts
+
+
+def main(argv: list[str] | None = None) -> int:
+    """``complete <package> [--write]``: print or write the drafted declaration."""
+    args = sys.argv[1:] if argv is None else argv
+    if (
+        len(args) not in (2, 3)
+        or args[0] != "complete"
+        or args[2:] not in ([], ["--write"])
+    ):
+        sys.stderr.write(
+            "usage: python -m scion_sdk.testing.surface_draft complete <package> [--write]\n"
+        )
+        return 2
+    for path, text in write_drafts(args[1], write=bool(args[2:])):
+        sys.stdout.write(f"# {path}\n{text}\n")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - module entry
+    raise SystemExit(main())

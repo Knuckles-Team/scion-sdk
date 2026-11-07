@@ -8,8 +8,8 @@ import pytest
 from fastmcp import FastMCP
 
 from scion_sdk.artifacts.pack import build_content_pack
-from scion_sdk.artifacts.resource_descriptor import ResourceDeclarationError
 from scion_sdk.artifacts.resources import ResourceArtifactKind
+from scion_sdk.manifest.resource_descriptor import ResourceDeclarationError
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.transports.mcp import McpTransport
 

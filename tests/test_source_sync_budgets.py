@@ -8,8 +8,8 @@ from typing import Any
 import pytest
 from test_source_sync import ITEMS, _Checkpoints, _Ingest, _runner, _Session, _spec
 
+from scion_sdk.ingest.backoff import Backoff
 from scion_sdk.ingest.source_sync import SourceCheckpointState, SyncBudget
-from scion_sdk.runner.backoff import Backoff
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.53")

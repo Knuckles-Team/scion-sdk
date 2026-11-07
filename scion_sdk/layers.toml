@@ -1,0 +1,136 @@
+# Unit layers of scion_sdk, most stable first (SCION-CENTRALIZED-CAPABILITIES-R044).
+#
+# A unit is one top-level module or package of scion_sdk; "__init__" is the
+# package root. An import goes to a unit in the same or an earlier layer, and
+# units never form an import cycle. Every unit is named in exactly one layer.
+#
+# Shared value types belong to the most stable unit that names them: a type in a
+# port signature lives in `ports`, a declaration model lives in `manifest`, and
+# the unit that implements the behaviour imports it from there.
+
+[[layers]]
+name = "foundation"
+summary = "identifiers, configuration, credentials, TLS and the acting identity"
+units = [
+    "_connector_metadata",
+    "_contract_fields",
+    "_extras",
+    "_file_lock_windows",
+    "_lock_unavailable",
+    "_payment_guard",
+    "_payment_models",
+    "_platform_paths",
+    "_privacy_urls",
+    "_stream_bus",
+    "_stream_types",
+    "_stream_websocket",
+    "_turtle",
+    "_utc_records",
+    "config",
+    "config_git",
+    "config_mounts",
+    "connector_hooks",
+    "connector_identity",
+    "contracts",
+    "credentials",
+    "current_plan",
+    "entitlements",
+    "exceptions",
+    "exposure",
+    "file_lock",
+    "host",
+    "identifiers",
+    "identity",
+    "library_state",
+    "paths",
+    "payments",
+    "privacy_pii",
+    "privacy_reference",
+    "privacy_rules",
+    "progress",
+    "schema_contract",
+    "schema_drift",
+    "schema_repair",
+    "signing",
+    "skills",
+    "streaming",
+    "tls",
+    "upstream_wire",
+    "utilities",
+    "version",
+    "voice_supply_chain",
+]
+
+[[layers]]
+name = "transport"
+summary = "governed HTTP, outbound authentication and protocol clients"
+units = [
+    "_embedding_providers",
+    "a2a",
+    "auth",
+    "embeddings",
+    "http",
+    "httpsupport",
+    "privacy",
+    "repository",
+    "resilience",
+    "source",
+    "storage",
+]
+
+[[layers]]
+name = "ports"
+summary = "one typed protocol per extension boundary, with the value types it names"
+# `decide` implements the decision port and holds the value types that
+# `ports.decide_runner` names; it stays beside `ports` until the owner rules
+# where decisions live (the one cycle the layer test still reports).
+units = [
+    "decide",
+    "ports",
+]
+
+[[layers]]
+name = "domain"
+summary = "declarations, ingest, write-back, adapters and source connectors"
+units = [
+    "access_contract",
+    "adapters",
+    "compute",
+    "data_prep",
+    "discovery",
+    "earth_observations",
+    "exchange",
+    "finance",
+    "ingest",
+    "manifest",
+    "source_connectors",
+    "taxonomy",
+    "transports",
+    "vendor_extractors",
+    "writeback",
+    "writeback_sinks",
+]
+
+[[layers]]
+name = "serve"
+summary = "the MCP server, content capture, certification and the connector declaration"
+units = [
+    "_connector_decl",
+    "_connector_serve",
+    "artifacts",
+    "certify",
+    "connector",
+    "mcp",
+    "sinks",
+    "surface_contracts",
+]
+
+[[layers]]
+name = "composition"
+summary = "the connector-sync runner, conformance suites and entry points"
+units = [
+    "__init__",
+    "cli",
+    "runner",
+    "testing",
+]

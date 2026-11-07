@@ -7,10 +7,10 @@ from collections.abc import Mapping
 
 import anyio
 
+from scion_sdk.ingest.backoff import Backoff
 from scion_sdk.ports.change_source import ChangeEvent, ChangeSource
 from scion_sdk.ports.session import McpSession
 from scion_sdk.ports.source_adapter import SourceAdapter
-from scion_sdk.runner.backoff import Backoff
 from scion_sdk.runner.credentialed_endpoint import resolve_endpoint
 from scion_sdk.runner.descriptors import ConnectorDescriptor
 from scion_sdk.runner.health_reporting import (
