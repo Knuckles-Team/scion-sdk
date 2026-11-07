@@ -22,8 +22,7 @@ from scion_sdk.http.bodies import (
 )
 from scion_sdk.http.client import (
     HTTP_LOGGER_NAME,
-    create_async_http_client,
-    create_http_client,
+    build_http_client,
     default_ssl_context,
 )
 from scion_sdk.http.errors import (
@@ -148,7 +147,7 @@ def _client(
     options = HttpClientOptions(
         base_url=base_url, retry=_FAST, timeout=timeout, tls=tls, auth=auth
     )
-    return create_http_client(options)
+    return build_http_client(options)
 
 
 def test_options_fail_closed(caplog: pytest.LogCaptureFixture) -> None:
@@ -170,7 +169,7 @@ def test_options_fail_closed(caplog: pytest.LogCaptureFixture) -> None:
     options = HttpClientOptions(
         base_url="http://api.example.invalid", allow_plaintext=True
     )
-    create_http_client(options).close()
+    build_http_client(options).close()
     assert "plaintext HTTP" in caplog.text
     assert (
         HttpClientOptions(base_url="http://127.0.0.1:1").timeout
@@ -233,7 +232,7 @@ def test_unreachable_upstream() -> None:
     with ScriptedHttpServer() as server:
         base_url = server.base_url
     options = HttpClientOptions(base_url=base_url, retry=RetryPolicy(max_attempts=1))
-    with create_http_client(options) as client, pytest.raises(UpstreamUnavailableError):
+    with build_http_client(options) as client, pytest.raises(UpstreamUnavailableError):
         client.get("/items")
 
 
@@ -329,7 +328,7 @@ async def test_async_client_paths() -> None:
     )
     with ScriptedHttpServer(*script) as server:
         options = HttpClientOptions(base_url=server.base_url, retry=_FAST)
-        async with create_async_http_client(options) as client:
+        async with build_http_client(options, async_=True) as client:
             assert await arequest_json(client, "GET", "/n") == {"n": 1}
             async with client.stream("GET", "/missing") as response:
                 with pytest.raises(HttpProblemError):
@@ -358,7 +357,7 @@ def test_api_key_client_isolates_cookies_across_response_statuses() -> None:
         return _cookie_response(request, seen, replies)
 
     options = _api_key_options()
-    with create_http_client(options, transport=httpx.MockTransport(handle)) as client:
+    with build_http_client(options, transport=httpx.MockTransport(handle)) as client:
         client.cookies.set("seeded", "caller-value")
         responses = [
             client.get(path, headers={"Cookie": "explicit=caller-value"})
@@ -380,8 +379,8 @@ async def test_async_api_key_client_isolates_cookies_across_response_statuses() 
         return _cookie_response(request, seen, replies)
 
     options = _api_key_options()
-    async with create_async_http_client(
-        options, transport=httpx.MockTransport(handle)
+    async with build_http_client(
+        options, transport=httpx.MockTransport(handle), async_=True
     ) as client:
         client.cookies.set("seeded", "caller-value")
         responses = []
@@ -410,8 +409,8 @@ async def test_async_api_key_client_isolates_concurrent_callers() -> None:
         )
 
     options = _api_key_options()
-    async with create_async_http_client(
-        options, transport=httpx.MockTransport(handle)
+    async with build_http_client(
+        options, transport=httpx.MockTransport(handle), async_=True
     ) as client:
         client.cookies.set("seeded", "caller-value")
         responses = await asyncio.gather(
@@ -438,7 +437,7 @@ def test_non_api_key_client_preserves_existing_cookie_behavior() -> None:
         auth=BearerAuth("fixture-token"),
         retry=RetryPolicy(max_attempts=1),
     )
-    with create_http_client(options, transport=httpx.MockTransport(handle)) as client:
+    with build_http_client(options, transport=httpx.MockTransport(handle)) as client:
         client.get("/login")
         client.get("/protected")
 

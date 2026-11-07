@@ -16,7 +16,7 @@ from urllib.parse import unquote, urlsplit
 
 import httpx
 
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.egress_validation import validate_base_url_resolved
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.storage.base import StorageError, TooLargeError
@@ -120,7 +120,7 @@ def _download(
     )
     written = 0
     with (
-        create_http_client(options, transport=transport) as client,
+        build_http_client(options, transport=transport) as client,
         client.stream("GET", url) as response,
     ):
         if response.status_code >= 400:

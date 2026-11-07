@@ -39,7 +39,7 @@ from scion_sdk.config import csv_values, setting
 from scion_sdk.credentials.runtime_references import (
     resolve_runtime_secret_reference,
 )
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.tls.resolve import resolve_tls_profile
 
@@ -199,7 +199,7 @@ def _build(
         else (),
         allow_plaintext=settings.allow_plaintext,
     )
-    client = create_http_client(options, transport=transport)
+    client = build_http_client(options, transport=transport)
     return EmbeddingModel(settings.model, client, _EMBED_FNS[settings.provider])
 
 

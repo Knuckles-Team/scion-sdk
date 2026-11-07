@@ -11,8 +11,7 @@ import pytest
 from scion_sdk.http.bodies import read_bounded
 from scion_sdk.http.client import (
     HTTP_LOGGER_NAME,
-    create_async_http_client,
-    create_http_client,
+    build_http_client,
 )
 from scion_sdk.http.errors import HttpProblemError, ResponseTooLargeError
 from scion_sdk.http.options import HttpClientOptions
@@ -51,9 +50,7 @@ def _check(error: HttpProblemError, caplog: pytest.LogCaptureFixture) -> None:
 def test_sync_diagnostics_omit_path_query_and_cause(handler, caplog) -> None:
     caplog.set_level(logging.INFO, logger=HTTP_LOGGER_NAME)
     with (
-        create_http_client(
-            _options(), transport=httpx.MockTransport(handler)
-        ) as client,
+        build_http_client(_options(), transport=httpx.MockTransport(handler)) as client,
         pytest.raises(HttpProblemError) as caught,
     ):
         request_json(client, "GET", _URL)
@@ -64,8 +61,8 @@ def test_sync_diagnostics_omit_path_query_and_cause(handler, caplog) -> None:
 @pytest.mark.parametrize("handler", (_fail, _invalid))
 async def test_async_diagnostics_omit_path_query_and_cause(handler, caplog) -> None:
     caplog.set_level(logging.INFO, logger=HTTP_LOGGER_NAME)
-    async with create_async_http_client(
-        _options(), transport=httpx.MockTransport(handler)
+    async with build_http_client(
+        _options(), transport=httpx.MockTransport(handler), async_=True
     ) as client:
         with pytest.raises(HttpProblemError) as caught:
             await arequest_json(client, "GET", _URL)

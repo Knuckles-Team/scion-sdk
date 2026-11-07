@@ -26,8 +26,7 @@ from scion_sdk.mcp.auth.policy import (
     secure_auth_url,
 )
 from scion_sdk.mcp.auth.proxies import (
-    configure_oauth_proxy,
-    configure_oidc_proxy,
+    configure_proxy,
     configure_remote_oauth,
 )
 from scion_sdk.mcp.auth.static import (
@@ -281,7 +280,7 @@ def test_proxy_providers(monkeypatch: pytest.MonkeyPatch) -> None:
         "--token-audience",
         "demo",
     )
-    assert isinstance(configure_oauth_proxy(AuthInputs(args=oauth)), OAuthProxy)
+    assert isinstance(configure_proxy(AuthInputs(args=oauth), "oauth"), OAuthProxy)
     remote = _args(
         "--remote-auth-servers",
         ISSUER,
@@ -298,7 +297,7 @@ def test_proxy_providers(monkeypatch: pytest.MonkeyPatch) -> None:
         configure_remote_oauth(AuthInputs(args=remote)), RemoteAuthProvider
     )
     with pytest.raises(AuthConfigurationError, match="oidc_config_url"):
-        configure_oidc_proxy(AuthInputs(args=_args()))
+        configure_proxy(AuthInputs(args=_args()), "oidc")
     with pytest.raises(AuthConfigurationError):
         configure_auth(argparse.Namespace(auth_type="kerberos"))
     assert configure_auth(_args()) is None

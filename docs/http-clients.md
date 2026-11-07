@@ -10,7 +10,7 @@ only what is specific to its vendor: paths, payloads and models.
 ```python
 from scion_sdk.auth.static import bearer_auth
 from scion_sdk.config import setting
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.pagination import ToolPage
 from scion_sdk.http.responses import arequest_json
@@ -20,13 +20,12 @@ from scion_sdk.tls.resolve import resolve_tls_profile
 
 def build_client():
     """Composition root: references resolve here, once."""
-    return create_async_http_client(
+    return build_http_client(
         HttpClientOptions(
             base_url=setting("DEMO_URL"),                       # https://api.example.com/v1
             auth=bearer_auth(setting("DEMO_TOKEN_REF")),        # openbao://apps/demo#TOKEN
             tls=resolve_tls_profile("demo"),                    # DEMO_TLS_PROFILE, DEMO_CA_BUNDLE_REF, ...
-        )
-    )
+        ), async_=True)
 
 
 def register(mcp, client):

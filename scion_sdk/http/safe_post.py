@@ -1,6 +1,6 @@
 """An SSRF-checked JSON POST helper for connectors that submit data.
 
-:func:`create_http_client` governs the client-wide transport (timeouts, TLS,
+:func:`build_http_client` governs the client-wide transport (timeouts, TLS,
 retries); :func:`safe_post_json` adds a per-call destination check for a
 connector that must POST to a self-hosted or private-network endpoint
 (SCION-CONNECTOR-CONTROL-R033), mirroring the private-host allowance a GET-style
@@ -47,7 +47,7 @@ def safe_post_json(
     """POST ``json`` to ``url`` through ``client``, parsed JSON on success.
 
     Args:
-        client: an already-governed client (see :func:`create_http_client`).
+        client: an already-governed client (see :func:`build_http_client`).
         url: the absolute request URL.
         json: the JSON-serializable request body.
         allowed_private_hosts: hostnames explicitly approved to receive a

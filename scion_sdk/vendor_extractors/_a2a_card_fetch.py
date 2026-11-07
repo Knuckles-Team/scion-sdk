@@ -11,7 +11,7 @@ from typing import Any
 import anyio
 
 from scion_sdk.http.bodies import aread_bounded
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.vendor_extractors._a2a_card_types import (
     AGENT_CARD_PATH,
@@ -81,7 +81,7 @@ async def _fetch_card(
 ) -> DiscoveredAgentCard | AgentCardRefused:
     with anyio.fail_after(max(0.0, deadline - time.monotonic())):
         async with (
-            create_async_http_client(options) as client,
+            build_http_client(options, async_=True) as client,
             client.stream("GET", AGENT_CARD_PATH, headers=headers) as response,
         ):
             outcome = _status_outcome(response.status_code, cached)

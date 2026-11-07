@@ -7,14 +7,20 @@ import socket
 import httpx
 import pytest
 
-from scion_sdk.http.client import create_async_http_client, create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.egress import PinnedEgressViolation
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R028.2")
-@pytest.mark.parametrize("factory", (create_http_client, create_async_http_client))
+@pytest.mark.parametrize(
+    "factory",
+    (
+        build_http_client,
+        lambda options, **kw: build_http_client(options, async_=True, **kw),
+    ),
+)
 @pytest.mark.parametrize("host", ("10.1.2.3", "127.0.0.1", "100.64.0.1"))
 def test_pinned_private_literal_refuses_before_transport_creation(
     factory, host, monkeypatch
@@ -36,7 +42,7 @@ def test_allowed_private_literal_uses_real_pinned_transport() -> None:
             pin_egress=True,
             allowed_private_hosts=("127.0.0.1",),
         )
-        with create_http_client(options) as client:
+        with build_http_client(options) as client:
             response = client.get("/")
     assert response.content == b"ok"
     assert len(server.requests) == 1
@@ -56,11 +62,11 @@ async def test_hostname_resolution_is_request_scoped_for_both_clients(monkeypatc
         base_url="https://example.com", pin_egress=True, verify_pinned_peer=False
     )
     transport = httpx.MockTransport(lambda request: httpx.Response(200))
-    with create_http_client(options, transport=transport) as client:
+    with build_http_client(options, transport=transport) as client:
         assert not calls
         assert client.get("/").status_code == 200
     calls.clear()
-    async with create_async_http_client(options, transport=transport) as client:
+    async with build_http_client(options, transport=transport, async_=True) as client:
         assert not calls
         assert (await client.get("/")).status_code == 200
     assert len(calls) == 1

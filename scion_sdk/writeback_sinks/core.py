@@ -25,7 +25,7 @@ sink with no per-sink change), and the ServiceNow/Egeria sinks additionally embe
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, NamedTuple, Protocol, runtime_checkable
 
@@ -201,12 +201,33 @@ def resolve_writeback_client(
         return None
 
 
+def run_sink(
+    sink: Any, invocation: WritebackInvocation, passes: Sequence[tuple[str, str]]
+) -> WritebackResult:
+    """Run each ``(ops key, sink method)`` pass over its operations in order.
+
+    Every method takes ``(ctx, client, result, item, resolve, *, dry_run)``; the
+    resolver is the one registered for the sink's domain.
+    """
+    ctx, ops, client, result, dry_run = invocation.unpack()
+    resolve = ctx.resolver(sink.domain)
+    for key, method in passes:
+        for item in ops.get(key) or []:
+            getattr(sink, method)(ctx, client, result, item, resolve, dry_run=dry_run)
+    return result
+
+
 class WritebackClientMixin:
-    """Shared injected/authenticated client resolution for write-back sinks."""
+    """Shared injected/authenticated client resolution for write-back sinks.
+
+    A sink either lists its ``passes`` (ops key and method per pass, in order)
+    and inherits :meth:`_run`, or overrides :meth:`_run` itself.
+    """
 
     domain: str
     client_module: str
     client_label: str | None = None
+    passes: tuple[tuple[str, str], ...] = ()
 
     def run(
         self, ctx: WritebackContext, ops: dict[str, Any], *, dry_run: bool
@@ -220,8 +241,10 @@ class WritebackClientMixin:
         return self._run(WritebackInvocation(ctx, ops, client, result, dry_run))
 
     def _run(self, invocation: WritebackInvocation) -> WritebackResult:
-        """Apply target-specific operations; concrete sinks override this hook."""
-        raise NotImplementedError  # ABSTRACT-OK
+        """Apply target-specific operations through ``passes`` unless overridden."""
+        if not self.passes:
+            raise NotImplementedError  # ABSTRACT-OK
+        return run_sink(self, invocation, self.passes)
 
     def _client(self, ops: dict[str, Any]) -> Any | None:
         return resolve_writeback_client(

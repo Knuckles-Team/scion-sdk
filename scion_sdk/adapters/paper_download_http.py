@@ -18,7 +18,7 @@ from scion_sdk.adapters.paper_document_errors import (
 from scion_sdk.adapters.paper_provider import ProviderFailure
 from scion_sdk.adapters.paper_quota import QuotaSlot
 from scion_sdk.http.bodies import aiter_bounded
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.errors import ResponseTooLargeError
 from scion_sdk.http.retry import parse_retry_after
 
@@ -33,7 +33,7 @@ async def _stream(
     request: DocumentRequest, admission: DocumentAdmission, fd: int, *, slot: QuotaSlot
 ) -> tuple[int, str]:
     async with (
-        create_async_http_client(admission.http) as client,
+        build_http_client(admission.http, async_=True) as client,
         client.stream(
             "GET", request.offer.url, headers={"Accept-Encoding": "identity"}
         ) as response,

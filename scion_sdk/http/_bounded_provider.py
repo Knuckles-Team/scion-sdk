@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager
 from typing import Any
 
-from scion_sdk.http.client import create_async_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 
 
@@ -36,7 +36,7 @@ async def _bounded(chunks: AsyncIterator[bytes], limit: int) -> bytes:
 
 async def _fetch(http: HttpClientOptions, path: str, max_bytes: int) -> bytes:
     async with (
-        create_async_http_client(http) as client,
+        build_http_client(http, async_=True) as client,
         client.stream("GET", path) as response,
     ):
         response.raise_for_status()

@@ -27,7 +27,7 @@ from scion_sdk.auth.oidc import (
 )
 from scion_sdk.auth.tokens import TokenRequestError
 from scion_sdk.credentials.resolver import EnvironmentCredentialResolver
-from scion_sdk.http.client import create_http_client
+from scion_sdk.http.client import build_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.runner.descriptors import ConnectorDescriptor, EndpointSpec
@@ -207,7 +207,7 @@ def test_discovery_failures(issuer: ScriptedHttpServer) -> None:
         _json({"token_endpoint": "http://idp.example.invalid/token"}),
         ScriptedResponse(status=500),
     )
-    with create_http_client(HttpClientOptions(base_url=issuer.base_url)) as client:
+    with build_http_client(HttpClientOptions(base_url=issuer.base_url)) as client:
         with pytest.raises(TokenRequestError, match="no usable"):
             discover_token_endpoint(issuer.base_url, client)
         with pytest.raises(TokenRequestError, match="discovery failed"):
