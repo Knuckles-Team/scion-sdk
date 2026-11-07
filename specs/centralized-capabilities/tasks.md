@@ -74,3 +74,5 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
 - [ ] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
 - [ ] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
+- [ ] T71 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
+- [ ] T72 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
