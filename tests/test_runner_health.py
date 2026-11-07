@@ -6,7 +6,7 @@ import json
 import time
 import urllib.error
 import urllib.request
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -138,14 +138,6 @@ class _NeverConnects:
 async def _until(predicate: Callable[[], bool], timeout: float = 5.0) -> None:
     with anyio.fail_after(timeout):
         while not predicate():
-            await anyio.sleep(0.01)
-
-
-async def _until_ready(
-    get_report: Callable[[], Awaitable[HealthReport]], timeout: float = 5.0
-) -> None:
-    with anyio.fail_after(timeout):
-        while (await get_report()).status != 200:
             await anyio.sleep(0.01)
 
 
@@ -299,17 +291,17 @@ async def test_readiness_reports_credential_failure_by_name_without_secret(
     assert "freshrss-agent" in rendered
     assert "CONNECTOR_SYNC_TEST_TOKEN" not in rendered
     detail = report.body["connectors"]["freshrss-agent"]
-    assert detail["credentials_ok"] is False
+    assert detail["lifecycle_state"] == "CredentialsPending"
     assert "could not be resolved" in detail["credential_error"]
 
 
-async def test_readiness_true_once_registry_and_credentials_are_proven(
+async def test_readiness_needs_a_proven_cycle_not_only_resolved_credentials(
     tmp_path: Path,
 ) -> None:
     # freshrss_descriptor's default endpoint carries no credential reference,
-    # so it resolves trivially even though the session itself later fails
-    # against the unreachable URL -- this proves readiness tracks registry
-    # load and credential resolution independently of cycle success.
+    # so credentials resolve trivially while the session itself fails against
+    # the unreachable URL: the connector never proves a cycle, so it is never
+    # ready (SCION-CONNECTOR-CONTROL-R917.4).
     health = _health()
     built = services(
         InMemorySink(),
@@ -319,8 +311,19 @@ async def test_readiness_true_once_registry_and_credentials_are_proven(
     runner = ConnectorSyncRunner(ListRegistry(freshrss_descriptor()), built)
     async with anyio.create_task_group() as tasks:
         tasks.start_soon(runner.run_forever)
-        await _until_ready(health.readiness)
+        await _until(
+            lambda: (
+                getattr(
+                    health._connectors.get("freshrss-agent"), "consecutive_failures", 0
+                )
+                > 0
+            )
+        )
         tasks.cancel_scope.cancel()
+    report = await health.readiness()
+    assert report.status == 503
+    state = report.body["connectors"]["freshrss-agent"]["lifecycle_state"]
+    assert state in {"Degraded", "Backoff"}
 
 
 # ── The data shapes ──────────────────────────────────────────────────────
@@ -332,16 +335,15 @@ def test_connector_health_snapshot_has_no_secret_field() -> None:
         last_success_monotonic=10.0,
         consecutive_failures=2,
         next_retry_seconds=5.0,
-        credentials_ok=False,
         credential_error="connector 'freshrss-agent' has a credential reference "
         "that could not be resolved",
     )
     snapshot = entry.snapshot(now=15.0)
     assert snapshot == {
+        "lifecycle_state": "Unconfigured",
         "last_success_seconds_ago": 5.0,
         "consecutive_failures": 2,
         "next_retry_seconds": 5.0,
-        "credentials_ok": False,
         "credential_error": entry.credential_error,
     }
 
@@ -369,11 +371,15 @@ async def test_note_functions_update_a_real_health_object() -> None:
     note_registry_loaded(health, ("freshrss-agent",))
     note_credentials(health, "freshrss-agent", ok=False, error="boom")
     detail = (await health.readiness()).body["connectors"]["freshrss-agent"]
-    assert (detail["credentials_ok"], detail["credential_error"]) == (False, "boom")
+    assert (detail["lifecycle_state"], detail["credential_error"]) == (
+        "CredentialsPending",
+        "boom",
+    )
 
+    note_credentials(health, "freshrss-agent", ok=True)
     note_cycle_success(health, "freshrss-agent")
     detail = (await health.readiness()).body["connectors"]["freshrss-agent"]
-    assert detail["consecutive_failures"] == 0
+    assert (detail["lifecycle_state"], detail["consecutive_failures"]) == ("Ready", 0)
 
     note_cycle_failure(health, "freshrss-agent", next_retry_seconds=2.5)
     detail = (await health.readiness()).body["connectors"]["freshrss-agent"]
@@ -394,10 +400,11 @@ async def test_resolve_endpoint_records_success(tmp_path: Path) -> None:
         transport=McpTransport(),
         health=health,
     )
+    health.sync_registry(("freshrss-agent",))
     endpoint = await resolve_endpoint(built, freshrss_descriptor())
     assert endpoint.url == "https://connector.example.invalid/mcp"
     detail = (await health.readiness()).body["connectors"]["freshrss-agent"]
-    assert detail["credentials_ok"] is True
+    assert detail["lifecycle_state"] == "Warming"
 
 
 async def _endpoint_failure_detail(
@@ -410,10 +417,11 @@ async def _endpoint_failure_detail(
         transport=McpTransport(),
         health=health,
     )
+    health.sync_registry(("freshrss-agent",))
     with pytest.raises(CredentialResolutionError):
         await resolve_endpoint(built, freshrss_descriptor(endpoint=endpoint_spec))
     detail = (await health.readiness()).body["connectors"]["freshrss-agent"]
-    assert detail["credentials_ok"] is False
+    assert detail["lifecycle_state"] == "CredentialsPending"
     return detail
 
 

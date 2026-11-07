@@ -63,6 +63,10 @@ class ConnectorSyncRunner:
         """Run one full cycle per connector; map each connector to its success."""
         limiter = anyio.CapacityLimiter(self._services.settings.max_concurrency)
         results: dict[str, bool] = {}
+        descriptors = await self._registry.connectors()
+        note_registry_loaded(
+            self._services.health, tuple(d.connector for d in descriptors)
+        )
 
         async def run(descriptor: ConnectorDescriptor) -> None:
             results[descriptor.connector] = await self._worker(
@@ -70,7 +74,7 @@ class ConnectorSyncRunner:
             ).run_once()
 
         async with anyio.create_task_group() as tasks:
-            for descriptor in await self._registry.connectors():
+            for descriptor in descriptors:
                 tasks.start_soon(run, descriptor)
         return results
 
