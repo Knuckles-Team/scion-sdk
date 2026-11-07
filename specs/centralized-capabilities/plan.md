@@ -229,6 +229,102 @@ No new rows. The open rows serve P2, where one SDK ingest connector proves the l
 
 Fleet migration: most connectors use the central SDK pattern and the rest migrate one by one. A connector counts as migrated when it passes the SDK conformance gate (`PIPE-GATES-R013`). One connector waits on an SDK capability gap. The gap is recorded here and closed before that connector moves. A connector must not roll to a new release until every consumer runs an SDK version that accepts its source declarations.
 
+### Release 0.10.0 and the removed-path map (R046)
+
+Pre-untangled design for these rows, one line per answer.
+
+- Owner. This repository, the package root and the release workflow. Each consumer owns only its own import edits.
+- Cohesion. The table, the absence test and the changelog change together, so they sit in one row family. The wheel build stays apart.
+- Dependency direction. Consumers import public modules of a unit. No new import points upward; the table removes the private reaches.
+- Interface depth. The public surface of each unit is its package `__init__` plus the modules named in the table's "New path" column.
+- Special cases. None. Every removed name takes the same treatment: absent, with no alias.
+- State. A release has no lifecycle here. The tag is the event, and CI on that commit gates publication.
+- Environment. None. The post-publish check is a published gate command with no host data.
+
+Sequence. `.1` first (it fixes the table), then `.2`, then tag `v0.10.0`, then `.3`. Consumers adopt in the order: erpnext-agent (it needs the write-back model path), the connectors in one train of small PRs, then arbora.
+
+**The removed-path map.** The first table lists every import path that changes. The last six lines are functions and a command. The second table is the consumer census taken on each repository's default branch: the old names it imports now. A census line that is not in the first table is a bug in the table.
+
+| Old path | New path |
+|---|---|
+| `scion_sdk.credentials.provider_profile` | `scion_sdk.auth.provider_profile` |
+| `scion_sdk.credentials.source` | `scion_sdk.auth.source_credentials` |
+| `scion_sdk.testing.successor_parity` | `scion_sdk.certify.successor_parity` |
+| `scion_sdk._connector_decl` | `scion_sdk.connector._decl` |
+| `scion_sdk._connector_serve` | `scion_sdk.connector._serve` |
+| `scion_sdk._connector_metadata` | `scion_sdk.connector_identity._metadata` |
+| `scion_sdk._contract_fields` | `scion_sdk.contract_fields` |
+| `scion_sdk.data_prep._classification` | `scion_sdk.data_prep.classification` |
+| `scion_sdk.ports.decide_runner` | `scion_sdk.decide.runner` |
+| `scion_sdk._embedding_providers` | `scion_sdk.embeddings._providers` |
+| `scion_sdk._extras` | `scion_sdk.extras` |
+| `scion_sdk._lock_unavailable` | `scion_sdk.file_lock._unavailable` |
+| `scion_sdk._file_lock_windows` | `scion_sdk.file_lock._windows` |
+| `scion_sdk.http._bounded_provider` | `scion_sdk.http.bounded_provider` |
+| `scion_sdk.http.support` | `scion_sdk.httpsupport.api_client` |
+| `scion_sdk.http.support_mixins` | `scion_sdk.httpsupport.api_client_mixins` |
+| `scion_sdk.http.support_rate` | `scion_sdk.httpsupport.api_client_rate` |
+| `scion_sdk.runner.backoff` | `scion_sdk.ingest.backoff` |
+| `scion_sdk.ingest._stream_checkpoint` | `scion_sdk.ingest.stream_checkpoint` |
+| `scion_sdk.certify.fingerprints` | `scion_sdk.manifest.fingerprints` |
+| `scion_sdk.ingest.for_each` | `scion_sdk.manifest.for_each` |
+| `scion_sdk.artifacts.resource_derivation` | `scion_sdk.manifest.resource_derivation` |
+| `scion_sdk.artifacts.resource_descriptor` | `scion_sdk.manifest.resource_descriptor` |
+| `scion_sdk.artifacts.resource_descriptor_model` | `scion_sdk.manifest.resource_descriptor_model` |
+| `scion_sdk.ingest.sources` | `scion_sdk.manifest.sources` |
+| `scion_sdk._platform_paths` | `scion_sdk.paths._platform` |
+| `scion_sdk._payment_guard` | `scion_sdk.payments._guard` |
+| `scion_sdk._payment_models` | `scion_sdk.payments._models` |
+| `scion_sdk.writeback.models` | `scion_sdk.ports.writeback_models` |
+| `scion_sdk._privacy_urls` | `scion_sdk.privacy._urls` |
+| `scion_sdk.ports.connector_registry` | `scion_sdk.runner.connector_registry` |
+| `scion_sdk._stream_bus` | `scion_sdk.streaming._bus` |
+| `scion_sdk._stream_types` | `scion_sdk.streaming._types` |
+| `scion_sdk._stream_websocket` | `scion_sdk.streaming._websocket` |
+| `scion_sdk._surface_agents` | `scion_sdk.surface_contracts._agents` |
+| `scion_sdk._surface_complete` | `scion_sdk.testing.surface_draft` |
+| `scion_sdk._turtle` | `scion_sdk.turtle_reader` |
+| `scion_sdk._utc_records` | `scion_sdk.utc_records` |
+| `scion_sdk._version` | `scion_sdk.version` |
+| `create_http_client` | `build_http_client(options)` |
+| `create_async_http_client` | `build_http_client(options, async_=True)` |
+| `configure_oauth_proxy` | `configure_proxy(inputs, flow)` |
+| `configure_oidc_proxy` | `configure_proxy(inputs, flow)` |
+| `connector_tool / triage_event (decide)` | `bounded_choice(question_id, ...)` |
+| `scion_sdk._surface_complete CLI` | `python -m scion_sdk.testing.surface_draft complete <package>` |
+
+| Repository | Old names it imports | Files |
+|---|---|---|
+| `adguard-home-agent` | `scion_sdk.http.support` | 3 |
+| `ansible-tower-mcp` | `create_http_client` | 4 |
+| `archivebox-api` | `create_http_client` | 7 |
+| `aris-mcp` | `create_http_client` | 1 |
+| `arr-mcp` | `create_http_client` | 1 |
+| `audiobookshelf-mcp` | `scion_sdk.credentials.provider_profile` | 1 |
+| `bellwether-mcp` | `create_async_http_client` | 1 |
+| `caddy-mcp` | `create_http_client`, `scion_sdk._connector_serve` | 4 |
+| `container-manager-mcp` | `create_http_client` | 1 |
+| `craft-suite-api` | `create_async_http_client`, `create_http_client` | 1 |
+| `egeria-mcp` | `create_http_client` | 1 |
+| `erpnext-agent` | `create_async_http_client`, `scion_sdk._connector_serve`, `scion_sdk.writeback.models` | 5 |
+| `firefly-iii-mcp` | `create_http_client`, `scion_sdk.http.client.create_http_client` | 3 |
+| `freshrss-agent` | `create_http_client` | 2 |
+| `immich-api` | `create_http_client` | 5 |
+| `keycloak-agent` | `create_http_client` | 1 |
+| `mattermost-mcp` | `create_http_client` | 2 |
+| `microsoft-agent` | `create_async_http_client`, `create_http_client` | 6 |
+| `objectstore-mcp` | `scion_sdk._connector_serve` | 1 |
+| `openbao-mcp` | `create_http_client` | 2 |
+| `paperless-ngx-mcp` | `create_http_client` | 2 |
+| `portainer-agent` | `scion_sdk.http.support` | 1 |
+| `scholarx` | `create_async_http_client` | 2 |
+| `technitium-dns-mcp` | `scion_sdk._connector_serve` | 1 |
+| `tunnel-manager` | `scion_sdk._connector_serve` | 1 |
+| `vaultwarden-mcp` | `create_http_client` | 2 |
+| `webarchiver` | `create_async_http_client`, `scion_sdk._turtle` | 2 |
+| `world-reference-mcp` | `create_async_http_client` | 1 |
+| `arbora` | `create_async_http_client`, `create_http_client` | 13 |
+
 ## Phase 2: Task approach
 
 Order the work producer first. R042.1 lands before the backends, and R042.6 before R043.1. R043.2 to R043.6 land before the served proof R043.7 and `SCION-CONNECTOR-CONTROL-R914.13`. Rows that extend the A2A server (R017.1, R017.2) and the certify submission (R041) wait for their provider rows in the Arbora and Medulla specs. Index rows need no task order. Each task line in tasks.md names one row.
