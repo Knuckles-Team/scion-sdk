@@ -1,0 +1,155 @@
+# Connector lifecycle vocabulary (SCION-CONNECTOR-CONTROL-R917.5, R918.3).
+#
+# The connector lifecycle machine and the circuit breaker machine. Every class
+# extends a core state-machine class (kg:StateMachine, kg:State, kg:Transition,
+# kg:Event, kg:Guard, kg:TransitionRefused). The file never imports the core
+# ontology. A test reads scion_sdk/connector_lifecycle.py and checks that this
+# file names the same states and edges.
+
+@prefix cl:   <https://knuckles-team.github.io/scion-sdk/lifecycle#> .
+@prefix cb:   <https://knuckles-team.github.io/scion-sdk/breaker#> .
+@prefix kg:   <http://knuckles.team/kg#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<https://knuckles-team.github.io/scion-sdk/lifecycle> a owl:Ontology ;
+    rdfs:label "Connector lifecycle" ;
+    rdfs:comment "The connector readiness machine and the circuit breaker machine." .
+
+cl:ConnectorLifecycle a owl:Class ; rdfs:subClassOf kg:StateMachine ;
+    rdfs:comment "One explicit state machine per connector: Unconfigured to Stopped." .
+
+cl:Unconfigured a owl:Class ; rdfs:subClassOf kg:State .
+cl:CredentialsPending a owl:Class ; rdfs:subClassOf kg:State .
+cl:Warming a owl:Class ; rdfs:subClassOf kg:State .
+cl:Ready a owl:Class ; rdfs:subClassOf kg:State .
+cl:Degraded a owl:Class ; rdfs:subClassOf kg:State .
+cl:Backoff a owl:Class ; rdfs:subClassOf kg:State .
+cl:Stopped a owl:Class ; rdfs:subClassOf kg:State .
+cl:Stopped rdfs:subClassOf kg:TerminalState .
+
+cl:RegistryLoadedEvent a owl:Class ; rdfs:subClassOf kg:Event .
+cl:CredsOkEvent a owl:Class ; rdfs:subClassOf kg:Event .
+cl:CredsBadEvent a owl:Class ; rdfs:subClassOf kg:Event .
+cl:CycleOkEvent a owl:Class ; rdfs:subClassOf kg:Event .
+cl:CycleFailEvent a owl:Class ; rdfs:subClassOf kg:Event .
+cl:RemovedEvent a owl:Class ; rdfs:subClassOf kg:Event .
+
+cl:FailuresAtThreshold a owl:Class ; rdfs:subClassOf kg:Guard ;
+    rdfs:comment "The consecutive failure count has reached SCION_HEALTH_DEGRADED_FAILURES." .
+cl:FirstProvenCycle a owl:Class ; rdfs:subClassOf kg:Guard ;
+    rdfs:comment "The first cycle after credentials resolved completed without error." .
+
+cl:LifecycleTransitionRefused a owl:Class ; rdfs:subClassOf kg:TransitionRefused ;
+    rdfs:comment "Code LIFECYCLE_TRANSITION_REFUSED: the pair is not an edge of the table." .
+
+cl:Edge_unconfigured-registry_loaded a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Unconfigured ;
+    kg:toState cl:CredentialsPending ;
+    kg:firedBy cl:RegistryLoadedEvent .
+cl:Edge_pending-creds_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:CredentialsPending ;
+    kg:toState cl:Warming ;
+    kg:firedBy cl:CredsOkEvent .
+cl:Edge_pending-creds_bad a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:CredentialsPending ;
+    kg:toState cl:CredentialsPending ;
+    kg:firedBy cl:CredsBadEvent .
+cl:Edge_warming-cycle_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Warming ;
+    kg:toState cl:Ready ;
+    kg:firedBy cl:CycleOkEvent ;
+    kg:guardedBy cl:FirstProvenCycle .
+cl:Edge_warming-cycle_fail a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Warming ;
+    kg:toState cl:Degraded ;
+    kg:firedBy cl:CycleFailEvent .
+cl:Edge_warming-creds_bad a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Warming ;
+    kg:toState cl:CredentialsPending ;
+    kg:firedBy cl:CredsBadEvent .
+cl:Edge_ready-cycle_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Ready ;
+    kg:toState cl:Ready ;
+    kg:firedBy cl:CycleOkEvent .
+cl:Edge_ready-cycle_fail a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Ready ;
+    kg:toState cl:Degraded ;
+    kg:firedBy cl:CycleFailEvent .
+cl:Edge_degraded-cycle_fail_below_threshold a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Degraded ;
+    kg:toState cl:Degraded ;
+    kg:firedBy cl:CycleFailEvent ;
+    kg:guardedBy cl:FailuresAtThreshold ;
+    rdfs:comment "Guard must not hold." .
+cl:Edge_degraded-cycle_fail_at_threshold a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Degraded ;
+    kg:toState cl:Backoff ;
+    kg:firedBy cl:CycleFailEvent ;
+    kg:guardedBy cl:FailuresAtThreshold .
+cl:Edge_backoff-cycle_fail a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Backoff ;
+    kg:toState cl:Backoff ;
+    kg:firedBy cl:CycleFailEvent .
+cl:Edge_ready-creds_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Ready ;
+    kg:toState cl:Ready ;
+    kg:firedBy cl:CredsOkEvent .
+cl:Edge_ready-creds_bad a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Ready ;
+    kg:toState cl:CredentialsPending ;
+    kg:firedBy cl:CredsBadEvent .
+cl:Edge_degraded-cycle_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Degraded ;
+    kg:toState cl:Ready ;
+    kg:firedBy cl:CycleOkEvent .
+cl:Edge_degraded-creds_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Degraded ;
+    kg:toState cl:Degraded ;
+    kg:firedBy cl:CredsOkEvent .
+cl:Edge_degraded-creds_bad a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Degraded ;
+    kg:toState cl:CredentialsPending ;
+    kg:firedBy cl:CredsBadEvent .
+cl:Edge_backoff-cycle_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Backoff ;
+    kg:toState cl:Ready ;
+    kg:firedBy cl:CycleOkEvent .
+cl:Edge_backoff-creds_ok a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Backoff ;
+    kg:toState cl:Backoff ;
+    kg:firedBy cl:CredsOkEvent .
+cl:Edge_backoff-creds_bad a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Backoff ;
+    kg:toState cl:CredentialsPending ;
+    kg:firedBy cl:CredsBadEvent .
+cl:Edge_unconfigured-removed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Unconfigured ;
+    kg:toState cl:Stopped ;
+    kg:firedBy cl:RemovedEvent .
+cl:Edge_pending-removed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:CredentialsPending ;
+    kg:toState cl:Stopped ;
+    kg:firedBy cl:RemovedEvent .
+cl:Edge_warming-removed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Warming ;
+    kg:toState cl:Stopped ;
+    kg:firedBy cl:RemovedEvent .
+cl:Edge_ready-removed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Ready ;
+    kg:toState cl:Stopped ;
+    kg:firedBy cl:RemovedEvent .
+cl:Edge_degraded-removed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Degraded ;
+    kg:toState cl:Stopped ;
+    kg:firedBy cl:RemovedEvent .
+cl:Edge_backoff-removed a owl:Class ; rdfs:subClassOf kg:Transition ;
+    kg:fromState cl:Backoff ;
+    kg:toState cl:Stopped ;
+    kg:firedBy cl:RemovedEvent .
+
+cb:CircuitBreaker a owl:Class ; rdfs:subClassOf kg:StateMachine ;
+    rdfs:comment "One explicit state machine per guarded upstream call path." .
+cb:Closed a owl:Class ; rdfs:subClassOf kg:State .
+cb:Open a owl:Class ; rdfs:subClassOf kg:State .
+cb:HalfOpen a owl:Class ; rdfs:subClassOf kg:State .

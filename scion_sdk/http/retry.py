@@ -11,11 +11,15 @@ from __future__ import annotations
 import math
 import secrets
 import ssl
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+from typing import TYPE_CHECKING
 
 import httpx
+
+if TYPE_CHECKING:
+    from scion_sdk.resilience import CircuitBreaker
 
 from scion_sdk.http.retry_values import _require_retry_shape, _snapshot_set
 
@@ -83,6 +87,9 @@ class RetryPolicy:
         jitter: Randomize each computed delay between half and all of it.
         retry_statuses: Statuses retried for idempotent methods.
         retry_methods: Methods retried; must be idempotent.
+        breaker: An optional :class:`~scion_sdk.resilience.CircuitBreaker`
+            consulted before every attempt. An open breaker refuses with
+            ``CircuitOpen`` before any network call and spends no attempt.
     """
 
     max_attempts: int = 3
@@ -93,6 +100,7 @@ class RetryPolicy:
     jitter: bool = True
     retry_statuses: frozenset[int] = RETRYABLE_STATUSES
     retry_methods: frozenset[str] = IDEMPOTENT_METHODS
+    breaker: CircuitBreaker | None = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
         _require_retry_shape(self.max_attempts, self.jitter)

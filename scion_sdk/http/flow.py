@@ -82,14 +82,25 @@ def _log_attempt(
     )
 
 
+def _settle(policy: RetryPolicy, outcome: Outcome) -> None:
+    """Tell the policy's breaker whether the attempt reached a healthy upstream."""
+    if policy.breaker is None:
+        return
+    failed = outcome.status_code >= 500 if isinstance(outcome, httpx.Response) else True
+    policy.breaker.settle(ok=not failed)
+
+
 def attempt_flow(
     policy: RetryPolicy, request: httpx.Request, logger: logging.Logger
 ) -> AttemptFlow:
     """Drive one request through ``policy``, logging every attempt."""
     attempt = 1
     while True:
+        if policy.breaker is not None:
+            policy.breaker.before_call()
         started = time.monotonic()
         outcome = yield None
+        _settle(policy, outcome)
         if isinstance(outcome, httpx.Response):
             delay = policy.delay_after_response(request, outcome, attempt)
         else:

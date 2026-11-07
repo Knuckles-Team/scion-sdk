@@ -1,17 +1,229 @@
-"""Explicitly retry-safe callable execution."""
+"""Explicitly retry-safe callable execution and the circuit breaker.
+
+:class:`CircuitBreaker` is one explicit state machine
+(SCION-CONNECTOR-CONTROL-R918): ``Closed``, ``Open`` and ``HalfOpen``, one
+``transition`` that owns every edge, and ``state`` as the one stored field.
+"""
 
 from __future__ import annotations
 
 import math
+import os
+import threading
 import time
-from collections.abc import Awaitable, Callable
-from typing import cast
+from collections.abc import Awaitable, Callable, Mapping
+from enum import StrEnum
+from typing import TYPE_CHECKING, ClassVar, cast
 
 import anyio
 
+from scion_sdk._transition_refused import MachineTransitionRefused
 from scion_sdk.http.retry import RetryPolicy, is_tls_verification_failure
 
-__all__ = ["run_with_resilience", "run_with_resilience_sync"]
+if TYPE_CHECKING:
+    from scion_sdk.runner.health_state import RunnerHealth
+
+__all__ = [
+    "BREAKER_COOLDOWN_ENV",
+    "BREAKER_FAILURES_ENV",
+    "BreakerState",
+    "BreakerTransitionRefused",
+    "CircuitBreaker",
+    "CircuitOpen",
+    "run_with_resilience",
+    "run_with_resilience_sync",
+]
+
+#: Consecutive failures at which a ``Closed`` breaker opens (starting value 5, range 1..100).
+BREAKER_FAILURES_ENV = "SCION_BREAKER_FAILURES"
+#: Seconds an ``Open`` breaker waits before a probe (starting value 30, range 1..3600).
+BREAKER_COOLDOWN_ENV = "SCION_BREAKER_COOLDOWN_S"
+_DEFAULT_FAILURES = 5
+_DEFAULT_COOLDOWN_S = 30.0
+
+
+class BreakerState(StrEnum):
+    """The closed states of a circuit breaker; none is terminal."""
+
+    CLOSED = "Closed"
+    OPEN = "Open"
+    HALF_OPEN = "HalfOpen"
+
+
+class BreakerEvent(StrEnum):
+    """The closed events of a circuit breaker."""
+
+    CALL_OK = "call_ok"
+    CALL_FAIL = "call_fail"
+    COOLDOWN_ELAPSED = "cooldown_elapsed"
+
+
+class CircuitOpen(Exception):
+    """The breaker is ``Open``: the call is refused before any network call."""
+
+    code: ClassVar[str] = "CIRCUIT_OPEN"
+
+    def __init__(self, retry_in_seconds: float = 0.0) -> None:
+        self.retry_in_seconds = max(0.0, retry_in_seconds)
+        super().__init__(f"{self.code}: retry in {self.retry_in_seconds:.1f}s")
+
+
+class BreakerTransitionRefused(MachineTransitionRefused):
+    """An event the breaker does not declare in its state (R918.2)."""
+
+    code: ClassVar[str] = "BREAKER_TRANSITION_REFUSED"
+    machine_name: ClassVar[str] = "CircuitBreaker"
+
+
+_B = BreakerState
+_BE = BreakerEvent
+#: The legal pairs of R918.1; ``call_fail`` in ``Closed`` is guarded by the threshold.
+_LEGAL: frozenset[tuple[BreakerState, BreakerEvent]] = frozenset(
+    {
+        (_B.CLOSED, _BE.CALL_OK),
+        (_B.CLOSED, _BE.CALL_FAIL),
+        (_B.OPEN, _BE.COOLDOWN_ELAPSED),
+        (_B.HALF_OPEN, _BE.CALL_OK),
+        (_B.HALF_OPEN, _BE.CALL_FAIL),
+    }
+)
+
+
+def _bounded_env(
+    environ: Mapping[str, str], name: str, default: float, low: float, high: float
+) -> float:
+    raw = environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be a number") from None
+    if not low <= value <= high:
+        raise ValueError(f"{name} must be within {low:g}..{high:g}")
+    return value
+
+
+class CircuitBreaker:
+    """Opens after repeated failures and probes once after a cooldown.
+
+    ``state`` is the one stored field and lives in memory. When ``health`` and
+    ``connector`` are given, entering ``Open`` sends ``cycle_fail`` and
+    returning to ``Closed`` sends ``cycle_ok`` to the connector lifecycle of
+    SCION-CONNECTOR-CONTROL-R917; the lifecycle keeps no copy of the state.
+
+    Args:
+        failure_threshold: Consecutive failures that open it; defaults to
+            ``SCION_BREAKER_FAILURES`` (5, range 1..100).
+        cooldown_seconds: Wait before the probe; defaults to
+            ``SCION_BREAKER_COOLDOWN_S`` (30, range 1..3600).
+        clock: Monotonic time source.
+        health: The runner health that mirrors the breaker into the lifecycle.
+        connector: The connector name reported to ``health``.
+    """
+
+    def __init__(
+        self,
+        *,
+        failure_threshold: int | None = None,
+        cooldown_seconds: float | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        health: RunnerHealth | None = None,
+        connector: str = "",
+        environ: Mapping[str, str] | None = None,
+    ) -> None:
+        env = os.environ if environ is None else environ
+        if failure_threshold is None:
+            failure_threshold = int(
+                _bounded_env(env, BREAKER_FAILURES_ENV, _DEFAULT_FAILURES, 1, 100)
+            )
+        if cooldown_seconds is None:
+            cooldown_seconds = _bounded_env(
+                env, BREAKER_COOLDOWN_ENV, _DEFAULT_COOLDOWN_S, 1, 3600
+            )
+        if not 1 <= failure_threshold <= 100 or not 1 <= cooldown_seconds <= 3600:
+            raise ValueError("breaker needs 1..100 failures and 1..3600 s cooldown")
+        self.state: BreakerState = BreakerState.CLOSED
+        self._threshold = failure_threshold
+        self._cooldown = cooldown_seconds
+        self._clock = clock
+        self._health = health
+        self._connector = connector
+        self._failures = 0
+        self._opened_at = 0.0
+        self._probe_out = False
+        self._lock = threading.RLock()
+
+    def transition(self, event: BreakerEvent) -> BreakerState:
+        """The one function that owns every breaker edge.
+
+        Raises:
+            BreakerTransitionRefused: the pair is outside the table.
+        """
+        with self._lock:
+            if (self.state, event) not in _LEGAL:
+                raise BreakerTransitionRefused(self.state.value, event.value)
+            previous = self.state
+            self.state = self._next(event)
+            self._on_enter(previous)
+            return self.state
+
+    def _next(self, event: BreakerEvent) -> BreakerState:
+        if event is _BE.COOLDOWN_ELAPSED:
+            return _B.HALF_OPEN
+        if event is _BE.CALL_OK:
+            self._failures = 0
+            return _B.CLOSED
+        self._failures += 1
+        if self.state is _B.HALF_OPEN or self._failures >= self._threshold:
+            return _B.OPEN
+        return _B.CLOSED
+
+    def _on_enter(self, previous: BreakerState) -> None:
+        self._probe_out = self.state is _B.HALF_OPEN
+        if self.state is _B.OPEN:
+            self._opened_at = self._clock()
+            self._report(failed=True)
+        elif self.state is _B.CLOSED and previous is not _B.CLOSED:
+            self._report(failed=False)
+
+    def _report(self, *, failed: bool) -> None:
+        if self._health is None:
+            return
+        if failed:
+            self._health.record_cycle_failure(self._connector, next_retry_seconds=None)
+        else:
+            self._health.record_cycle_success(self._connector)
+
+    def before_call(self) -> None:
+        """Admit a call or refuse it before any network call.
+
+        ``Open`` refuses with :class:`CircuitOpen` until the cooldown ends;
+        then ``HalfOpen`` admits exactly one probe.
+
+        Raises:
+            CircuitOpen: the breaker is open, or its one probe is in flight.
+        """
+        with self._lock:
+            if self.state is _B.OPEN:
+                waited = self._clock() - self._opened_at
+                if waited < self._cooldown:
+                    raise CircuitOpen(self._cooldown - waited)
+                self.transition(_BE.COOLDOWN_ELAPSED)
+            elif self.state is _B.HALF_OPEN and self._probe_out:
+                raise CircuitOpen(0.0)
+            self._probe_out = self.state is _B.HALF_OPEN
+
+    def settle(self, *, ok: bool) -> None:
+        """Report the outcome of an admitted call.
+
+        A late outcome that arrives while ``Open`` is ignored: the breaker
+        already opened and a probe decides the next edge.
+        """
+        with self._lock:
+            if self.state is _B.OPEN:
+                return
+            self.transition(_BE.CALL_OK if ok else _BE.CALL_FAIL)
 
 
 def _validate(
