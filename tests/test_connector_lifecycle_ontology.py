@@ -5,8 +5,8 @@ from __future__ import annotations
 from importlib import resources
 
 import pytest
-
 from scion_sdk._turtle import RDF_TYPE, parse_graph
+
 from scion_sdk.connector_lifecycle import EDGES, LifecycleEvent, LifecycleState
 
 pytestmark = [
