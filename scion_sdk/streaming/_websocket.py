@@ -17,7 +17,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 from scion_sdk._transition_refused import MachineTransitionRefused
-from scion_sdk.runner.backoff import Backoff
+from scion_sdk.ingest.backoff import Backoff
 from scion_sdk.streaming._bus import StreamBus
 from scion_sdk.streaming._types import StreamMessage
 
