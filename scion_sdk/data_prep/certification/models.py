@@ -14,7 +14,7 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, Field, model_validator
 
 from scion_sdk.data_prep._base import ProtocolModel
-from scion_sdk.data_prep._classification import DataClassification
+from scion_sdk.data_prep.classification import DataClassification
 
 type CertificationBackend = Literal["great_expectations", "pandera"]
 type CertificationState = Literal[

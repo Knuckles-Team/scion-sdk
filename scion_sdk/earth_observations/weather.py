@@ -18,7 +18,7 @@ from scion_sdk.earth_observations._weather_daily import (
 )
 from scion_sdk.earth_observations._weather_hourly import _noaa_rows, _time
 from scion_sdk.earth_observations.records import WeatherObservation
-from scion_sdk.http._bounded_provider import _bounded, _BoundedProvider
+from scion_sdk.http.bounded_provider import BoundedProvider, bounded_bytes
 from scion_sdk.http.client import create_async_http_client
 from scion_sdk.http.options import HttpClientOptions
 
@@ -43,7 +43,7 @@ class WeatherRequest:
     station: str | None = None
 
 
-class WeatherProvider(_BoundedProvider[WeatherProviderName]):
+class WeatherProvider(BoundedProvider[WeatherProviderName]):
     """Read hourly temperatures using explicit host and source policy."""
 
     def __init__(
@@ -81,7 +81,7 @@ class WeatherProvider(_BoundedProvider[WeatherProviderName]):
             client.stream("GET", path, params=params) as response,
         ):
             response.raise_for_status()
-            payload = await _bounded(response.aiter_bytes(), self.max_bytes)
+            payload = await bounded_bytes(response.aiter_bytes(), self.max_bytes)
         rows = _read_rows(
             self.provider,
             json.loads(payload),

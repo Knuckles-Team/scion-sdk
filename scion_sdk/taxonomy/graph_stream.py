@@ -9,8 +9,8 @@ from collections.abc import Awaitable, Callable, Mapping, Sequence
 from typing import Any
 
 from scion_sdk._extras import require_mcp_extra
-from scion_sdk.ingest._stream_checkpoint import _authorize_generation
 from scion_sdk.ingest.live_declaration import source_meta
+from scion_sdk.ingest.stream_checkpoint import authorize_generation
 from scion_sdk.taxonomy._graph_policy import (
     _validate_crosswalk,
     _validate_policy,
@@ -171,7 +171,7 @@ def register_taxonomy_graph_stream(
     async def _serve(
         ctx: Context, mode: str, state: dict[str, Any] | None
     ) -> dict[str, Any]:
-        await _authorize_generation(
+        await authorize_generation(
             authorize,
             tenant=tenant,
             context=ctx,

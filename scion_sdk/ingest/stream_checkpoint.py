@@ -3,8 +3,10 @@
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+__all__ = ["authorize_generation"]
 
-async def _authorize_generation(
+
+async def authorize_generation(
     authorize: Callable[[str, Any], Awaitable[bool]],
     *,
     tenant: str,
@@ -13,6 +15,7 @@ async def _authorize_generation(
     state: dict[str, Any] | None,
     binding: str,
 ) -> None:
+    """Refuse a non-delta or unauthorized read, or a checkpoint not bound to ``binding``."""
     if mode != "delta" or not await authorize(tenant, context):
         raise ValueError("access refused")
     if state is not None and (

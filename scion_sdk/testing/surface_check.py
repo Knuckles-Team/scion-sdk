@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from scion_sdk.connector import build_server
-from scion_sdk.mcp._content_prompts import PROMPT_META_KEY
+from scion_sdk.mcp.content import PROMPT_META_KEY
 from scion_sdk.surface_contracts import load_surface, surface_findings
 
 __all__ = ["ServedSurface", "main", "served_surface", "surface_check"]
