@@ -140,8 +140,8 @@ These future tests have not run. The producer, gate, and writer attachments are 
 - **Incompatible hot path:** Fail one package check through the same entry point. Assert refusal before the first pin write and unchanged manifests and lockfiles.
 - **Missing and stale evidence:** Remove a receipt or change the source, pin preimage, inventory, or artifact. Assert typed refusal and no pin changes.
 - **Invalid receipt sets:** Test failed, incomplete, cancelled, duplicate, extra, and cross-package receipts. Assert preflight refusal before any write and byte-identical pins.
-- **CC-105 / R007.4:** `tests/test_major_version_compatibility_served.py::test_fleet_preflight_refusal_preserves_all_pins` proves preflight refusal preserves every pin byte-for-byte.
-- **CC-106 / R007.6:** `tests/test_major_version_compatibility_served.py::test_writer_b_preimage_race_reports_partial_rollout` races B after A writes. It proves B does not write and requires reconciliation. It identifies A as applied and B as refused.
+- **CC-105 / R007.4:** `tests/test_major_version_compatibility_served.py::test_fleet_preflight_refusal_preserves_all_pins` proves preflight refusal preserves every pin byte-for-byte. (planned: the test file does not exist yet.)
+- **CC-106 / R007.6:** `tests/test_major_version_compatibility_served.py::test_writer_b_preimage_race_reports_partial_rollout` races B after A writes. It proves B does not write and requires reconciliation. It identifies A as applied and B as refused. (planned: the test file does not exist yet.)
 - **Existing acceptance:** Retain R007 fingerprint and live-contract comparison and R009-R013 package migration and import-scan tests.
 <!-- /spec-definition-patch -->
 
@@ -202,6 +202,10 @@ These are required future tests. None ran during definition authoring.
 - `SCION-CONNECTOR-CONTROL-R025.5`: `tests/test_actor_binding_served.py::test_current_actor_resolves_system_outside_any_request`, `::test_a_bare_no_auth_server_serves_without_use_actor` and `::test_a_bare_authenticated_server_uses_the_token_identity_and_denies`.
 - `SCION-CONNECTOR-CONTROL-R025.6`: `tests/test_actor_binding_served.py::test_the_rate_limiter_runs_after_the_binding_and_keys_on_the_bound_actor`, `::test_the_trusted_local_principal_is_not_throttled_on_stdio`, `::test_the_trusted_local_principal_is_not_throttled_on_http_none` and `::test_an_untrusted_actor_keeps_its_rate_limit`.
 - `SCION-CONNECTOR-CONTROL-R025.7`: `tests/test_tool_response_redaction.py::test_a_tool_error_keeps_the_local_path_that_caused_it` and `::test_a_tool_response_redacts_secrets`.
+- `SCION-CONNECTOR-CONTROL-R025.7.1`: `tests/test_tool_response_redaction.py::test_a_served_tool_returning_a_raw_remote_dict_is_redacted` (planned; L3 over stdio: a served tool returns an upstream dict holding `runners_token`; the client receives `[REDACTED_SECRET]`).
+- `SCION-CONNECTOR-CONTROL-R025.7.2`: `tests/test_tool_response_redaction.py::test_suffix_secret_names_are_redacted` and `::test_descriptive_flag_and_cursor_names_are_kept` (planned; the vectors of contract `secret-redaction.md`).
+- `SCION-CONNECTOR-CONTROL-R025.7.3`: `tests/test_tool_response_redaction.py::test_a_minted_secret_is_returned_once_and_marked` and `::test_a_redacted_field_never_serializes_its_value` (planned).
+- `SCION-CONNECTOR-CONTROL-R025.7.4`: `tests/test_tool_response_redaction.py::test_trace_and_log_records_of_a_tool_call_hold_no_secret_value` (planned).
 - `SCION-CONNECTOR-CONTROL-R025.8`: `tests/test_middleware_typed_refusal.py::test_a_tool_refusal_keeps_its_message`, `::test_a_coded_refusal_keeps_its_code_and_reason`, `::test_a_permission_subclass_is_a_denial_not_an_internal_error` and `::test_an_unexpected_exception_is_still_an_internal_error`.
 
 All five tests serve a real `create_mcp_server` server. A fastmcp client calls it in memory or over streamable HTTP. No test fakes the identity layer.
@@ -397,7 +401,7 @@ Hot-path proof for `SCION-CONNECTOR-CONTROL-R069`: `tests/test_transport_contrac
 
 ## SCION-CONNECTOR-CONTROL-R072
 
-`tests/test_certify_connector_rename.py` gives the fixture fingerprints an older connector name. `--check` refuses the checkout. `--write` rewrites the name from the manifest, and `--check` then passes.
+`tests/test_certify_connector_rename.py` gives the fixture fingerprints an older connector name. `--check` refuses the checkout. `--write` rewrites the name from the manifest, and `--check` then passes. (planned: the file was removed with the declaration rework and is to be re-added.)
 
 ## Never-drop splitter, successor parity and actor forwarding (R020.3, R020.4, R902)
 
@@ -444,13 +448,13 @@ R045.3 uses a captured tool's canonical body and checks byte boundaries and
 non-ASCII text against the named divisor.
 
 - **R039 external evidence:** The container-manager test
-  `tests/test_access_contracts.py::test_served_deployment_access_contract_matches_fixture`
+  `tests/test_access_contracts.py::test_served_deployment_access_contract_matches_fixture` (planned: the test file does not exist yet.)
   uses a synthetic Kubernetes provider and a real MCP tool call. Its owner
   repository merged commit `db08ad5123a1b12ef715d237d2d3aa6e49aac330` after
   green checks. This is not a local test binding or engine mapping proof.
 
 - **R038 external evidence:** The uptime-kuma-agent test
-  `tests/test_service_health.py::test_served_health_contract` calls the served
+  `tests/test_service_health.py::test_served_health_contract` calls the served (planned: the test file does not exist yet.)
   MCP tool with a synthetic provider and checks its response and access
   contract. Owner merge `1915fce3ef886c82ce17edbf9cb0d92bdfe50dfb` passed
   its PR checks. This is not SDK-local evidence or engine mapping proof.
