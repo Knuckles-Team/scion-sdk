@@ -12,31 +12,19 @@
 name = "foundation"
 summary = "identifiers, configuration, credentials, TLS and the acting identity"
 units = [
-    "_connector_metadata",
-    "_contract_fields",
-    "_extras",
-    "_file_lock_windows",
-    "_lock_unavailable",
-    "_payment_guard",
-    "_payment_models",
-    "_platform_paths",
-    "_privacy_urls",
-    "_stream_bus",
-    "_stream_types",
-    "_stream_websocket",
-    "_turtle",
-    "_utc_records",
     "config",
     "config_git",
     "config_mounts",
     "connector_hooks",
     "connector_identity",
+    "contract_fields",
     "contracts",
     "credentials",
     "current_plan",
     "entitlements",
     "exceptions",
     "exposure",
+    "extras",
     "file_lock",
     "host",
     "identifiers",
@@ -55,7 +43,9 @@ units = [
     "skills",
     "streaming",
     "tls",
+    "turtle_reader",
     "upstream_wire",
+    "utc_records",
     "utilities",
     "version",
     "voice_supply_chain",
@@ -65,7 +55,6 @@ units = [
 name = "transport"
 summary = "governed HTTP, outbound authentication and protocol clients"
 units = [
-    "_embedding_providers",
     "a2a",
     "auth",
     "embeddings",
@@ -115,8 +104,6 @@ units = [
 name = "serve"
 summary = "the MCP server, content capture, certification and the connector declaration"
 units = [
-    "_connector_decl",
-    "_connector_serve",
     "artifacts",
     "certify",
     "connector",

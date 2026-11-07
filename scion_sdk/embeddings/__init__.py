@@ -33,12 +33,12 @@ from dataclasses import dataclass
 
 import httpx
 
-from scion_sdk._embedding_providers import _EMBED_FNS, EmbedFn
 from scion_sdk.auth.static import BearerAuth
 from scion_sdk.config import csv_values, setting
 from scion_sdk.credentials.runtime_references import (
     resolve_runtime_secret_reference,
 )
+from scion_sdk.embeddings._providers import _EMBED_FNS, EmbedFn
 from scion_sdk.http.client import create_http_client
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.tls.resolve import resolve_tls_profile

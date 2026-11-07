@@ -7,9 +7,13 @@ WebSocket source. The ``stream`` extra supplies the WebSocket client.
 
 from __future__ import annotations
 
-from scion_sdk._stream_bus import StreamBus
-from scion_sdk._stream_types import CallbackSubscriber, StreamMessage, StreamSubscriber
-from scion_sdk._stream_websocket import WebSocketStreamAdapter
+from scion_sdk.streaming._bus import StreamBus
+from scion_sdk.streaming._types import (
+    CallbackSubscriber,
+    StreamMessage,
+    StreamSubscriber,
+)
+from scion_sdk.streaming._websocket import WebSocketStreamAdapter
 
 __all__ = [
     "CallbackSubscriber",

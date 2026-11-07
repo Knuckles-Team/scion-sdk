@@ -7,7 +7,7 @@ import ctypes
 import sys
 from ctypes import wintypes
 
-from scion_sdk._lock_unavailable import LockUnavailable
+from scion_sdk.file_lock._unavailable import LockUnavailable
 
 if sys.platform == "win32":
     import msvcrt

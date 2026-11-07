@@ -20,8 +20,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from scion_sdk._privacy_urls import _public_hostname, _split_http_url
 from scion_sdk.httpsupport.redaction import redact_text
+from scion_sdk.privacy._urls import _public_hostname, _split_http_url
 from scion_sdk.privacy_reference import persistence_reference
 from scion_sdk.privacy_rules import (
     _SECRET_FIELDS,

@@ -84,11 +84,11 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 
 ### Stream state machine
 
-`scion_sdk/_stream_websocket.py::WebSocketStreamAdapter` holds one `state: StreamState` field with the states of SCION-REPOSITORY-TRANSPORT-R008 and one `transition` function. `Closed` is terminal and every pair outside the table of R008.1 raises `StreamTransitionRefused`.
+`scion_sdk/streaming/_websocket.py::WebSocketStreamAdapter` holds one `state: StreamState` field with the states of SCION-REPOSITORY-TRANSPORT-R008 and one `transition` function. `Closed` is terminal and every pair outside the table of R008.1 raises `StreamTransitionRefused`.
 
 Entry points to attach points:
 
-- Connector stream consumer → `scion_sdk/streaming.py` → `WebSocketStreamAdapter.connect` → `transition` with `connect`, then `opened` or `error`.
+- Connector stream consumer → `scion_sdk/streaming/__init__.py` → `WebSocketStreamAdapter.connect` → `transition` with `connect`, then `opened` or `error`.
 - `WebSocketStreamAdapter.listen` → requires `Open`; an error ends in `transition` with `error`.
 - `WebSocketStreamAdapter.disconnect` → `transition` with `close`, then `closed`.
 - `Failed` → backoff delay of `scion_sdk/ingest/backoff.py` → `transition` with `retry`; `Failed` and `Open` report `cycle_fail` and `cycle_ok` to `RunnerHealth` (R008.3).

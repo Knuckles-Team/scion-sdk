@@ -41,10 +41,10 @@ def windows(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_modules_import_without_fcntl(module: str) -> None:
     code = (
         "import sys, asyncio, ctypes, pathlib, logging, http.server, hashlib\n"
-        "import types; stub = types.ModuleType('scion_sdk._file_lock_windows')\n"
+        "import types; stub = types.ModuleType('scion_sdk.file_lock._windows')\n"
         "stub.lock_exclusive = stub.lock_shared = lambda fd, blocking=True: True\n"
         "stub.lock_exclusive_nb = stub.lock_shared_nb = stub.unlock = lambda fd: None\n"
-        "sys.modules['scion_sdk._file_lock_windows'] = stub\n"
+        "sys.modules['scion_sdk.file_lock._windows'] = stub\n"
         "sys.modules['fcntl'] = None; sys.platform = 'win32'\n"
         f"import {module}"
     )

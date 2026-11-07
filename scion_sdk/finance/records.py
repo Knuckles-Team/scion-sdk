@@ -16,7 +16,7 @@ from typing import Self
 
 from pydantic import Field, model_validator
 
-from scion_sdk._utc_records import _UtcTimestampedRecord
+from scion_sdk.utc_records import _UtcTimestampedRecord
 
 __all__ = [
     "FINANCE_SCHEMA_VERSION",

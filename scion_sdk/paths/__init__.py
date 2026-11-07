@@ -13,12 +13,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from scion_sdk._platform_paths import (
+from scion_sdk.config import setting
+from scion_sdk.paths._platform import (
     platform_config_dir,
     platform_config_file,
     preferred_platform_config_dir,
 )
-from scion_sdk.config import setting
 
 __all__ = [
     "cache_dir",

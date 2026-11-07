@@ -1010,7 +1010,7 @@ Console scripts and connector imports reach the owners below; each row's Caller 
 
 - `scion_sdk/__init__.py` (line 18): cited by 44 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/artifacts/pack.py` (line 58): cited by 29 rows; its importers are named in each row's Caller chain.
-- `scion_sdk/_connector_serve.py` (line 23): cited by 26 rows; its importers are named in each row's Caller chain.
+- `scion_sdk/connector/_serve.py` (line 23): cited by 26 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/testing/fleet_migration.py` (line 40): cited by 26 rows; its importers are named in each row's Caller chain.
 - `scion_sdk/artifacts/tool_facts.py` (line 40): cited by 26 rows; its importers are named in each row's Caller chain.
 

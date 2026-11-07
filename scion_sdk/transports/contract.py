@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
-from scion_sdk._contract_fields import (
+from scion_sdk.contract_fields import (
     ACCESS_KINDS,
     AUTH_MODELS,
     PAGINATION_MODES,
