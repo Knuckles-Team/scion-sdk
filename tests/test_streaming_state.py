@@ -6,10 +6,9 @@ from importlib import resources
 from typing import Any
 
 import pytest
-
 from scion_sdk._stream_websocket import StreamEdge
-from scion_sdk._turtle import parse_graph
 from scion_sdk.runner.backoff import Backoff
+
 from scion_sdk.runner.health_state import RunnerHealth
 from scion_sdk.streaming import (
     STREAM_EDGES,
@@ -21,6 +20,7 @@ from scion_sdk.streaming import (
     stream_transition,
 )
 from scion_sdk.testing.sinks import InMemorySink
+from scion_sdk.turtle_reader import parse_graph
 
 pytestmark = [
     pytest.mark.spec("SCION-REPOSITORY-TRANSPORT-R008"),

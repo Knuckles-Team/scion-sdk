@@ -5,12 +5,12 @@ from __future__ import annotations
 import pytest
 from state_machine_fixtures import SUBMIT_AND_CANCEL
 
-from scion_sdk._turtle import parse_graph
 from scion_sdk.state_machine import (
     MACHINE_NS,
     StateMachineDescriptor,
     render_state_machine_turtle,
 )
+from scion_sdk.turtle_reader import parse_graph
 
 pytestmark = [pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R007.4")]
 

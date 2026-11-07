@@ -5,9 +5,9 @@ from __future__ import annotations
 from importlib import resources
 
 import pytest
-from scion_sdk._turtle import RDF_TYPE, parse_graph
 
 from scion_sdk.connector_lifecycle import EDGES, LifecycleEvent, LifecycleState
+from scion_sdk.turtle_reader import RDF_TYPE, parse_graph
 
 pytestmark = [
     pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917.5"),
