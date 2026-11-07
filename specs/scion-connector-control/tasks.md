@@ -325,3 +325,4 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [ ] T318 [US1] SCION-CONNECTOR-CONTROL-R918.1 Model: states, events and the transition table.
 - [ ] T319 [US1] SCION-CONNECTOR-CONTROL-R918.2 Refusal: an open breaker refuses the call and an illegal edge is typed.
 - [ ] T320 [US1] SCION-CONNECTOR-CONTROL-R918.3 Wiring: the breaker state drives the connector lifecycle.
+- [ ] T321 [US1] SCION-CONNECTOR-CONTROL-R006.1 Ranked call: ask medulla for an order with a received fallback. Size: S, 1 PR, 3 hours.
