@@ -11,7 +11,7 @@ from medulla.generated.write_back import (
 )
 
 from scion_sdk.ports.audit_reservation import AuditReservation
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 
 __all__ = [
     "AuditBoundWriteBackTransport",

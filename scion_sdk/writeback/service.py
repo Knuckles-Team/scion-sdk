@@ -21,6 +21,7 @@ from scion_sdk.ports.audit_reservation import (
     AuditReservationPort,
 )
 from scion_sdk.ports.authorization_verifier import AuthorizationVerifier
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 from scion_sdk.ports.writeback_transport import (
     AuditBoundWriteBackTransport,
     ReservableWriteBackTransport,
@@ -38,7 +39,6 @@ from scion_sdk.writeback.errors import (
     ReconciliationRequiredError,
     WalletProofRefusedError,
 )
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
 from scion_sdk.writeback.validation import (
     require_authorized,
     require_base,

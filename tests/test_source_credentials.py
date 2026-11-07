@@ -9,9 +9,8 @@ from typing import Any
 
 import pytest
 
-from scion_sdk.credentials import source as source_module
-from scion_sdk.credentials.references import SecretReference
-from scion_sdk.credentials.source import (
+from scion_sdk.auth import source_credentials as source_module
+from scion_sdk.auth.source_credentials import (
     CREDENTIAL_TYPES,
     ApiKeyCredential,
     AuthMaterial,
@@ -23,6 +22,7 @@ from scion_sdk.credentials.source import (
     SourceCredentials,
     build_credential,
 )
+from scion_sdk.credentials.references import SecretReference
 
 SECRETS = {
     "API": "k-1",

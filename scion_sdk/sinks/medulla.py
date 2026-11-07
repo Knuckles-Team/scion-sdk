@@ -27,11 +27,10 @@ from medulla.generated.source_ingestion import (
     SourceIngestStatus,
 )
 
-from scion_sdk._version import __version__
-from scion_sdk.artifacts.pack import CapturedConnectorPack
 from scion_sdk.ingest.channel import SourceIngestChannel
-from scion_sdk.ports.sink import SinkReadiness
+from scion_sdk.ports.sink import CapturedConnectorPack, SinkReadiness
 from scion_sdk.sinks._pack_contract import _require_supported_mapping_contract
+from scion_sdk.version import __version__
 
 __all__ = [
     "MedullaSink",

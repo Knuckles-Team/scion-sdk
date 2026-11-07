@@ -27,7 +27,7 @@ from scion_sdk.manifest.release_identity import release_identity_digest
 if TYPE_CHECKING:
     from rdflib import Graph
 
-    from scion_sdk.ingest.sources import IngestSourceDeclaration
+    from scion_sdk.manifest.sources import IngestSourceDeclaration
 
 __all__ = ["ReleaseSignature", "ReleaseSigningError", "sign_release", "verify_release"]
 

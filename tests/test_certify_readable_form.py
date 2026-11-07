@@ -6,9 +6,9 @@ from fastmcp import FastMCP
 from scion_sdk.certify.certification import certify_connector
 from scion_sdk.certify.verdicts import ToolStatus
 from scion_sdk.ingest.live_declaration import (
-    register_live_declaration,
     source_meta,
 )
+from scion_sdk.mcp.declaration_resource import register_live_declaration
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.transports.mcp import McpTransport
 

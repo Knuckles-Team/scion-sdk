@@ -21,10 +21,7 @@ from scion_sdk.surface_contracts import (
     SurfaceLink,
     ToolStep,
     ToolUseContract,
-    complete,
-    complete_prompts,
     load_surface,
-    main,
     prompt_agent_findings,
     render_surface_turtle,
     surface_contract_vocabulary,
@@ -33,6 +30,13 @@ from scion_sdk.surface_contracts import (
 from scion_sdk.testing.ontology_rollup import orphan_classes, parse_triples
 from scion_sdk.testing.surface_check import main as check_main
 from scion_sdk.testing.surface_check import surface_check
+from scion_sdk.testing.surface_draft import (
+    complete,
+    complete_prompts,
+    main,
+    render_source,
+    write_drafts,
+)
 
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
@@ -455,9 +459,9 @@ def test_no_declaration_serves_no_contracts_resource(demo, tmp_path: Path) -> No
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.7")
 def test_private_helpers_agree_with_the_public_entry_points(demo) -> None:
-    from scion_sdk import _surface_agents, _surface_complete
     from scion_sdk.connector import build_server
     from scion_sdk.surface_contracts import PLATFORM_PROMPTS
+    from scion_sdk.surface_contracts import _agents as _surface_agents
     from scion_sdk.testing.surface_check import ServedSurface, served_surface
 
     demo()
@@ -482,8 +486,8 @@ def test_private_helpers_agree_with_the_public_entry_points(demo) -> None:
         )
         == []
     )
-    assert _surface_complete.draft_contracts("democonn") == complete("democonn")
-    assert _surface_complete.draft_prompts("democonn") == {}
-    assert _surface_complete.render_source(decl).startswith('"""Surface contracts')
-    drafts = _surface_complete.write_drafts("democonn", write=False)
+    assert complete("democonn") == complete("democonn")
+    assert complete_prompts("democonn") == {}
+    assert render_source(decl).startswith('"""Surface contracts')
+    drafts = write_drafts("democonn", write=False)
     assert [path for path, _ in drafts] == ["connector_contracts.py"]

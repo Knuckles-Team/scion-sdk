@@ -108,10 +108,12 @@ class SessionLoginAuth(httpx.Auth):
             request.headers.pop("Cookie", None)
             self._cookies.set_cookie_header(request)
 
-    def _guard_request(self, request: httpx.Request) -> None:
+    def guard_request(self, request: httpx.Request) -> None:
+        """Mark ``request`` as sent by a governed client."""
         request.extensions["scion_session_guard"] = self._guard_token
 
-    def _check_origin(self, request: httpx.Request) -> None:
+    def check_origin(self, request: httpx.Request) -> None:
+        """Refuse ``request`` when its origin differs from the session's."""
         origin = (request.url.scheme, request.url.host, request.url.port)
         with self._lock:
             if self._origin is None:
@@ -125,7 +127,7 @@ class SessionLoginAuth(httpx.Auth):
         """Log in when there is no session, attach it, re-login once on 401/403."""
         if request.extensions.pop("scion_session_guard", None) is not self._guard_token:
             raise TokenRequestError("session authentication requires a governed client")
-        self._check_origin(request)
+        self.check_origin(request)
         with self._lock:
             has_cookies = bool(list(self._cookies.jar))
         if not has_cookies:

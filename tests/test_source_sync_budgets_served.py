@@ -14,7 +14,7 @@ from scion_sdk.ingest.source_sync import (
     SourceSyncRunner,
     SyncBudget,
 )
-from scion_sdk.ingest.sources import IngestSourceSpec
+from scion_sdk.manifest.sources import IngestSourceSpec
 
 
 async def _exercise(ingest):

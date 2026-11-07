@@ -7,7 +7,7 @@ a :mod:`contextvars` variable so it follows async tasks.
 
 Nothing has to bind an actor first. With none bound, :func:`current_actor`
 resolves one from the transport of the current request (see
-:mod:`scion_sdk.mcp.actor_binding`): :data:`SYSTEM_ACTOR` for a local
+:mod:`scion_sdk.identity.transport`): :data:`SYSTEM_ACTOR` for a local
 transport, process startup or background work with no request; the verified
 token's actor for authenticated HTTP; and :data:`ANONYMOUS_ACTOR`, which holds
 no entitlements, for HTTP without a verified token.
@@ -116,7 +116,7 @@ def current_actor() -> ActorContext:
 
 def _transport_actor() -> ActorContext:
     try:
-        from scion_sdk.mcp.actor_binding import request_actor
+        from scion_sdk.identity.transport import request_actor
     except ImportError:  # no [mcp] extra: no served transport can exist
         return SYSTEM_ACTOR
     return request_actor()

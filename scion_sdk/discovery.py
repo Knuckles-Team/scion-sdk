@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from importlib.metadata import EntryPoint, entry_points
 from typing import Protocol
 
-from scion_sdk import __version__
+from scion_sdk.version import __version__
 
 __all__ = [
     "ARTIFACT_KIND_GROUP",

@@ -28,7 +28,7 @@ from scion_sdk.ingest.model import (
     IngestBinding,
 )
 from scion_sdk.ingest.source_calls import _SourceCalls
-from scion_sdk.ingest.sources import IngestSourceSpec
+from scion_sdk.manifest.sources import IngestSourceSpec
 
 from ._sync_models import (
     CHECKPOINT_NAMESPACE,

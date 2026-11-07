@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 
-from scion_sdk.http.support_rate import RateLimitSnapshot, _redact
+from scion_sdk.httpsupport.api_client_rate import RateLimitSnapshot, _redact
 
 
 class _ResponseDecoding:

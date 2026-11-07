@@ -25,14 +25,13 @@ from medulla.generated.source_ingestion import (
     SourceIngestStatus,
 )
 
-from scion_sdk.artifacts.pack import CapturedConnectorPack
 from scion_sdk.artifacts.prompts import PromptArtifactKind
 from scion_sdk.artifacts.resources import ResourceArtifactKind
 from scion_sdk.artifacts.skills import SkillArtifactKind
 from scion_sdk.artifacts.tools import ToolArtifactKind
 from scion_sdk.ports.artifact_kind import ArtifactKind
 from scion_sdk.ports.session import TransportEndpoint
-from scion_sdk.ports.sink import SinkReadiness
+from scion_sdk.ports.sink import CapturedConnectorPack, SinkReadiness
 from scion_sdk.runner.descriptors import (
     ConnectorDescriptor,
     EndpointSpec,

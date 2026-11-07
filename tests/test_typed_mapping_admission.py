@@ -11,7 +11,7 @@ from medulla.connector_pack import (
 )
 from medulla.generated.connector_pack import PackEntryKind
 
-from scion_sdk.artifacts.pack import CapturedConnectorPack
+from scion_sdk.ports.sink import CapturedConnectorPack
 from scion_sdk.sinks.medulla import (
     MedullaSink,
     _require_supported_mapping_contract,

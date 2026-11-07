@@ -24,7 +24,7 @@ from scion_sdk.ingest.source_sync import (
     checkpoint_key,
     record_digest,
 )
-from scion_sdk.ingest.sources import (
+from scion_sdk.manifest.sources import (
     IngestSourceDeclaration,
     IngestSourceSpec,
 )

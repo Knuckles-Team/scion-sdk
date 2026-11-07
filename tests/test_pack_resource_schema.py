@@ -12,7 +12,7 @@ from scion_sdk.artifacts.prompts import PromptArtifactKind
 from scion_sdk.artifacts.resources import ResourceArtifactKind
 from scion_sdk.artifacts.skills import SkillArtifactKind
 from scion_sdk.artifacts.tools import ToolArtifactKind
-from scion_sdk.ingest.sources import IngestSourceDeclaration
+from scion_sdk.manifest.sources import IngestSourceDeclaration
 from scion_sdk.testing.results import SessionFactory
 
 KINDS = (

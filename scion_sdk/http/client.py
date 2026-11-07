@@ -26,14 +26,11 @@ from __future__ import annotations
 import ipaddress
 import logging
 import ssl
-from typing import Any, Literal, overload
+from typing import Any, Literal, Protocol, overload, runtime_checkable
 from urllib.parse import urlsplit
 
 import httpx
 
-from scion_sdk._version import __version__
-from scion_sdk.auth.rotating import SessionLoginAuth
-from scion_sdk.auth.static import ApiKeyAuth
 from scion_sdk.config import setting
 from scion_sdk.http.egress import (
     AsyncDnsPinnedEgressTransport,
@@ -44,6 +41,7 @@ from scion_sdk.http.egress_resolution import _check_pinned_base_host
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.redaction import redact_origin
 from scion_sdk.http.transport import AsyncGovernedTransport, GovernedTransport
+from scion_sdk.version import __version__
 
 __all__ = [
     "HTTP_LOGGER_NAME",
@@ -59,13 +57,36 @@ HTTP_LOGGER_NAME = "scion_sdk.http"
 _logger = logging.getLogger(HTTP_LOGGER_NAME)
 
 
+@runtime_checkable
+class _SessionGuardedAuth(Protocol):
+    """An auth whose session only a governed client may carry (cookie-session login).
+
+    The governed client marks each request it sends and checks every hop's
+    origin through these two methods, so the auth refuses unguarded clients.
+    """
+
+    def guard_request(self, request: httpx.Request) -> None:
+        """Mark ``request`` as sent by a governed client."""
+        ...
+
+    def check_origin(self, request: httpx.Request) -> None:
+        """Refuse ``request`` when its origin differs from the session's."""
+        ...
+
+
+def _session_auth(auth: httpx.Auth | None) -> _SessionGuardedAuth | None:
+    """``auth`` when it holds a session that only a governed client may carry."""
+    candidate: object = auth
+    return candidate if isinstance(candidate, _SessionGuardedAuth) else None
+
+
 class _SessionClient(httpx.Client):
-    def __init__(self, session_auth: SessionLoginAuth, **kwargs: Any) -> None:
+    def __init__(self, session_auth: _SessionGuardedAuth, **kwargs: Any) -> None:
         self._session_auth = session_auth
         super().__init__(**kwargs)
 
     def send(self, request: httpx.Request, **kwargs: Any) -> httpx.Response:
-        self._session_auth._guard_request(request)
+        self._session_auth.guard_request(request)
         try:
             return super().send(request, **kwargs)
         finally:
@@ -73,12 +94,12 @@ class _SessionClient(httpx.Client):
 
 
 class _AsyncSessionClient(httpx.AsyncClient):
-    def __init__(self, session_auth: SessionLoginAuth, **kwargs: Any) -> None:
+    def __init__(self, session_auth: _SessionGuardedAuth, **kwargs: Any) -> None:
         self._session_auth = session_auth
         super().__init__(**kwargs)
 
     async def send(self, request: httpx.Request, **kwargs: Any) -> httpx.Response:
-        self._session_auth._guard_request(request)
+        self._session_auth.guard_request(request)
         try:
             return await super().send(request, **kwargs)
         finally:
@@ -86,13 +107,13 @@ class _AsyncSessionClient(httpx.AsyncClient):
 
 
 class _SessionTransport(httpx.BaseTransport):
-    def __init__(self, inner: httpx.BaseTransport, auth: SessionLoginAuth) -> None:
+    def __init__(self, inner: httpx.BaseTransport, auth: _SessionGuardedAuth) -> None:
         self._inner = inner
         self._auth = auth
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
         request.extensions.pop("scion_session_guard", None)
-        self._auth._check_origin(request)
+        self._auth.check_origin(request)
         return self._inner.handle_request(request)
 
     def close(self) -> None:
@@ -100,13 +121,15 @@ class _SessionTransport(httpx.BaseTransport):
 
 
 class _AsyncSessionTransport(httpx.AsyncBaseTransport):
-    def __init__(self, inner: httpx.AsyncBaseTransport, auth: SessionLoginAuth) -> None:
+    def __init__(
+        self, inner: httpx.AsyncBaseTransport, auth: _SessionGuardedAuth
+    ) -> None:
         self._inner = inner
         self._auth = auth
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         request.extensions.pop("scion_session_guard", None)
-        self._auth._check_origin(request)
+        self._auth.check_origin(request)
         return await self._inner.handle_async_request(request)
 
     async def aclose(self) -> None:
@@ -122,9 +145,7 @@ def default_ssl_context() -> ssl.SSLContext:
 
 def isolates_cookies(auth: httpx.Auth | None) -> bool:
     """Whether ``auth`` is an API-key identity whose client must not keep cookies."""
-    return isinstance(auth, ApiKeyAuth) or bool(
-        getattr(auth, "isolates_cookies", False)
-    )
+    return bool(getattr(auth, "isolates_cookies", False))
 
 
 def _transport_kwargs(options: HttpClientOptions) -> dict[str, Any]:
@@ -301,10 +322,11 @@ def build_http_client(
         )
     proxy = options.tls.proxy_url if options.tls else None
     final_transport = airgap_type(governed, proxy)
-    if isinstance(options.auth, SessionLoginAuth):
-        final_transport = session_transport_type(final_transport, options.auth)
+    session_auth = _session_auth(options.auth)
+    if session_auth is not None:
+        final_transport = session_transport_type(final_transport, session_auth)
         session_client: httpx.Client | httpx.AsyncClient = session_client_type(
-            options.auth, transport=final_transport, **_client_kwargs(options)
+            session_auth, transport=final_transport, **_client_kwargs(options)
         )
         return session_client
     client: httpx.Client | httpx.AsyncClient = client_type(

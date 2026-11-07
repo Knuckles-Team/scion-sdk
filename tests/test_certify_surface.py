@@ -15,18 +15,18 @@ from scion_sdk.certify.cli import (
     build_endpoint,
     parse_arguments,
 )
-from scion_sdk.certify.fingerprints import (
-    EmptyToolSchemaError,
-    is_empty_schema_pin,
-    output_schema_digest,
-    tool_fingerprint,
-)
 from scion_sdk.certify.listing import (
     ToolListing,
     ToolListingError,
     list_server_tools,
 )
 from scion_sdk.certify.verdicts import ToolStatus, ToolVerdict
+from scion_sdk.manifest.fingerprints import (
+    EmptyToolSchemaError,
+    is_empty_schema_pin,
+    output_schema_digest,
+    tool_fingerprint,
+)
 from scion_sdk.manifest.live_contract import (
     LiveToolContract,
     validate_live_tool_contract,

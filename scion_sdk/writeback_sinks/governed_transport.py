@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, cast
 
+from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 from scion_sdk.writeback.errors import OutcomeUncertainError
-from scion_sdk.writeback.models import DryRunObservation, SourceSnapshot
 
 from ._governed_common import PATCH_FIELD, _digest, _write_back
 from .core import WritebackContext, WritebackResult, WritebackSink

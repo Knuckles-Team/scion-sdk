@@ -2,7 +2,7 @@
 
 import pytest
 
-from scion_sdk.artifacts.resource_descriptor import (
+from scion_sdk.manifest.resource_descriptor import (
     FieldBinding,
     ResourceDeclarationError,
     ResourceDescriptor,

@@ -16,7 +16,7 @@ The `surface_complete` check fails with the sorted findings of `surface_findings
 
 ## Authoritative types
 
-[`scion_sdk/surface_contracts.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/surface_contracts.py).
+[`scion_sdk/surface_contracts/__init__.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/surface_contracts/__init__.py).
 
 ## Test vectors
 

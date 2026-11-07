@@ -35,10 +35,8 @@ def _register_declared_sources(mcp: Any, prefix: str, root: Path | None) -> None
     """
     if root is None:
         return
-    from scion_sdk.ingest.live_declaration import (
-        load_sources_module,
-        register_live_declaration,
-    )
+    from scion_sdk.ingest.live_declaration import load_sources_module
+    from scion_sdk.mcp.declaration_resource import register_live_declaration
 
     register_live_declaration(
         mcp,
