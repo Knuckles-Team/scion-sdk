@@ -24,7 +24,7 @@ from typing import Any
 import httpx
 
 from scion_sdk.credentials.resolution import resolve_secret_reference
-from scion_sdk.data_prep._classification import DataClassification
+from scion_sdk.data_prep.classification import DataClassification
 from scion_sdk.privacy import PersistencePrivacyGuard
 from scion_sdk.tls.errors import TransportSecurityError
 from scion_sdk.tls.resolve import resolve_tls_profile

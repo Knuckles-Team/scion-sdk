@@ -8,7 +8,7 @@ import json
 import re
 from typing import Any
 
-from scion_sdk.data_prep._classification import DataClassification
+from scion_sdk.data_prep.classification import DataClassification
 
 from ..base import (
     ExternalAccess,
