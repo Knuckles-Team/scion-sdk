@@ -5,10 +5,12 @@ Consumer: pipelines PIPE-GATES-R014.3
 Consumer: pipelines PIPE-GATES-R014.5
 Consumer: pipelines PIPE-GATES-R014.6
 Consumer: pipelines PIPE-GATES-R014.7
+Provider: scion-sdk SCION-CONNECTOR-CONTROL-R916.9
+Consumer: pipelines PIPE-GATES-R014.12
 
 ## Wire shape
 
-A connector package holds `<package>/connector_contracts.py`. It binds the module-level tuples `CONTRACTS`, `LINKS`, `LOCATIONS` and `ROLES` to calls of `ToolUseContract(task, steps, description)`, `ToolStep(tool, params, result, refusals)`, `Refusal(code, when)`, `SurfaceLink(task, tools, prompts, skills)`, `DataLocation(name, holds, instance, read_tool, store, route_param, federation_key)` and `BusinessRole(name, tasks, description)`. Positional arguments follow that field order. The gate reads the calls statically and imports no SDK module. A prompt `<package>/prompts/<name>.json` carries the `agent` object of `SCION-CONNECTOR-CONTROL-R916.8`.
+A connector package holds `<package>/connector_contracts.py`. It binds the module-level tuples `CONTRACTS`, `LINKS`, `LOCATIONS` and `ROLES` to calls of `ToolUseContract(task, steps, description)`, `ToolStep(tool, params, result, refusals)`, `Refusal(code, when)`, `SurfaceLink(task, tools, prompts, skills)`, `DataLocation(name, holds, instance, read_tool, store, route_param, federation_key)` and `BusinessRole(name, tasks, description)`. A connector that proxies a provider's MCP server also binds `UPSTREAM_TOOLS` to `UpstreamTool(upstream, tool, description, input_schema, destructive)` calls (`SCION-CONNECTOR-CONTROL-R916.9`); the served name is `<upstream>_<tool>`. Positional arguments follow that field order. The gate reads the calls statically and imports no SDK module. A prompt `<package>/prompts/<name>.json` carries the `agent` object of `SCION-CONNECTOR-CONTROL-R916.8`.
 
 ## Refusal codes
 

@@ -351,6 +351,7 @@ A connector author or host integrator relies on the SDK for this capability: A c
 - **FR-102**: Hot-path proof: a served connector carries its contracts. Rows: SCION-CONNECTOR-CONTROL-R916.6.
 - **FR-103**: Backfill: complete drafts the declaration of an existing connector. Rows: SCION-CONNECTOR-CONTROL-R916.7.
 - **FR-104**: Behavior: prompts are complete agent definitions. Rows: SCION-CONNECTOR-CONTROL-R916.8.
+- **FR-104A**: Declared upstream tools: a proxy connector declares the tools its upstream serves. Rows: SCION-CONNECTOR-CONTROL-R916.9.
 
 ## Success Criteria
 

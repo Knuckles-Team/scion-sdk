@@ -13,6 +13,10 @@ A connector declares, in ``<package>/connector_contracts.py``, three tuples
   and federation resolve through the ontology.
 * ``ROLES``: :class:`BusinessRole` values. Each names one business role the
   connector serves; a business-role prompt defines the agent for it.
+* ``UPSTREAM_TOOLS``: :class:`UpstreamTool` values. A connector that proxies a
+  provider's own MCP server registers no tool offline; it declares the tools
+  the upstream serves, and :func:`surface_findings` treats each declared tool
+  as served (SCION-CONNECTOR-CONTROL-R916.9).
 
 Each packaged prompt is a complete agent definition: its ``agent`` object
 names the kind, the tools, skills, data locations, guardrails and outputs
@@ -50,6 +54,7 @@ __all__ = [
     "SurfaceLink",
     "ToolStep",
     "ToolUseContract",
+    "UpstreamTool",
     "load_surface",
     "prompt_agent_findings",
     "render_surface_turtle",
@@ -154,17 +159,39 @@ class BusinessRole:
 
 
 @dataclass(frozen=True)
+class UpstreamTool:
+    """One tool an upstream MCP server serves, declared so it can be checked offline.
+
+    The served name is ``<upstream>_<tool>`` (SCION-CONNECTOR-CONTROL-R914.5).
+    ``input_schema`` is the upstream's JSON Schema for the tool arguments and
+    ``destructive`` mirrors the upstream's destructive annotation.
+    """
+
+    upstream: str
+    tool: str
+    description: str
+    input_schema: Mapping[str, Any]
+    destructive: bool = False
+
+    @property
+    def name(self) -> str:
+        """The name the connector serves the tool under."""
+        return f"{self.upstream}_{self.tool}"
+
+
+@dataclass(frozen=True)
 class SurfaceDeclaration:
-    """The contracts, links, locations and roles of one connector."""
+    """The contracts, links, locations, roles and upstream tools of one connector."""
 
     connector: str
     contracts: tuple[ToolUseContract, ...] = ()
     links: tuple[SurfaceLink, ...] = ()
     locations: tuple[DataLocation, ...] = ()
     roles: tuple[BusinessRole, ...] = ()
+    upstream_tools: tuple[UpstreamTool, ...] = ()
 
     def __post_init__(self) -> None:
-        for name in ("contracts", "links", "locations", "roles"):
+        for name in ("contracts", "links", "locations", "roles", "upstream_tools"):
             _set(self, name, tuple(getattr(self, name)))
 
 
@@ -193,6 +220,7 @@ def load_surface(
         links=tuple(getattr(module, "LINKS", ())),
         locations=tuple(getattr(module, "LOCATIONS", ())),
         roles=tuple(getattr(module, "ROLES", ())),
+        upstream_tools=tuple(getattr(module, "UPSTREAM_TOOLS", ())),
     )
 
 
@@ -416,6 +444,33 @@ def _surface_gaps(
     return found
 
 
+def _upstream_tool_gaps(declaration: SurfaceDeclaration, local: set[str]) -> list[str]:
+    """Names, descriptions, schemas and the destructive flag of the declared upstream tools."""
+    found: list[str] = []
+    seen: set[str] = set()
+    for tool in declaration.upstream_tools:
+        name = tool.name
+        if not tool.upstream.strip() or not tool.tool.strip():
+            found.append(f"upstream tool {name!r} names no upstream or no tool")
+        if name in seen:
+            found.append(f"upstream tool {name} is declared twice")
+        seen.add(name)
+        if name in local:
+            found.append(f"upstream tool {name} collides with a local tool")
+        if not tool.description.strip():
+            found.append(f"upstream tool {name} has no description")
+        schema = tool.input_schema
+        if not isinstance(schema, Mapping) or schema.get("type") != "object":
+            found.append(f"upstream tool {name} has no object input schema")
+        elif not isinstance(schema.get("properties", {}), Mapping):
+            found.append(f"upstream tool {name} has a malformed input schema")
+        # Declarations are loaded from connector modules, so the flag is checked at run time.
+        flag: object = tool.destructive
+        if not isinstance(flag, bool):
+            found.append(f"upstream tool {name} has no destructive annotation")
+    return found
+
+
 def _contract_gaps(declaration: SurfaceDeclaration, tools: set[str]) -> list[str]:
     if not declaration.contracts:
         return ["no tool-use contract declared"]
@@ -510,16 +565,29 @@ def surface_findings(
     given, each prompt is checked as an agent definition.
     """
     prompts = set(prompts) - PLATFORM_PROMPTS
+    local = set(tools)
+    schemas = dict(tool_schemas or {})
+    if declaration is not None:
+        # A declared upstream tool counts as served; it is checked like a registered one.
+        tools = local | {t.name for t in declaration.upstream_tools}
+        schemas.update(
+            {
+                t.name: t.input_schema
+                for t in declaration.upstream_tools
+                if isinstance(t.input_schema, Mapping)
+            }
+        )
     found = _surface_gaps(
         tools=tools,
         prompts=prompts,
         skills=skills,
         resources=resources,
-        tool_schemas=tool_schemas or {},
+        tool_schemas=schemas,
     )
     if declaration is None:
         found.append("no connector_contracts declaration")
     else:
+        found += _upstream_tool_gaps(declaration, local)
         found += _contract_gaps(declaration, tools)
         found += _link_gaps(declaration, tools, prompts, skills)
         found += _location_gaps(declaration, tools)
