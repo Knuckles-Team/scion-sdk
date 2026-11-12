@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- The condensed-tool finding looks for an `action` that selects an operation (a string or enum);
+  an `action` that is the upstream API's own object payload no longer counts as routing
+  (SCION-CONNECTOR-CONTROL-R916.4).
 - A `connector_sources` entry may name a tool the connector declares in `UPSTREAM_TOOLS`: the
   declaration builder and the conformance `connector_sources` check now accept the declared
   upstream names next to the registered tools, so a proxy connector no longer fails with

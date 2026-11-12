@@ -597,3 +597,23 @@ def test_contracts_are_cut_into_self_contained_shards_under_the_pack_bound() -> 
     assert all(len(text.encode()) <= 600 + 400 for text in shards)
     assert set().union(*(set(parse_triples(text)) for text in shards)) == whole
     assert render_surface_turtle_shards(decl) == [render_surface_turtle(decl)]
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.4")
+def test_an_action_body_field_of_the_upstream_api_is_not_a_condensed_tool() -> None:
+    payload = {
+        "anyOf": [{"type": "object", "properties": {"AddFlags": {"type": "object"}}}]
+    }
+    selector = {"type": "string", "enum": ["list", "get"]}
+    body = surface_findings(
+        _declaration(),
+        **_SERVED,
+        tool_schemas={"demo_get": {"properties": {"action": payload}}},
+    )
+    assert not [f for f in body if "condensed" in f]
+    routed = surface_findings(
+        _declaration(),
+        **_SERVED,
+        tool_schemas={"demo_get": {"properties": {"action": selector}}},
+    )
+    assert [f for f in routed if "condensed" in f]

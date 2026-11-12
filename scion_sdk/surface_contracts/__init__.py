@@ -460,6 +460,20 @@ def _surface_graph(
 # ── findings ────────────────────────────────────────────────────────────────
 
 
+def _is_dispatch_selector(prop: Any) -> bool:
+    """Whether an ``action`` property selects an operation (anything but an object payload).
+
+    An ``action`` that is an object, or a union of objects, is the upstream API's own request
+    body field (a tagged payload), not a selector that routes to different handlers.
+    """
+    if not isinstance(prop, Mapping):
+        return False
+    variants = prop.get("anyOf") or prop.get("oneOf")
+    if variants:
+        return any(_is_dispatch_selector(v) for v in variants)
+    return not (prop.get("type") == "object" or "properties" in prop)
+
+
 def _surface_gaps(
     *,
     tools: set[str],
@@ -473,7 +487,7 @@ def _surface_gaps(
         found.append("no tools served")
     for name in sorted(tool_schemas):
         properties = (tool_schemas[name] or {}).get("properties") or {}
-        if "action" in properties:
+        if _is_dispatch_selector(properties.get("action")):
             found.append(f"tool {name} routes an action parameter (condensed tool)")
     if not any(not uri.startswith(_CONTENT_SCHEMES) for uri in resources):
         found.append("no data resource served")
