@@ -2,7 +2,7 @@
 
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.caddy``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
-HTTP server routes become ``Service`` entities instead of agent-utilities'
+HTTP server routes become ``Service`` entities instead of meristem's
 ``GraphNode``. The client is injected through ``config`` and this module
 performs no I/O of its own; it is tolerant of the Caddy JSON config shape.
 """

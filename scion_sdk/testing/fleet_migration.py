@@ -1,7 +1,7 @@
 """The per-package import scan SCION-CONNECTOR-CONTROL-R009-R013 verify by.
 
 Each batch requirement's own verification column asks for the same proof:
-"a per-package import scan ... confirming no agent_utilities import
+"a per-package import scan ... confirming no meristem import
 remains." This module is that scan, reusable across every alphabetical
 batch (A-E, F-J, K-O, P-S, T-Z) rather than re-derived per batch, matching
 the SCION-CONNECTOR-CONTROL-R004 precedent that contract-pin verification is
@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from scion_sdk.testing._fleet_scan import _imports_agent_utilities
+from scion_sdk.testing._fleet_scan import _imports_meristem
 from scion_sdk.testing._fleet_walk import (
     _DEFAULT_EXCLUDED_DIRS,
     PackageScanResult,
@@ -30,21 +30,21 @@ __all__ = [
     "OperationMapping",
     "PackageScanResult",
     "loader_parity_problems",
-    "scan_for_agent_utilities_imports",
+    "scan_for_meristem_imports",
     "scan_many_packages",
 ]
 
 _REGISTRATION_KINDS = frozenset({"operation", "callback", "action_dispatch"})
 
 
-def scan_for_agent_utilities_imports(
+def scan_for_meristem_imports(
     package_root: Path,
     *,
     exclude_dirs: frozenset[str] = _DEFAULT_EXCLUDED_DIRS,
 ) -> PackageScanResult:
     """Scan Python imports without treating incomplete scans as migrated."""
     return _scan_python_sources(
-        package_root, _imports_agent_utilities, exclude_dirs=exclude_dirs
+        package_root, _imports_meristem, exclude_dirs=exclude_dirs
     )
 
 
@@ -59,15 +59,13 @@ def scan_many_packages(
     showing no connector still depends on the superseded implementation".
     This is that scan's one call site: every batch requirement (R009-R013)
     and R014's own fleet-wide census share this function instead of each
-    re-deriving a loop over :func:`scan_for_agent_utilities_imports`.
+    re-deriving a loop over :func:`scan_for_meristem_imports`.
     """
     results: dict[str, PackageScanResult] = {}
     for root in package_roots:
         if root.name in results:
             raise ValueError("connector package names must be unique")
-        results[root.name] = scan_for_agent_utilities_imports(
-            root, exclude_dirs=exclude_dirs
-        )
+        results[root.name] = scan_for_meristem_imports(root, exclude_dirs=exclude_dirs)
     return results
 
 

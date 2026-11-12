@@ -4,7 +4,7 @@ Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.emerald``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 the trading account state becomes canonical quant entities -- account ->
 ``Account``, a synthetic ``Portfolio``, open positions -> ``Position`` with a
-``HELD_IN`` relationship to the portfolio -- instead of agent-utilities'
+``HELD_IN`` relationship to the portfolio -- instead of meristem's
 ``GraphNode``/``EnrichmentEdge``. The backend is injected through ``config``;
 its read methods return dataclasses, so values are read tolerantly (object
 attribute or dict key). Read-only: no orders here.

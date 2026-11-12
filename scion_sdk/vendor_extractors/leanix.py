@@ -6,9 +6,9 @@ mirrors the LeanIX fact-sheet graph via a well-known core EA type/relation
 vocabulary. The LeanIX client is injected via ``config.client`` (duck-typed);
 this module performs no network I/O.
 
-Scope note: the agent-utilities source additionally *discovers* the type and
+Scope note: the meristem source additionally *discovers* the type and
 relation vocabulary from the live LeanIX metamodel (reusing
-``agent_utilities.ontology.leanix_metamodel``, an agent-utilities-internal
+``agent_utilities.ontology.leanix_metamodel``, a meristem-internal
 compiler this SDK does not depend on) and falls back to the same core types
 below when that discovery is unavailable. This port always uses that core
 vocabulary; live-metamodel discovery is not carried over.

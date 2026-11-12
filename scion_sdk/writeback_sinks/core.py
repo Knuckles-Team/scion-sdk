@@ -35,7 +35,7 @@ from ._external_ids import _upsert_stamp, resolve_external_id
 logger = logging.getLogger(__name__)
 
 #: provenance tag stamped on agent-written (inferred) upstream relations/records.
-PROVENANCE_TAG = "agent-utilities:inferred"
+PROVENANCE_TAG = "meristem:inferred"
 
 
 def _require_identifier(value: object, field_name: str) -> str:

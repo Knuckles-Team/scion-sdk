@@ -1,6 +1,6 @@
 """Secret-reference-only command-line arguments (SCION-CONNECTOR-CONTROL-R014.4).
 
-Moved from agent-utilities ``security.cli_secrets``. Secret material never
+Moved from meristem ``security.cli_secrets``. Secret material never
 travels in a process argument: a CLI accepts only a bounded ``env://``,
 ``vault://`` or ``secret://`` reference and resolves it in memory. ``env://``
 reads the SDK configuration; ``vault://`` and ``secret://`` resolve through the

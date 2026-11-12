@@ -12,7 +12,7 @@ Two tables:
     ``run_connector("mcp", {"package": "scholarx"})`` work out of the box.
 
   * :data:`ONYX_CONNECTOR_PARITY` — an explicit map from each Onyx / Danswer
-    connector source to the agent-utilities route that ingests it, so we can state
+    connector source to the meristem route that ingests it, so we can state
     connector parity precisely. Every Onyx source resolves to one of:
       - ``native`` — a first-class agent-package reached via the MCP fleet adapter
         (``mcp:<package>``);
@@ -185,7 +185,7 @@ def list_presets() -> list[str]:
 
 # ── Onyx connector-parity catalog ──────────────────────────────────────────
 #
-# route: the agent-utilities source_type that ingests this Onyx source.
+# route: the meristem source_type that ingests this Onyx source.
 # via:   native (MCP fleet package) | rest | web | filesystem | database.
 # package: the agent-package backing a native route (when via == native).
 ONYX_CONNECTOR_PARITY: dict[str, dict[str, str]] = {
@@ -244,7 +244,7 @@ ONYX_CONNECTOR_PARITY: dict[str, dict[str, str]] = {
 
 
 def onyx_parity(source: str) -> dict[str, str] | None:
-    """Return the agent-utilities route for an Onyx connector ``source``."""
+    """Return the meristem route for an Onyx connector ``source``."""
     return ONYX_CONNECTOR_PARITY.get(source.lower())
 
 

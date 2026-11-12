@@ -3,7 +3,7 @@
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.kafka``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 topics and consumer groups become ``Topic``/``Service`` entities instead of
-agent-utilities' ``GraphNode``. The client is injected through ``config`` and
+meristem's ``GraphNode``. The client is injected through ``config`` and
 this module performs no I/O of its own; it is tolerant of native/REST list
 shapes.
 """

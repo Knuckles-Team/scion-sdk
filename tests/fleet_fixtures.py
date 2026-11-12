@@ -1,6 +1,6 @@
 """Fixture servers standing in for the freshrss-agent and archivebox-api connectors.
 
-The real connector servers still import agent-utilities, so the suite cannot
+The real connector servers still import meristem, so the suite cannot
 start them. These fixtures serve the same condensed tools with the same input
 schemas and fake upstream data. ``*_CURRENT_SHA256`` values fingerprint the real
 servers' current free-string action schemas as listed over stdio ``tools/list``

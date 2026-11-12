@@ -5,7 +5,7 @@ from ``agent_utilities.knowledge_graph.enrichment.extractors`` onto this SDK's
 typed :class:`~scion_sdk.vendor_extractors.contract.VendorExtractor`
 contract: a plain ``extract(config) -> ChangeSet`` function producing
 :class:`scion_sdk.ingest.Entity`/:class:`~scion_sdk.ingest.Relationship`
-records instead of agent-utilities' ``ExtractionBatch`` of
+records instead of meristem's ``ExtractionBatch`` of
 ``GraphNode``/``EnrichmentEdge``. A module registers itself at import time via
 :func:`~scion_sdk.vendor_extractors.contract.register_vendor_extractor`,
 so porting one vendor touches no shared hub file.

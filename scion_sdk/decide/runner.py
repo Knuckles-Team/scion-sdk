@@ -3,8 +3,8 @@
 The port lives with the thin client in :mod:`scion_sdk.decide` and is typed
 with that client's own option and outcome values.
 
-Mirrors agent-utilities' equivalent ``DecisionRunner`` shape without
-importing ``agent_utilities`` -- the SDK must never depend on the agent
+Mirrors meristem's equivalent ``DecisionRunner`` shape without
+importing ``meristem`` -- the SDK must never depend on the agent
 control plane (see ``pyproject.toml``'s dependency comment) or on EG beyond
 its existing generated types.
 :class:`~scion_sdk.decide.medulla.MedullaDecisionRunner`

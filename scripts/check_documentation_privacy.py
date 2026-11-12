@@ -8,7 +8,7 @@ host alias checked into one of those
 pages leaks environment topology that has no business being public.
 
 This is the SDK's own instance of a check that already exists, independently,
-in agent-utilities (``tests/gates/test_public_example_privacy.py``) and
+in meristem (``tests/gates/test_public_example_privacy.py``) and
 medulla (``tests/test_documentation_privacy.py``): each of the four
 core repos scans its own public surface rather than sharing one gate, so a
 regex change in one repo can't silently disable another's coverage. The

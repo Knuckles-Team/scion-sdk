@@ -4,7 +4,7 @@ Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.portainer``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 endpoints become ``Server`` entities, stacks become ``Service`` entities, and
 containers become ``AssetInstance`` entities with a ``RUNS_ON`` relationship
-to their endpoint, instead of agent-utilities' ``GraphNode``/
+to their endpoint, instead of meristem's ``GraphNode``/
 ``EnrichmentEdge``. The client is injected through ``config`` and this module
 performs no I/O of its own.
 """

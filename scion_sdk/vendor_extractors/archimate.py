@@ -4,7 +4,7 @@ Ported from
 ``agent_utilities.knowledge_graph.enrichment.extractors.archimate`` onto this
 SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`: elements
 become entities typed by their ArchiMate class (``BusinessProcess``,
-``ApplicationComponent``, ``Node``, ...) instead of agent-utilities'
+``ApplicationComponent``, ``Node``, ...) instead of meristem's
 ``GraphNode``, and relationships become ``Relationship`` records instead of
 ``EnrichmentEdge``. The client is injected through ``config`` and this module
 performs no I/O of its own.

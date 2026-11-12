@@ -244,7 +244,7 @@ def get_delegated_token(
 ) -> str:
     """Exchange the served caller's token for a downstream token string.
 
-    Replaces agent-utilities ``mcp.delegated_auth.get_delegated_token``
+    Replaces meristem ``mcp.delegated_auth.get_delegated_token``
     (SCION-CONNECTOR-CONTROL-R014.8). Raises :class:`LoginRequiredError` when no
     caller token is in context and :class:`TokenRequestError` on exchange failure.
     """

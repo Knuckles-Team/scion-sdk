@@ -312,7 +312,7 @@ async def test_declared_content_providers_import_as_separate_pack_heads(
     providers: list[ConnectorContent] = []
     for connector, file_name, body in (
         (
-            "agent-utilities",
+            "meristem",
             "governance.shapes.ttl",
             b"@prefix sh: <urn:sh:> .\n<urn:au> a sh:NodeShape .\n",
         ),
@@ -342,9 +342,9 @@ async def test_declared_content_providers_import_as_separate_pack_heads(
     assert all(outcome.changed for outcome in outcomes)
     assert len(sink.packs) == 2
     packs = {pack.connector: pack for pack in sink.packs.values()}
-    assert set(packs) == {"agent-utilities", "arbora"}
+    assert set(packs) == {"meristem", "arbora"}
     expected_names = {
-        "agent-utilities": "governance.shapes.ttl",
+        "meristem": "governance.shapes.ttl",
         "arbora": "runtime.shapes.ttl",
     }
     for connector, pack in packs.items():

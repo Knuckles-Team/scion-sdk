@@ -1,4 +1,4 @@
-"""SCION-CONNECTOR-CONTROL-R014.10-R014.14: the remaining connector runtime moved from agent-utilities."""
+"""SCION-CONNECTOR-CONTROL-R014.10-R014.14: the remaining connector runtime moved from meristem."""
 
 from __future__ import annotations
 
@@ -263,7 +263,7 @@ def test_r014_14_env_drift_against_declarations(tmp_path, capsys):
     assert env_drift.main([str(tmp_path), "--check"]) == 1
     assert "[DEAD] DEMO_STALE" in capsys.readouterr().out
     assert env_drift._format is env_drift.format_report
-    assert "AGENT_UTILITIES" not in " ".join(env_drift.framework_reads())
+    assert "MERISTEM" not in " ".join(env_drift.framework_reads())
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R014.25")

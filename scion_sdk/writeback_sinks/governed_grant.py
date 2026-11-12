@@ -21,11 +21,11 @@ if TYPE_CHECKING:
 __all__ = ["SinkGrant", "build_change_set"]
 
 #: SDK connector id prefix for AU write-back sinks.
-_CONNECTOR_PREFIX = "agent-utilities.writeback"
+_CONNECTOR_PREFIX = "meristem.writeback"
 #: source version used when the caller supplies no version signal.
 _UNVERSIONED = "unversioned"
-_TENANT = "agent-utilities"
-_ACTOR = "agent-utilities:graph_writeback"
+_TENANT = "meristem"
+_ACTOR = "meristem:graph_writeback"
 _TTL_MS = 300_000
 _SCHEMA_VERSION = 1
 

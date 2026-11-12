@@ -26,7 +26,7 @@ def _ics(uid: str, summary: str, *, start: str | None, end: str | None) -> str:
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//agent-utilities//KG//EN",
+        "PRODID:-//meristem//KG//EN",
         "BEGIN:VEVENT",
         f"UID:{uid}",
         f"SUMMARY:{summary}",

@@ -3,7 +3,7 @@
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.microsoft``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 calendar events and directory users become ``CalendarEvent``/``Person``
-entities instead of agent-utilities' ``GraphNode`` -- the same canonical
+entities instead of meristem's ``GraphNode`` -- the same canonical
 classes the Nextcloud port uses, so M365/Nextcloud calendars and people
 reconcile across sources. The client is injected through ``config`` and this
 module performs no I/O of its own; all calls are tolerant -- a missing

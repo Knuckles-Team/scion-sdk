@@ -4,7 +4,7 @@ Ported from
 ``agent_utilities.knowledge_graph.enrichment.extractors.technitium_dns`` onto
 this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 zones and records become ``ConfigurationItem`` entities instead of
-agent-utilities' ``GraphNode``, with a ``CONTAINS`` relationship from zone to
+meristem's ``GraphNode``, with a ``CONTAINS`` relationship from zone to
 record. The client is injected through ``config`` and this module performs no
 I/O of its own.
 """

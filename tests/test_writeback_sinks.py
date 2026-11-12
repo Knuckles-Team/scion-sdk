@@ -197,7 +197,7 @@ def test_writeback_package_has_no_harness_import_or_duplicate_entrypoint():
             imported_harness_modules.extend(
                 module
                 for module in modules
-                if module == "agent_utilities" or module.startswith("agent_utilities.")
+                if module == "meristem" or module.startswith("meristem.")
             )
         if (
             path.name in {"core.py", "runner.py"}
@@ -275,7 +275,7 @@ def test_sink_failure_manifest_binds_uncertain_evidence_after_preflight(
     assert events == [(DOMAIN, sink)]
     assert sink.calls == [False]
     assert evidence == {
-        "connector_id": f"agent-utilities.writeback.{DOMAIN}",
+        "connector_id": f"meristem.writeback.{DOMAIN}",
         "change_set_id": receipt["change_set_id"],
         "change_set_digest": receipt["change_set_digest"],
         "authorization_mode": "standing_policy",

@@ -3,7 +3,7 @@
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.keycloak``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 a realm's users, groups, and clients become ``IdentityUser``/
-``IdentityGroup``/``Application`` entities instead of agent-utilities'
+``IdentityGroup``/``Application`` entities instead of meristem's
 ``GraphNode``. The realm comes from ``config['realm']`` (default
 ``master``). The client is injected through ``config`` and this module
 performs no I/O of its own.

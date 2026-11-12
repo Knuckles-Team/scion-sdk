@@ -2,7 +2,7 @@
 """Check the relocated universal/privacy-safe external-graph architecture docs.
 
 ``docs/architecture/universal-graph-connectors.md`` and
-``docs/architecture/privacy-safe-ingestion.md`` moved here from agent-utilities'
+``docs/architecture/privacy-safe-ingestion.md`` moved here from meristem's
 own ``scripts/check_external_graph_contract.py`` gate (this repo owns
 connectors/transport). That gate verified two things about the docs directly: a
 fixed set of required content markers (so the page cannot silently drop mention
@@ -10,7 +10,7 @@ of a supported backend or the governed-ingestion vocabulary), and an
 environment-literal scan (so no live endpoint, filesystem path, or email address
 gets checked in as an example). Both checks move here verbatim -- same markers,
 same regex -- scoped to the two docs that now live in this repository. See
-agent-utilities' own gate for the source-code-level checks (AgentConfig,
+meristem's own gate for the source-code-level checks (AgentConfig,
 connection_registry.py, external_graph_schema.py, ...), which stay there since
 that source never moved.
 

@@ -2,7 +2,7 @@
 deterministic fallback on anything else.
 
 Ported (not imported -- the SDK must never depend on the agent control
-plane) from agent-utilities' equivalent transport/runner contract, trimmed
+plane) from meristem's equivalent transport/runner contract, trimmed
 to a client adapter. The point catalog and the choice of an option are
 Medulla's; this runner only carries a question and reads the outcome.
 

@@ -23,7 +23,7 @@ from ..core import (
 
 logger = logging.getLogger(__name__)
 
-_SOURCE = "agent-utilities"
+_SOURCE = "meristem"
 _ATTEMPT_FAILED = object()
 
 # KG node type → ServiceNow CMDB class for created inventory. Covers the fleet's

@@ -239,5 +239,5 @@
     rdfs:comment """GitHub source-control, code-review and CI/CD model — organizations,
     repositories, pull requests, issues, releases, branches, commits, workflows and
     workflow runs, with their review and delivery relationships — federated into the
-    agent-utilities knowledge-graph hub. Reuses the shared :Person and :Document classes.""" ;
+    meristem knowledge-graph hub. Reuses the shared :Person and :Document classes.""" ;
     owl:imports <http://knuckles.team/kg> .

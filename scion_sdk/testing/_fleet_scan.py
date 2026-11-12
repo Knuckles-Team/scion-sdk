@@ -36,11 +36,9 @@ def _import_spellings(tree: ast.AST) -> tuple[set[str], set[str]]:
 
 def _static_import_is_legacy(node: ast.AST) -> bool:
     if isinstance(node, ast.Import):
-        return any(
-            alias.name.split(".")[0] == "agent_utilities" for alias in node.names
-        )
+        return any(alias.name.split(".")[0] == "meristem" for alias in node.names)
     if isinstance(node, ast.ImportFrom):
-        return (node.module or "").split(".")[0] == "agent_utilities"
+        return (node.module or "").split(".")[0] == "meristem"
     return False
 
 
@@ -65,10 +63,10 @@ def _dynamic_import_verdict(node: ast.Call) -> bool | None:
     module = node.args[0].value
     if not isinstance(module, str) or module.startswith("."):
         return None
-    return module.split(".")[0] == "agent_utilities"
+    return module.split(".")[0] == "meristem"
 
 
-def _imports_agent_utilities(source: str) -> bool | None:
+def _imports_meristem(source: str) -> bool | None:
     tree = ast.parse(source)
     import_functions, module_aliases = _import_spellings(tree)
     uncertain = False

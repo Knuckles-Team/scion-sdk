@@ -1,6 +1,6 @@
 """Caller-declared options for EG ``Decide`` (``CandidateSource::Declared``).
 
-Ported from agent-utilities' equivalent options module rather than
+Ported from meristem's equivalent options module rather than
 imported: the SDK must never depend on the agent control plane. A declared
 option is the caller's own claim: EG records every one as a claim premise
 and keeps the record visible to the declaring principal only. Facts travel

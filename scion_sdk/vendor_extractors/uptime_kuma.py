@@ -2,7 +2,7 @@
 
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.uptime_kuma``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
-monitors become ``Service`` entities instead of agent-utilities' ``GraphNode``,
+monitors become ``Service`` entities instead of meristem's ``GraphNode``,
 carrying the same Uptime Kuma id, status, and provenance stamp. The client is
 injected through ``config`` and this module performs no I/O of its own; it is
 tolerant of the dict- or list-shaped monitor collections the ``uptime_kuma_api``

@@ -1,6 +1,6 @@
 """PII sanitization for connector payloads (SCION-CONNECTOR-CONTROL-R014.6).
 
-Moved from agent-utilities so MCP-only connectors redact PII without the harness.
+Moved from meristem so MCP-only connectors redact PII without the harness.
 """
 
 from __future__ import annotations

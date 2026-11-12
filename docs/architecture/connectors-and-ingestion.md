@@ -324,7 +324,7 @@ lands in **one ontology** and is reasoned over together:
 See also: [KG as Bidirectional ETL Hub](etl-hub.md),
 [Content-Aware Ingestion](content-aware-ingestion.md),
 [Code Intelligence](https://knuckles-team.github.io/medulla/architecture/code-intelligence/),
-[Vendor-Neutral Enterprise Ontology](https://knuckles-team.github.io/agent-utilities/architecture/vendor_neutral_enterprise_ontology/),
+[Vendor-Neutral Enterprise Ontology](https://knuckles-team.github.io/meristem/architecture/vendor_neutral_enterprise_ontology/),
 [Camunda + ARIS ↔ KG](camunda-aris-integration.md).
 
 ---
@@ -360,8 +360,8 @@ connector reports **nothing**:
    sites still call `_reconcile` without `fetch_ok`, so they keep the
    conservative default (`True`) rather than distinguishing the two cases yet.
 
-See [Configuration Reference](https://knuckles-team.github.io/agent-utilities/architecture/configuration/) for the three flags, and
-[External Permission Sync](https://knuckles-team.github.io/agent-utilities/pillars/4_ecosystem_peripherals/ECO-4.28-External_Permission_Sync/)
+See [Configuration Reference](https://knuckles-team.github.io/meristem/architecture/configuration/) for the three flags, and
+[External Permission Sync](https://knuckles-team.github.io/meristem/pillars/4_ecosystem_peripherals/ECO-4.28-External_Permission_Sync/)
 for how the ACL descriptor maps onto the KG-2.46 permissioning model.
 
 ### 8a. Actions come from tool annotations
@@ -416,7 +416,7 @@ edge.
   does not reuse that path for candidate-claim promotion.
 * **Per-pack confidence thresholds** resolve from one bounded
   `INGESTION_CONFIDENCE_THRESHOLDS` mapping (domain → threshold; see
-  [Configuration Reference](https://knuckles-team.github.io/agent-utilities/architecture/configuration/)), not a global constant.
+  [Configuration Reference](https://knuckles-team.github.io/meristem/architecture/configuration/)), not a global constant.
 * **Retraction/supersession preserves history.** `supersession.retire_fact`
   tombstones through the SAME fail-closed `ingest_envelope` path connectors
   use (`operation="delete"` — archives, closes the bitemporal interval, never

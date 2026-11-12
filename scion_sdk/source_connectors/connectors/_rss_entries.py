@@ -55,7 +55,7 @@ def _build_safe_fetch(
         return safe_get_text(
             url,
             timeout=_FEED_FETCH_TIMEOUT_S,
-            headers={"User-Agent": "agent-utilities-rss/1.0"},
+            headers={"User-Agent": "meristem-rss/1.0"},
             max_bytes=max_response_bytes,
             allowed_private_hosts=allowed_private_hosts,
             allowed_redirect_hosts=allowed_redirect_hosts,

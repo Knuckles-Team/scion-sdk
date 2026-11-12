@@ -286,8 +286,6 @@ def test_r014_20_entry_point_groups_use_the_sdk_namespace() -> None:
         str(path.relative_to(ROOT))
         for path in (ROOT / "scion_sdk").rglob("*")
         if path.suffix in {".py", ".md"}
-        and re.search(
-            r"agent_utilities\.\w+_providers", path.read_text(errors="ignore")
-        )
+        and re.search(r"meristem\.\w+_providers", path.read_text(errors="ignore"))
     ]
     assert offenders == []

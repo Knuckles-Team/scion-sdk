@@ -1,4 +1,4 @@
-"""SCION-CONNECTOR-CONTROL-R014.2-R014.9: connector runtime utilities moved from agent-utilities."""
+"""SCION-CONNECTOR-CONTROL-R014.2-R014.9: connector runtime utilities moved from meristem."""
 
 from __future__ import annotations
 

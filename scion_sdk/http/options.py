@@ -72,7 +72,7 @@ class HttpClientOptions:
         pin_egress: Resolve every request once, refuse destinations outside the
             public boundary, dial only the resolved address (``Host``/SNI kept)
             and require the connected peer to match it. Off by default, as in
-            agent-utilities; it forbids proxies and redirects.
+            meristem; it forbids proxies and redirects.
         allowed_private_hosts: Exact hostnames or IP literals that may resolve
             into private space (RFC 1918, RFC 6598, ULA, loopback); needs
             ``pin_egress``.
