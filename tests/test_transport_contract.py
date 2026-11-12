@@ -17,7 +17,7 @@ from scion_sdk.contract_fields import AUTH_MODELS, STREAM_MODES
 
 
 def _contract(kind: str, pushdown: str = '"time_range"') -> str:
-    return f'''@prefix ac: <https://knuckles-team.github.io/agent-connector-sdk/access#> .
+    return f'''@prefix ac: <https://knuckles-team.github.io/ontology/access#> .
 @prefix ex: <https://example.invalid/> .
 ex:feed a ac:AccessContract ; ac:classIri ex:Event ; ac:sourceId "source" ;
  ac:entity "event" ; ac:keyField "id" ; ac:accessKind "{kind}" ;

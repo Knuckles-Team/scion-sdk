@@ -6,12 +6,12 @@
 # scion_sdk/_stream_websocket.py and checks that this file names the same
 # states and edges.
 
-@prefix st:   <https://knuckles-team.github.io/scion-sdk/stream#> .
-@prefix kg:   <http://knuckles.team/kg#> .
+@prefix st:   <https://knuckles-team.github.io/ontology/stream-transport#> .
+@prefix kg:   <https://knuckles-team.github.io/ontology/core#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 
-<https://knuckles-team.github.io/scion-sdk/stream> a owl:Ontology ;
+<https://knuckles-team.github.io/ontology/stream-transport> a owl:Ontology ;
     rdfs:label "WebSocket stream" ;
     rdfs:comment "The WebSocket stream adapter machine: Idle to Closed." .
 

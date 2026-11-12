@@ -16,7 +16,7 @@ def test_parse_graph_reads_typed_subjects_with_rdf_type() -> None:
 
 def test_integer_reads_an_integer_field_and_cost_hints_are_bounded() -> None:
     graph = parse_graph(
-        "@prefix ac: <https://knuckles-team.github.io/agent-connector-sdk/access#> .\n"
+        "@prefix ac: <https://knuckles-team.github.io/ontology/access#> .\n"
         "@prefix ex: <http://example.org/> .\nex:a ac:rateLimit 3 .\n"
     )
     props = graph["http://example.org/a"]

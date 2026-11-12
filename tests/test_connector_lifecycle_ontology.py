@@ -15,9 +15,9 @@ pytestmark = [
 ]
 
 
-_KG = "http://knuckles.team/kg#"
-_CL = "https://knuckles-team.github.io/scion-sdk/lifecycle#"
-_CB = "https://knuckles-team.github.io/scion-sdk/breaker#"
+_KG = "https://knuckles-team.github.io/ontology/core#"
+_CL = "https://knuckles-team.github.io/ontology/connector-lifecycle#"
+_CB = "https://knuckles-team.github.io/ontology/circuit-breaker#"
 _SUBCLASS = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
 _CORE = {
     "StateMachine",

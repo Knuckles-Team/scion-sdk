@@ -602,6 +602,7 @@ units = [
     "identifiers",
     "identity",
     "library_state",
+    "ontology_namespaces",
     "paths",
     "payments",
     "privacy_pii",

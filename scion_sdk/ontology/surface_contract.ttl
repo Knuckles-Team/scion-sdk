@@ -4,14 +4,14 @@
 # and tools link to that task, and where its data lives. Every class extends a
 # core class. The file never imports the core ontology.
 
-@prefix sc:   <https://knuckles-team.github.io/scion-sdk/contract#> .
-@prefix kg:   <http://knuckles.team/kg#> .
+@prefix sc:   <https://knuckles-team.github.io/ontology/surface-contract#> .
+@prefix kg:   <https://knuckles-team.github.io/ontology/core#> .
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<https://knuckles-team.github.io/scion-sdk/contract> a owl:Ontology ;
+<https://knuckles-team.github.io/ontology/surface-contract> a owl:Ontology ;
     rdfs:label "Connector surface contract" ;
     rdfs:comment "Tool-use contracts, surface links and data locations of one connector." .
 

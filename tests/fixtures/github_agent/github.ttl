@@ -1,7 +1,7 @@
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://purl.org/dc/terms/> .
-@prefix : <http://knuckles.team/kg#> .
+@prefix : <https://knuckles-team.github.io/ontology/core#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -234,10 +234,10 @@
     rdfs:domain :CheckRun ;
     rdfs:range xsd:dateTime .
 
-<http://knuckles.team/kg/github> a owl:Ontology ;
+<https://knuckles-team.github.io/ontology/github> a owl:Ontology ;
     rdfs:label "GitHub Ontology" ;
     rdfs:comment """GitHub source-control, code-review and CI/CD model — organizations,
     repositories, pull requests, issues, releases, branches, commits, workflows and
     workflow runs, with their review and delivery relationships — federated into the
     meristem knowledge-graph hub. Reuses the shared :Person and :Document classes.""" ;
-    owl:imports <http://knuckles.team/kg> .
+    owl:imports <https://knuckles-team.github.io/ontology/core> .

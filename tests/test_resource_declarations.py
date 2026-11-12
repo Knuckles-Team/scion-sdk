@@ -32,7 +32,7 @@ from scion_sdk.mcp.content import ConnectorContent
 pytestmark = pytest.mark.spec("SCION-CONNECTOR-CONTROL-R074.7")
 
 GITHUB = Path(__file__).parent / "fixtures" / "github_agent"
-KG = "http://knuckles.team/kg#"
+KG = "https://knuckles-team.github.io/ontology/core#"
 SERVER = (
     "from pathlib import Path\n"
     "from scion_sdk.mcp.content import ConnectorContent\n"
@@ -41,9 +41,9 @@ SERVER = (
     "    kw.setdefault('content', ConnectorContent('scaffold-mcp', Path(__file__).parent, '1.2.3'))\n"
     "    return create_mcp_server('scaffold-mcp', version='1.2.3', command_args=[], **kw)\n"
 )
-ONTOLOGY = """@prefix : <http://knuckles.team/kg#> .
+ONTOLOGY = """@prefix : <https://knuckles-team.github.io/ontology/core#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-<http://example.invalid/scaffold> a owl:Ontology ; owl:imports <http://knuckles.team/kg> .
+<http://example.invalid/scaffold> a owl:Ontology ; owl:imports <https://knuckles-team.github.io/ontology/core> .
 :Widget a owl:Class .
 :serialNumber a owl:DatatypeProperty .
 """

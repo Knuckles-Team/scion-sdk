@@ -196,7 +196,7 @@ async def graph_shape_results(engine, node_type):
     """Read conforming and violating nodes plus source relationships."""
     query = (
         f"MATCH (:{node_type}) |> VALIDATE SHAPE "
-        f"<http://knuckles.team/kg#{node_type}Shape> PROJECT 'http://knuckles.team/kg#'"
+        f"<https://knuckles-team.github.io/ontology/core#{node_type}Shape> PROJECT 'https://knuckles-team.github.io/ontology/core#'"
     )
     valid = await engine.query.uql(query + " KEEP CONFORMING")
     invalid = await engine.query.uql(query + " KEEP VIOLATING")

@@ -33,6 +33,11 @@ from dataclasses import dataclass
 from importlib import resources
 from typing import Any
 
+from scion_sdk.ontology_namespaces import (
+    CORE_NAMESPACE,
+    SURFACE_CONTRACT_NAMESPACE,
+)
+
 __all__ = [
     "CONTRACT_NS",
     "CONTRIBUTOR_SKILL_SUFFIX",
@@ -52,8 +57,8 @@ __all__ = [
     "surface_findings",
 ]
 
-CONTRACT_NS = "https://knuckles-team.github.io/scion-sdk/contract#"
-CORE_NS = "http://knuckles.team/kg#"
+CONTRACT_NS = SURFACE_CONTRACT_NAMESPACE
+CORE_NS = CORE_NAMESPACE
 _CONTENT_SCHEMES = ("skill://", "ontology://", "shapes://")
 #: Prompts every SDK server registers itself; a connector links none of them.
 PLATFORM_PROMPTS = frozenset({"connector-status"})

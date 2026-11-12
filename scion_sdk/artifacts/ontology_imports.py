@@ -2,7 +2,7 @@
 
 medulla accepts an ``owl:imports`` only when it names an ontology
 entry of the same ConnectorPack. Fleet ontologies import shared hub
-ontologies, such as ``http://knuckles.team/kg``. The tenant schema composes
+ontologies, such as ``https://knuckles-team.github.io/ontology/core``. The tenant schema composes
 every attached pack, so those imports are redundant at pack scope. The pack
 builder removes each external import from the ontology body. It records the
 external IRI as an ``ontology-import:<iri>`` entry in the ontology entry's

@@ -97,7 +97,9 @@ def test_removed_groups_are_the_three_provider_groups() -> None:
 def test_orphan_classes_reads_transitive_parents(tmp_path) -> None:
     path = tmp_path / "o.ttl"
     path.write_text(ORPHAN)
-    assert orphan_classes(path) == {"https://example.invalid/ontology/demo#Lonely"}
+    assert orphan_classes(path) == {
+        "https://knuckles-team.github.io/ontology/connector/demo#Lonely"
+    }
 
 
 @pytest.mark.spec("SCION-QUALITY-RELEASE-R005.1")

@@ -59,7 +59,7 @@ async def exercise(url, provider_name, with_context=False):
                     "Region": {"ontology_class": "Region", "fields": {"name": "name"}},
                 }
             )
-            ontology = b"@prefix : <http://knuckles.team/kg#> . @prefix owl: <http://www.w3.org/2002/07/owl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . :observedTaxon a owl:ObjectProperty ; rdfs:domain :OrganismObservation ; rdfs:range :Taxon . :occurredAt a owl:ObjectProperty ; rdfs:domain :OrganismObservation ; rdfs:range :Place . :locatedIn a owl:ObjectProperty ; rdfs:domain :Place ; rdfs:range :Region ."
+            ontology = b"@prefix : <https://knuckles-team.github.io/ontology/core#> . @prefix owl: <http://www.w3.org/2002/07/owl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . :observedTaxon a owl:ObjectProperty ; rdfs:domain :OrganismObservation ; rdfs:range :Taxon . :occurredAt a owl:ObjectProperty ; rdfs:domain :OrganismObservation ; rdfs:range :Place . :locatedIn a owl:ObjectProperty ; rdfs:domain :Place ; rdfs:range :Region ."
         authority, authorize, quota = await graph_helpers.admitted_source_fixture(
             engine, CONNECTOR, mappings, ontology=ontology
         )

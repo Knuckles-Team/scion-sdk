@@ -77,7 +77,7 @@ async def _exercise(url, provider_name):
             },
             "TaxonRank": {"ontology_class": "TaxonRank", "fields": {"name": "name"}},
         }
-        ontology = b"""@prefix : <http://knuckles.team/kg#> .
+        ontology = b"""@prefix : <https://knuckles-team.github.io/ontology/core#> .
           @prefix owl: <http://www.w3.org/2002/07/owl#> .
           @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
           :parentTaxon a owl:ObjectProperty ; rdfs:domain :Taxon ; rdfs:range :Taxon .

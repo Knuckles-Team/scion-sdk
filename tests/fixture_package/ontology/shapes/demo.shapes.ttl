@@ -1,4 +1,4 @@
-@prefix demo: <https://example.invalid/ontology/demo#> .
+@prefix demo: <https://knuckles-team.github.io/ontology/connector/demo#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 
 demo:DemoItemShape a sh:NodeShape ;

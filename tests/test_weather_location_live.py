@@ -55,7 +55,7 @@ async def exercise(url, with_quality):
                 "ontology_class": "QualityTerm",
                 "fields": {"name": "name"},
             }
-        ontology = b"@prefix : <http://knuckles.team/kg#> . @prefix owl: <http://www.w3.org/2002/07/owl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . :occurredAt a owl:ObjectProperty ; rdfs:domain :WeatherObservation ; rdfs:range :Place . :locatedIn a owl:ObjectProperty ; rdfs:domain :Place ; rdfs:range :Region ."
+        ontology = b"@prefix : <https://knuckles-team.github.io/ontology/core#> . @prefix owl: <http://www.w3.org/2002/07/owl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . :occurredAt a owl:ObjectProperty ; rdfs:domain :WeatherObservation ; rdfs:range :Place . :locatedIn a owl:ObjectProperty ; rdfs:domain :Place ; rdfs:range :Region ."
         if with_quality:
             ontology += b" :observedQuality a owl:ObjectProperty ; rdfs:domain :WeatherObservation ; rdfs:range :QualityTerm ."
         authority, authorize, quota = await admitted_source_fixture(
@@ -145,7 +145,7 @@ async def exercise(url, with_quality):
         if with_quality:
             query = (
                 "MATCH (:WeatherObservation) |> VALIDATE SHAPE "
-                "<http://knuckles.team/kg#WeatherObservationShape> PROJECT 'http://knuckles.team/kg#'"
+                "<https://knuckles-team.github.io/ontology/core#WeatherObservationShape> PROJECT 'https://knuckles-team.github.io/ontology/core#'"
             )
             shapes = (
                 await engine.query.uql(query + " KEEP CONFORMING"),
