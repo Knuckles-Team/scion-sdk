@@ -53,6 +53,7 @@ from scion_sdk.mcp._method_params import (
     _ParamShape,
 )
 from scion_sdk.mcp.action_dispatch import is_destructive_action
+from scion_sdk.mcp.destructive import is_declared_destructive
 
 __all__ = [
     "GATED_TAG",
@@ -81,10 +82,16 @@ _READ_TOKENS = frozenset(
 
 
 def operation_annotations(
-    name: str, verb: str | None, *, title: str | None = None
+    name: str,
+    verb: str | None,
+    *,
+    title: str | None = None,
+    declared_destructive: bool = False,
 ) -> ToolAnnotations:
     """MCP tool annotations for one operation, from its HTTP verb or name tokens."""
-    destructive = verb == "DELETE" or is_destructive_action(name)
+    destructive = (
+        declared_destructive or verb == "DELETE" or is_destructive_action(name)
+    )
     if verb is None:
         read_only = name.split("_", 1)[0] in _READ_TOKENS and not destructive
         idempotent = True if read_only else None
@@ -173,18 +180,23 @@ def _register_operation(
     typed_returns: bool,
 ) -> bool:
     verb = operation_verb(method, operation)
+    declared = is_declared_destructive(method)
     options = {
         "name": tool_name,
         "description": _description(method, operation),
         "tags": {domain, OPERATION_TAG, GRANULAR_TAG, GATED_TAG},
-        "annotations": operation_annotations(method_name, verb),
+        "annotations": operation_annotations(
+            method_name, verb, declared_destructive=declared
+        ),
     }
     tools = _build_tool(
         method_name=method_name,
         method=method,
         get_client=get_client,
         operation=operation,
-        destructive=verb == "DELETE" or is_destructive_action(method_name, operation),
+        destructive=declared
+        or verb == "DELETE"
+        or is_destructive_action(method_name, operation),
         coercer=coercer,
         returns=_json_return(method) if typed_returns else Any,
     )

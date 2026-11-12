@@ -36,6 +36,8 @@ from typing import Any, Literal, get_args, get_origin
 
 from pydantic.fields import FieldInfo
 
+from scion_sdk.mcp.destructive import declared_destructive_actions
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -212,8 +214,10 @@ def _names(node: ast.AST) -> set[str]:
     return {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
 
 
-def _annotations(action: str, declared: Any) -> dict[str, Any]:
-    destructive = bool(_DESTRUCTIVE.search(action))
+def _annotations(
+    action: str, declared: Any, destructive_actions: Collection[str] = ()
+) -> dict[str, Any]:
+    destructive = action in destructive_actions or bool(_DESTRUCTIVE.search(action))
     read_only = bool(_READ_ONLY.search(action)) and not _MUTATING.search(action)
     return {
         "title": action.replace("_", " ").title(),
@@ -597,6 +601,9 @@ def _register_split(mcp: Any, ctx: _Context, tool: Any, action: str) -> str:
     branch = ctx.branches.get(action)
     params = set(inspect.signature(tool.fn).parameters)
     keep = (_names(branch) & params) if branch is not None else None
+    destructive = declared_destructive_actions(tool.fn)
+    if keep is not None and action in destructive:
+        keep |= {"confirm"} & params
     fn, _served = _per_action(tool, action, keep)
     tool_name = f"{ctx.prefix}_{action}"
     mcp.tool(
@@ -604,7 +611,7 @@ def _register_split(mcp: Any, ctx: _Context, tool: Any, action: str) -> str:
         description=f"{action.replace('_', ' ').capitalize()} ({ctx.name}). "
         + (tool.description or ""),
         tags=set(tool.tags or set()) | {SPLIT_ACTION_TAG},
-        annotations=_annotations(action, tool.annotations),
+        annotations=_annotations(action, tool.annotations, destructive),
     )(fn)
     return tool_name
 
