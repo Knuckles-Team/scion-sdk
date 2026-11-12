@@ -464,7 +464,8 @@ def _upstream_tool_gaps(declaration: SurfaceDeclaration, local: set[str]) -> lis
             found.append(f"upstream tool {name} has no object input schema")
         elif not isinstance(schema.get("properties", {}), Mapping):
             found.append(f"upstream tool {name} has a malformed input schema")
-        if not isinstance(tool.destructive, bool):
+        # Declarations are loaded from connector modules, so the flag is checked at run time.
+        if not isinstance(tool.destructive, bool):  # type: ignore[unreachable]
             found.append(f"upstream tool {name} has no destructive annotation")
     return found
 
