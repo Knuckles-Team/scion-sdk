@@ -46,6 +46,7 @@ __all__ = [
     "ContentError",
     "ContentRegistration",
     "contracts_resource",
+    "contracts_resources",
     "ontology_resources",
     "register_connector_content",
     "register_ontology_resources",
@@ -172,13 +173,40 @@ def contracts_resource(content: ConnectorContent) -> TextResource | None:
     )
 
 
+def contracts_resources(content: ConnectorContent) -> list[TextResource]:
+    """The surface contracts as ``contracts.ttl`` and, when one body would pass the pack bound, ``contracts-2.ttl`` ...
+
+    A connector pack bounds each body at 2 MiB, so a connector with hundreds of contracts is served in
+    self-contained shards cut at subject boundaries (SCION-CONNECTOR-CONTROL-R916.3).
+    """
+    from scion_sdk.surface_contracts import load_surface, render_surface_turtle_shards
+
+    if not (content.package_root / "connector_contracts.py").is_file():
+        return []
+    declaration = load_surface(content.package_root.name, connector=content.connector)
+    if declaration is None:
+        return []
+    prompts = {
+        path.stem: _prompt_document(path)
+        for path in sorted((content.package_root / "prompts").glob("*.json"))
+        if not path.name.startswith("_")
+    }
+    shards = render_surface_turtle_shards(declaration, prompts)
+    out: list[TextResource] = []
+    for index, text in enumerate(shards, start=1):
+        name = "contracts.ttl" if index == 1 else f"contracts-{index}.ttl"
+        uri = f"ontology://{content.connector}/{name}"
+        out.append(
+            TextResource(uri=AnyUrl(uri), name=uri, text=text, mime_type="text/turtle")
+        )
+    return out
+
+
 def _content_resources(content: ConnectorContent) -> list[FileResource | TextResource]:
     found: list[FileResource | TextResource] = list(
         ontology_resources(content.connector, content.package_root / "ontology")
     )
-    contracts = contracts_resource(content)
-    if contracts is not None:
-        found.append(contracts)
+    found.extend(contracts_resources(content))
     return found
 
 

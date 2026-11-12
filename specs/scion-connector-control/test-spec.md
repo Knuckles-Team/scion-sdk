@@ -619,7 +619,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R916` | `tests/test_surface_contracts.py::test_served_contracts_resource_carries_the_declaration` |
 | `SCION-CONNECTOR-CONTROL-R916.1` | `tests/test_surface_contracts.py::test_vocabulary_rolls_up_to_core_and_never_imports_it` |
 | `SCION-CONNECTOR-CONTROL-R916.2` | `tests/test_surface_contracts.py::test_builders_normalise_lists_and_render_deterministic_individuals` |
-| `SCION-CONNECTOR-CONTROL-R916.3` | `tests/test_surface_contracts.py::test_no_declaration_serves_no_contracts_resource` |
+| `SCION-CONNECTOR-CONTROL-R916.3` | `tests/test_surface_contracts.py::test_no_declaration_serves_no_contracts_resource`, `tests/test_surface_contracts.py::test_contracts_are_cut_into_self_contained_shards_under_the_pack_bound` |
 | `SCION-CONNECTOR-CONTROL-R916.4` | `tests/test_surface_contracts.py::test_each_missing_element_is_a_named_finding` |
 | `SCION-CONNECTOR-CONTROL-R916.5` | `tests/test_conformance_plugin.py::test_every_check_passes_for_a_conforming_connector` |
 | `SCION-CONNECTOR-CONTROL-R916.6` | `tests/test_surface_contracts.py::test_self_check_flags_an_action_routed_tool` |
