@@ -15,6 +15,7 @@ Usage: ``python3 scripts/check_release_consumers.py --wheel dist/scion_sdk-X.whl
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 import tomllib
@@ -100,14 +101,44 @@ def plan(
     ]
 
 
+def sdk_extras(src: Path) -> tuple[str, ...]:
+    """The scion-sdk extras the consumer itself declares (empty when it declares none).
+
+    An ``--override`` replaces the whole requirement, extras included, so the
+    override must carry the extras the consumer asked for or the candidate would
+    be tested without the packages those extras bring.
+    """
+    pyproject = src / "pyproject.toml"
+    if not pyproject.is_file():
+        return ()
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    project = data.get("project", {})
+    requirements = list(project.get("dependencies", []))
+    for group in project.get("optional-dependencies", {}).values():
+        requirements.extend(group)
+    extras: set[str] = set()
+    for requirement in requirements:
+        match = re.match(r"\s*scion[-_.]sdk\s*\[([^\]]*)\]", requirement, re.IGNORECASE)
+        if match:
+            extras.update(e.strip() for e in match.group(1).split(",") if e.strip())
+    return tuple(sorted(extras))
+
+
+def write_override(consumer: Consumer, wheel: Path, workdir: Path) -> None:
+    extras = sdk_extras(workdir / consumer.name)
+    spec = f"scion-sdk[{','.join(extras)}]" if extras else "scion-sdk"
+    (workdir / f"{consumer.name}.override.txt").write_text(
+        f"{spec} @ {wheel.resolve().as_uri()}\n", encoding="utf-8"
+    )
+
+
 def check_consumer(
     consumer: Consumer, wheel: Path, workdir: Path, run: Runner
 ) -> str | None:
     """None when the consumer passes, else the failing command line."""
-    (workdir / f"{consumer.name}.override.txt").write_text(
-        f"scion-sdk @ {wheel.resolve().as_uri()}\n", encoding="utf-8"
-    )
     for command, cwd in plan(consumer, wheel, workdir):
+        if "--override" in command:  # the clone exists now: read the extras it declares
+            write_override(consumer, wheel, workdir)
         if run(command, cwd) != 0:
             return " ".join(command)
     return None

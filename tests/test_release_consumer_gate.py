@@ -43,6 +43,23 @@ def test_plan_overrides_the_sdk_with_the_candidate_and_collects_tests(tmp_path) 
     assert "--collect-only" in steps[-1]
 
 
+def test_the_override_keeps_the_extras_the_consumer_declares(tmp_path) -> None:
+    gate = _load()
+    consumer = gate.Consumer("Org/conn", "main", "conn", (), "tests")
+    src = tmp_path / "conn"
+    src.mkdir()
+    (src / "pyproject.toml").write_text(
+        '[project]\nname = "conn"\ndependencies = ["scion-sdk[graphql,mcp]>=0.10"]\n'
+        '[project.optional-dependencies]\ntest = ["scion-sdk[requests]>=0.10"]\n',
+        encoding="utf-8",
+    )
+    wheel = tmp_path / "w.whl"
+    wheel.write_bytes(b"")
+    gate.write_override(consumer, wheel, tmp_path)
+    text = (tmp_path / "conn.override.txt").read_text(encoding="utf-8")
+    assert text.startswith("scion-sdk[graphql,mcp,requests] @ file://")
+
+
 def test_a_failing_consumer_step_fails_the_gate(tmp_path) -> None:
     gate = _load()
     wheel = tmp_path / "w.whl"
