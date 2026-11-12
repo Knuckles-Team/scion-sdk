@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.11.0
+
+### Changed
+
+- Every vocabulary the SDK publishes now lives under one ontology base, defined once in
+  `scion_sdk.ontology_namespaces`. Consumers derive their namespace constants from that
+  module instead of hand-typing IRIs. The namespaces changed, so this is a minor release.
+- The release consumer gate keeps a consumer's scion-sdk extras when it installs the candidate
+  wheel, and records real-run evidence.
+
+### Added
+
+- `UpstreamTool` and the `UPSTREAM_TOOLS` tuple in a connector's contracts module: a proxy
+  connector declares the tools its upstream serves, and the surface check treats each as
+  served and validates its name, description, input schema and destructive flag
+  (SCION-CONNECTOR-CONTROL-R916.9).
+
 ## 0.10.2
 
 ### Added
