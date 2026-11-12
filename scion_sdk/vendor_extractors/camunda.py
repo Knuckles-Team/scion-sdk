@@ -18,7 +18,7 @@ external ids. The Camunda client is injected (duck-typed) via
 (``list_process_definitions()``, ``list_tasks()``, ``list_incidents()``).
 This module performs no network calls itself.
 
-Scope note: the agent-utilities source additionally lifts each definition's
+Scope note: the meristem source additionally lifts each definition's
 static BPMN 2.0 XML structure (tasks/gateways -> ``BusinessTask``/
 ``FLOWS_TO``) when the client also serves ``get_process_definition_xml``, via
 a graph-collapse algorithm shared with the ARIS extractor. This port carries

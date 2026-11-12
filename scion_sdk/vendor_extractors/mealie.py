@@ -3,7 +3,7 @@
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.mealie``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 recipes/meal-plans/shopping-lists become ``Recipe``/``MealPlan``/
-``ShoppingList`` entities instead of agent-utilities' ``GraphNode``, with an
+``ShoppingList`` entities instead of meristem's ``GraphNode``, with an
 ``INCLUDES`` relationship from a meal plan entry to its recipe. The client is
 injected through ``config`` and this module performs no I/O of its own; it is
 tolerant of Mealie's ``{"items": [...]}`` pagination shape (and bare lists /

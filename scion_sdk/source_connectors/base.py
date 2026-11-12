@@ -10,7 +10,7 @@ ontology objects.
 Provenance: this ports the connector surface of Onyx / Danswer
 (``backend/onyx/connectors/interfaces.py`` — ``LoadConnector`` / ``PollConnector``
 / ``SlimConnector`` / ``SlimConnectorWithPermSync`` with generic checkpoint
-typing) onto agent-utilities' *semantic* core. The "for free" win versus a flat
+typing) onto meristem's *semantic* core. The "for free" win versus a flat
 vector store: every :class:`SourceDocument` ingested through this framework flows
 through the KG-2.48 ``DocumentProcessor`` and therefore inherits OWL semantics,
 bitemporal slicing, reified ``HAS_CHUNK`` / ``CHUNK_OF`` links, and the

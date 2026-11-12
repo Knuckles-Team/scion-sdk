@@ -9,7 +9,7 @@ import pytest
 
 from scion_sdk.testing.fleet_migration import (
     PackageScanResult,
-    scan_for_agent_utilities_imports,
+    scan_for_meristem_imports,
     scan_many_packages,
 )
 
@@ -25,7 +25,7 @@ def test_a_clean_package_is_reported_migrated(tmp_path: Path) -> None:
         "from scion_sdk.mcp.server import build_server\n",
     )
 
-    result = scan_for_agent_utilities_imports(tmp_path / "clean_pkg")
+    result = scan_for_meristem_imports(tmp_path / "clean_pkg")
 
     assert isinstance(result, PackageScanResult)
     assert result.migrated
@@ -33,9 +33,9 @@ def test_a_clean_package_is_reported_migrated(tmp_path: Path) -> None:
 
 
 def test_a_plain_import_is_caught(tmp_path: Path) -> None:
-    _write(tmp_path / "legacy_pkg" / "a.py", "import agent_utilities.core.config\n")
+    _write(tmp_path / "legacy_pkg" / "a.py", "import meristem.core.config\n")
 
-    result = scan_for_agent_utilities_imports(tmp_path / "legacy_pkg")
+    result = scan_for_meristem_imports(tmp_path / "legacy_pkg")
 
     assert not result.migrated
     assert result.offending_files == ("a.py",)
@@ -44,10 +44,10 @@ def test_a_plain_import_is_caught(tmp_path: Path) -> None:
 def test_a_from_import_is_caught(tmp_path: Path) -> None:
     _write(
         tmp_path / "legacy_pkg" / "b.py",
-        "from agent_utilities.mcp.verbose_tools import register_tool_surface\n",
+        "from meristem.mcp.verbose_tools import register_tool_surface\n",
     )
 
-    result = scan_for_agent_utilities_imports(tmp_path / "legacy_pkg")
+    result = scan_for_meristem_imports(tmp_path / "legacy_pkg")
 
     assert not result.migrated
     assert result.offending_files == ("b.py",)
@@ -58,10 +58,10 @@ def test_a_mention_in_a_string_or_comment_is_not_a_false_positive(
 ) -> None:
     _write(
         tmp_path / "clean_pkg" / "docs.py",
-        '# migrated off agent_utilities\n"""See agent_utilities for history."""\n',
+        '# migrated off meristem\n"""See meristem for history."""\n',
     )
 
-    result = scan_for_agent_utilities_imports(tmp_path / "clean_pkg")
+    result = scan_for_meristem_imports(tmp_path / "clean_pkg")
 
     assert result.migrated
 
@@ -69,11 +69,11 @@ def test_a_mention_in_a_string_or_comment_is_not_a_false_positive(
 def test_excluded_directories_are_not_scanned(tmp_path: Path) -> None:
     _write(
         tmp_path / "pkg" / ".venv" / "site" / "x.py",
-        "import agent_utilities\n",
+        "import meristem\n",
     )
     _write(tmp_path / "pkg" / "real.py", "import httpx\n")
 
-    result = scan_for_agent_utilities_imports(tmp_path / "pkg")
+    result = scan_for_meristem_imports(tmp_path / "pkg")
 
     assert result.migrated
 
@@ -83,7 +83,7 @@ def test_a_file_that_fails_to_parse_is_skipped_not_fabricated_clean(
 ) -> None:
     _write(tmp_path / "pkg" / "broken.py", "def broken(:\n")
 
-    result = scan_for_agent_utilities_imports(tmp_path / "pkg")
+    result = scan_for_meristem_imports(tmp_path / "pkg")
 
     assert result.offending_files == ()
     assert result.unscanned_files == ("broken.py",)
@@ -97,8 +97,8 @@ def test_incomplete_or_ambiguous_fleet_scans_never_prove_migration(
     empty = tmp_path / "empty"
     empty.mkdir()
     missing = tmp_path / "missing"
-    assert not scan_for_agent_utilities_imports(empty).migrated
-    assert not scan_for_agent_utilities_imports(missing).migrated
+    assert not scan_for_meristem_imports(empty).migrated
+    assert not scan_for_meristem_imports(missing).migrated
 
     root = tmp_path / "pkg"
     _write(root / "good.py", "import httpx\n")
@@ -107,7 +107,7 @@ def test_incomplete_or_ambiguous_fleet_scans_never_prove_migration(
     target = tmp_path / "target"
     target.mkdir()
     (root / "linked_dir").symlink_to(target, target_is_directory=True)
-    result = scan_for_agent_utilities_imports(root)
+    result = scan_for_meristem_imports(root)
     assert not result.migrated
     assert result.unscanned_files == ("invalid.py", "linked.py", "linked_dir")
 
@@ -131,7 +131,7 @@ def test_traversal_error_prevents_migration(
         yield str(root), [], ["good.py"]
 
     monkeypatch.setattr("os.walk", broken_walk)
-    result = scan_for_agent_utilities_imports(root)
+    result = scan_for_meristem_imports(root)
     assert result.unscanned_files == ("private",)
     assert not result.migrated
 
@@ -140,10 +140,10 @@ def test_traversal_error_prevents_migration(
 @pytest.mark.parametrize(
     "source",
     [
-        '__import__("agent_utilities.core")',
-        'import importlib as loader\nloader.import_module("agent_utilities.core")',
-        'from importlib import import_module as load\nload("agent_utilities.core")',
-        'from builtins import __import__ as load\nload("agent_utilities")',
+        '__import__("meristem.core")',
+        'import importlib as loader\nloader.import_module("meristem.core")',
+        'from importlib import import_module as load\nload("meristem.core")',
+        'from builtins import __import__ as load\nload("meristem")',
     ],
 )
 def test_fleet_scan_detects_literal_dynamic_legacy_imports(
@@ -151,7 +151,7 @@ def test_fleet_scan_detects_literal_dynamic_legacy_imports(
 ) -> None:
     root = tmp_path / "pkg"
     _write(root / "dynamic.py", source)
-    result = scan_for_agent_utilities_imports(root)
+    result = scan_for_meristem_imports(root)
     assert not result.migrated
     assert result.offending_files == ("dynamic.py",)
 
@@ -159,11 +159,11 @@ def test_fleet_scan_detects_literal_dynamic_legacy_imports(
 def test_fleet_scan_marks_unknown_dynamic_import_incomplete(tmp_path: Path) -> None:
     root = tmp_path / "pkg"
     _write(root / "dynamic.py", "import importlib\nimportlib.import_module(name)")
-    result = scan_for_agent_utilities_imports(root)
+    result = scan_for_meristem_imports(root)
     assert not result.migrated
     assert result.unscanned_files == ("dynamic.py",)
     _write(root / "dynamic.py", 'import importlib\nimportlib.import_module("json")')
-    assert scan_for_agent_utilities_imports(root).migrated
+    assert scan_for_meristem_imports(root).migrated
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R014.1")
@@ -175,7 +175,7 @@ def test_scan_many_packages_reports_each_root_by_name(tmp_path: Path) -> None:
         tmp_path / "clean_pkg" / "server.py",
         "from scion_sdk.mcp.server import build_server\n",
     )
-    _write(tmp_path / "legacy_pkg" / "a.py", "import agent_utilities.core.config\n")
+    _write(tmp_path / "legacy_pkg" / "a.py", "import meristem.core.config\n")
 
     results = scan_many_packages([tmp_path / "clean_pkg", tmp_path / "legacy_pkg"])
 

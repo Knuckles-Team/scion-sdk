@@ -4,7 +4,7 @@ Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.wger`` onto
 this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`: weight
 entries and measurements become ``BodyMeasurement`` entities, workout sessions
 become ``WorkoutSession`` entities (``PART_OF`` their routine), and nutrition
-plans become ``MealPlan`` entities -- the same shape as the agent-utilities
+plans become ``MealPlan`` entities -- the same shape as the meristem
 ``GraphNode``/``EnrichmentEdge`` source, now rendered as this SDK's
 ``Entity``/``Relationship`` records. The client is injected through ``config``
 and this module performs no I/O of its own.

@@ -6,7 +6,7 @@ onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`::
     res.partner -> ``Customer`` id=odoo_customer:{id}
     crm.lead    -> ``Lead``     id=odoo_lead:{id}   (BELONGS_TO customer)
 
-So Odoo joins the same ``crm`` cohort as Twenty, instead of agent-utilities'
+So Odoo joins the same ``crm`` cohort as Twenty, instead of meristem's
 ``GraphNode``/``EnrichmentEdge``. The client is injected through ``config``
 (expected to expose ``list_partners()``/``list_leads()``) and this module
 performs no I/O of its own; all field access is tolerant.

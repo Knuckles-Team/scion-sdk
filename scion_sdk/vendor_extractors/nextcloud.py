@@ -3,7 +3,7 @@
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.nextcloud``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 CalDAV calendar events and CardDAV contacts become ``CalendarEvent``/
-``Person`` entities instead of agent-utilities' ``GraphNode`` -- the same
+``Person`` entities instead of meristem's ``GraphNode`` -- the same
 canonical classes the Microsoft 365 port uses, so Nextcloud and M365 calendars
 and people reconcile across sources. Documents flow through the document
 pipeline, not here. The client is injected through ``config`` and this module

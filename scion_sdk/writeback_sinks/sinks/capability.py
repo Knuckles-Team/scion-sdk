@@ -42,7 +42,7 @@ def _push_archi(client: Any, node: Any, result: WritebackResult) -> None:
             type="Capability",
             name=_name_of(node),
             documentation=str(_node_props(node).get("summary") or ""),
-            properties={"source": "agent-utilities"},
+            properties={"source": "meristem"},
         )
         result.created += 1
     except Exception as exc:  # pragma: no cover - external transport

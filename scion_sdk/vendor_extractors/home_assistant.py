@@ -4,7 +4,7 @@ Ported from
 ``agent_utilities.knowledge_graph.enrichment.extractors.home_assistant`` onto
 this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 entity states become ``ConfigurationItem`` entities instead of
-agent-utilities' ``GraphNode``. The client is injected through ``config`` and
+meristem's ``GraphNode``. The client is injected through ``config`` and
 this module performs no I/O of its own; it is tolerant of dict- or
 object-shaped states.
 """

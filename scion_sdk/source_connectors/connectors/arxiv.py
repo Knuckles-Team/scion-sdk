@@ -111,7 +111,7 @@ class ArxivConnector(LoadConnector, PollConnector):
                     url,
                     params=params,
                     timeout=_FETCH_TIMEOUT_S,
-                    headers={"User-Agent": "agent-utilities-arxiv/1.0"},
+                    headers={"User-Agent": "meristem-arxiv/1.0"},
                     max_bytes=max_response_bytes,
                     allowed_private_hosts=list(allowed_private_hosts or []),
                 )

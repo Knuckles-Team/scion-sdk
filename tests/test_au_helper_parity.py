@@ -1,4 +1,4 @@
-"""The SDK helpers that replace the retired agent-utilities harness modules."""
+"""The SDK helpers that replace the retired meristem harness modules."""
 
 from __future__ import annotations
 

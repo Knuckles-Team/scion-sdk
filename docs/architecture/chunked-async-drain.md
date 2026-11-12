@@ -7,7 +7,7 @@
 > **CONCEPT:MERISTEM-KG.compute.connector-declared-page-drainer** (connector-declared page drainer). Source of truth:
 > `agent_utilities/knowledge_graph/core/chunked_drain.py`.
 
-This page builds on [Ingestion throughput](https://knuckles-team.github.io/agent-utilities/architecture/ingestion_throughput/) (the lanes,
+This page builds on [Ingestion throughput](https://knuckles-team.github.io/meristem/architecture/ingestion_throughput/) (the lanes,
 the best-effort cap, the tick-collapse, the bulk primitives) and on
 [content-aware ingestion](content-aware-ingestion.md). Where that page is about
 keeping the *steady-state* throughput lanes flowing, this one is about the one
@@ -213,7 +213,7 @@ Source-specific knobs still apply to the page ingest — e.g. FreshRSS's
 **It composes with the existing lane/throughput system rather than bypassing it.**
 The page units are ordinary ingestion WorkItems on the `connectors` lane, so the
 best-effort cap, the interactive reservation (CONCEPT:MERISTEM-KG.compute.interactive-lane-floor), the per-hop
-profiler (`graph_ingest action=profile`), and `agent-utilities-doctor`'s
+profiler (`graph_ingest action=profile`), and `meristem-doctor`'s
 `ingestion_coverage` check all see and govern them like any other ingest. After a
 drain completes, subsequent `mode="delta"` syncs are cheap because the watermark
 advanced and the content-hash delta skips everything unchanged.
@@ -225,8 +225,8 @@ fast.
 
 ## See also
 
-- [Ingestion throughput — lanes, tick-collapse, bulk primitives](https://knuckles-team.github.io/agent-utilities/architecture/ingestion_throughput/)
-- [Intelligent ingestion — classification, commit-history, embedding, tail](https://knuckles-team.github.io/agent-utilities/architecture/intelligent-ingestion/)
+- [Ingestion throughput — lanes, tick-collapse, bulk primitives](https://knuckles-team.github.io/meristem/architecture/ingestion_throughput/)
+- [Intelligent ingestion — classification, commit-history, embedding, tail](https://knuckles-team.github.io/meristem/architecture/intelligent-ingestion/)
 - [Content-aware ingestion](content-aware-ingestion.md)
-- [Delta-based ingestion recipe](https://knuckles-team.github.io/agent-utilities/recipes/delta-ingestion/)
-- [Unified feeds](https://knuckles-team.github.io/agent-utilities/recipes/unified-feeds/)
+- [Delta-based ingestion recipe](https://knuckles-team.github.io/meristem/recipes/delta-ingestion/)
+- [Unified feeds](https://knuckles-team.github.io/meristem/recipes/unified-feeds/)

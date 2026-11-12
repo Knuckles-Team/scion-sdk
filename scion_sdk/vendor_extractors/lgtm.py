@@ -3,7 +3,7 @@
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.lgtm``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
 dashboards, alerts, and datasources become ``Dashboard``/``Alert``/
-``DataSource`` entities instead of agent-utilities' ``GraphNode``. The client
+``DataSource`` entities instead of meristem's ``GraphNode``. The client
 is injected through ``config`` and this module performs no I/O of its own.
 """
 

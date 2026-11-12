@@ -15,7 +15,7 @@ Pagination modes:
 ``page``
     ``page_param`` carries a page index starting at ``start_page`` and
     ``page_size_param`` the page size. ``page_kind`` may be ``number``, the one
-    spelling of a page index (agent-utilities' preset vocabulary). The fleet's
+    spelling of a page index (meristem's preset vocabulary). The fleet's
     generated presets also wrote ``page`` for the same thing; that spelling is
     rejected, so one index kind has one name.
 ``offset``

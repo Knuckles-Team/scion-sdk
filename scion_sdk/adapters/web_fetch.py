@@ -2,13 +2,13 @@
 
 Ported from ``agent_utilities.knowledge_graph.ingestion.web_fetch``
 (SCION-SOURCE-INGEST-R005) onto this SDK's own governed HTTP client
-(:mod:`scion_sdk.http.client`) instead of agent-utilities' bespoke
-HTTP policy, since agent-utilities is not a dependency of this package.
+(:mod:`scion_sdk.http.client`) instead of meristem's bespoke
+HTTP policy, since meristem is not a dependency of this package.
 
 This module ports only the zero-dependency ``requests`` floor: the HTTP GET,
 Open Graph/Twitter Card metadata extraction, and markdown normalization. The
-ArchiveBox and crawl4ai backends stay in agent-utilities for now (they call
-back into agent-utilities-owned infrastructure: the MCP tool fleet and the
+ArchiveBox and crawl4ai backends stay in meristem for now (they call
+back into meristem-owned infrastructure: the MCP tool fleet and the
 skill-graph crawler subprocess); both remain as open lines in
 ``specs/scion-source-ingest/tasks.md``.
 

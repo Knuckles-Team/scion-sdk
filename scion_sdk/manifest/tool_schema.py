@@ -28,7 +28,7 @@ COMPATIBILITY_FINGERPRINT_ALGORITHM = "agent-connector-sdk:mcp-tool-contract-com
 
 _EXACT_DOMAIN = b"agent-connector-sdk:mcp-tool-contract:v2\x00"
 _COMPATIBILITY_DOMAIN = COMPATIBILITY_FINGERPRINT_ALGORITHM.encode("ascii") + b"\x00"
-_LEGACY_COMPATIBILITY_DOMAIN = b"agent-utilities:mcp-tool-schema-compat:v1\x00"
+_LEGACY_COMPATIBILITY_DOMAIN = b"meristem:mcp-tool-schema-compat:v1\x00"
 _PRESENTATION_KEYS = frozenset({"$comment", "description", "examples", "title"})
 _RUNTIME_CONFIGURATION_KEYS = frozenset({"default"})
 

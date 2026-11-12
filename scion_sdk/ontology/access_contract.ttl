@@ -1,7 +1,7 @@
 # Access-contract vocabulary (SCION-CONNECTOR-CONTROL-R021).
 #
 # A connector ontology declares, per ontology class, how a consumer reads it
-# live. Field names align with agent-utilities VirtualMapping:
+# live. Field names align with meristem VirtualMapping:
 # sourceId, entity, classIri, keyField and PropertyBinding (property -> field).
 # Contracts use the flat Turtle profile that access_contract.py parses:
 # prefixed names or <IRIs>, string or integer literals, no blank nodes.

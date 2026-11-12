@@ -2,7 +2,7 @@
 
 Ported from ``agent_utilities.knowledge_graph.enrichment.extractors.ansible``
 onto this SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`:
-managed hosts become ``Server`` entities instead of agent-utilities'
+managed hosts become ``Server`` entities instead of meristem's
 ``GraphNode``, carrying the same Tower host id and provenance stamp. The
 client is injected through ``config`` and this module performs no I/O of its
 own.

@@ -1,7 +1,7 @@
 # Camunda + ARIS ↔ Knowledge Graph (bidirectional, OWL/RDF-native)
 
 This is the end-to-end bridge between the **process world** (Software AG **ARIS**
-models and **Camunda** BPMN processes) and the agent-utilities **Knowledge
+models and **Camunda** BPMN processes) and the meristem **Knowledge
 Graph**. It is *bidirectional* and *OWL/RDF-native*: processes are **ingested**
 into the KG as canonical ArchiMate ontology objects and reasoned over, and the
 intelligence the KG accumulates is **enriched back** onto the live Camunda
@@ -126,11 +126,11 @@ read by its `auth.get_client()`:
 - **ARIS** — `ARIS_API_BASE`, OAuth2 (`ARIS_OAUTH_URL`/`ARIS_CLIENT_ID`/
   `ARIS_CLIENT_SECRET`/`ARIS_TENANT`) or `ARIS_TOKEN`/basic, `ARIS_PATHS_JSON`
   for tenants whose REST layout differs, and `ARIS_ENABLE_WRITE` for outbound.
-- **Outbound gate** — `KG_PROCESS_WRITEBACK=1` (agent-utilities) to enable
+- **Outbound gate** — `KG_PROCESS_WRITEBACK=1` (meristem) to enable
   writeback at all.
 
-See [Configuration Reference](https://knuckles-team.github.io/agent-utilities/architecture/configuration/). For a guided, fully-configured
-setup, use the **agent-utilities-process-integration** skill.
+See [Configuration Reference](https://knuckles-team.github.io/meristem/architecture/configuration/). For a guided, fully-configured
+setup, use the **meristem-process-integration** skill.
 
 ## Verification
 

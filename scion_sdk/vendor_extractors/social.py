@@ -16,7 +16,7 @@ originate from), and an optional ``exclude_url_hosts`` tuple of link-
 shortener/self-referential hosts to filter out. This module performs no
 network calls itself.
 
-Scope note: the agent-utilities source reads these two shapes through a
+Scope note: the meristem source reads these two shapes through a
 shared, generic dotted-path digger
 (``agent_utilities.knowledge_graph.etl.transforms``) this SDK does not depend
 on; this port reads the same two shapes with direct dict access instead.

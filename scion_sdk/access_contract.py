@@ -48,7 +48,7 @@ class AccessContract:
     """One ontology class bound to one live source operation.
 
     ``source_id``, ``entity``, ``class_iri``, ``key_field`` and ``predicates``
-    match the agent-utilities ``VirtualMapping`` fields of the same name.
+    match the meristem ``VirtualMapping`` fields of the same name.
     """
 
     contract_iri: str

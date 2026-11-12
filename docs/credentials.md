@@ -38,7 +38,7 @@ The shared Arbora platform configuration (`workspace.yml`, `config.json`,
 `mcp_config.json`, ...) lives in `$XDG_CONFIG_HOME/arbora` (`~/.config/arbora`),
 overridable with `ARBORA_CONFIG_DIR`. Resolve it with
 `scion_sdk.paths.platform_config_dir()` or `platform_config_file(name)`.
-There is no fallback to the pre-rename `graph-os` or `agent-utilities` locations.
+There is no fallback to the pre-rename `graph-os` or `meristem` locations.
 
 `load_config()` projects `$XDG_CONFIG_HOME/scion-sdk/config.json` (or
 `CONNECTOR_CONFIG_FILE`) into the environment without overriding variables that

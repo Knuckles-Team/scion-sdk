@@ -5,7 +5,7 @@ Ported from
 SDK's typed :mod:`~scion_sdk.vendor_extractors.contract`: Account ->
 ``Customer``, Contact -> ``Person``, Opportunity -> ``SalesOrder``, each
 carrying the Salesforce ``Id`` and a relationship back to its account, instead
-of agent-utilities' ``GraphNode``/``EnrichmentEdge``. The client is injected
+of meristem's ``GraphNode``/``EnrichmentEdge``. The client is injected
 through ``config`` and this module performs no I/O of its own; the SOQL
 queried here is a fixed literal from ``_OBJECTS`` below, never caller data.
 """

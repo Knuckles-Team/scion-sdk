@@ -1,6 +1,6 @@
 """Tool version metadata for MCP tools (SCION-CONNECTOR-CONTROL-R014.3).
 
-Moved from agent-utilities so connectors stamp tool versions without the harness.
+Moved from meristem so connectors stamp tool versions without the harness.
 """
 
 from __future__ import annotations

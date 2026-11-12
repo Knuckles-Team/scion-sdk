@@ -1,6 +1,6 @@
 # Universal external graph connectors
 
-Agent Utilities can consume a foreign graph without treating it as a second
+Meristem can consume a foreign graph without treating it as a second
 operational authority. Neo4j/openCypher, Apache AGE, LadybugDB/Kuzu, remote
 medulla, and GraphQL sources use the same governed lifecycle:
 

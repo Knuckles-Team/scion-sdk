@@ -38,7 +38,7 @@ and published through GitHub Pages.
 
 - **Owns:** connector contracts and transports. The transports are REST, GraphQL, gRPC, MCP, the A2A protocol library and the others. It also owns the EG client adapter and connector ontology pack generation.
 - **Never builds:** serving or routing (route them to arbora). Facts, storage and pushdown planning go to medulla.
-- **Allowed dependencies:** the medulla client and protocol libraries. It never imports `agent_utilities` or `arbora`. Connectors depend on this SDK only.
+- **Allowed dependencies:** the medulla client and protocol libraries. It never imports `meristem` or `arbora`. Connectors depend on this SDK only.
 
 Route every feature with the [ecosystem boundaries standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md) before any code. A part this repository does not own goes to its owner's specs.
 
@@ -62,7 +62,7 @@ policy. Connectors own vendor-specific transport. `medulla` owns durable
 records, graph schemas, validation, reasoning, receipts, and semantic indexing.
 The agent control plane owns goals, workflows, and routing.
 
-`agent-utilities` is not a dependency. Keep dependency direction enforceable by
+`meristem` is not a dependency. Keep dependency direction enforceable by
 the `phase-direction` gate.
 
 ## Architecture and module map

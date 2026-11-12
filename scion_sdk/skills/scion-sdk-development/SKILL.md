@@ -22,7 +22,7 @@ typed extension ports, discovery/certification, and governed HTTP/TLS/
 credential handling. It does not own vendor API implementations, durable graph
 storage, ontology reasoning, agents, or workflow orchestration — those belong
 to the owning connector, `medulla`, and the agent control plane.
-`agent-utilities` is not a dependency of this package; keep dependency
+`meristem` is not a dependency of this package; keep dependency
 direction enforceable by the `phase-direction` gate.
 
 ## Step 0: route the feature

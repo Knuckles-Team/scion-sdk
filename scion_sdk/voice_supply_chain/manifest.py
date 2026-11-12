@@ -5,7 +5,7 @@ These mirror the ``voice.model.manifest.v1`` / ``voice.config.manifest.v1`` /
 ``voice.license.decision.v1`` contracts defined in the lane doc
 (``plans/arbora-completion-program/lanes/GOC-36-voice-model-supply-chain-qualification.md``
 §"Schemas and APIs") — the Meristem-side subset this repo is authorized to own
-(``agent-utilities governed voice-model registry/acquisition adapter and evidence consumer
+(``meristem governed voice-model registry/acquisition adapter and evidence consumer
 only`` per the lane contract table).
 
 **Authority note (read before wiring a caller):** per the lane doc's "Authority and

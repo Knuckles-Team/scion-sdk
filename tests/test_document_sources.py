@@ -1,4 +1,4 @@
-"""Document sources moved from agent-utilities: git-markdown domain packs,
+"""Document sources moved from meristem: git-markdown domain packs,
 filesystem polling, governed ingest and external ACL sync.
 
 Functional tests commit through :class:`KnowledgeIngest` into the SDK's

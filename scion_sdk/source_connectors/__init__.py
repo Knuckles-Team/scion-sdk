@@ -1,6 +1,6 @@
 """Document-source connector framework (CONCEPT:MERISTEM-ECO.connector.document-source-framework-4.29).
 
-Onyx-parity document ingestion bolted onto agent-utilities' semantic core: a
+Onyx-parity document ingestion bolted onto meristem's semantic core: a
 ``load`` / ``poll`` / ``slim`` connector abstraction (:mod:`base`), resumable
 checkpoints (:mod:`checkpoint`, ECO-4.26), a self-registering factory
 (:mod:`registry`, ECO-4.27), access descriptors rendered as record

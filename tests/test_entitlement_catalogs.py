@@ -65,7 +65,7 @@ def test_super_capability_grants_every_namespace_in_catalog() -> None:
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R036")
-def test_sdk_entitlements_do_not_import_agent_utilities() -> None:
+def test_sdk_entitlements_do_not_import_meristem() -> None:
     import ast
     import inspect
 
@@ -77,4 +77,4 @@ def test_sdk_entitlements_do_not_import_agent_utilities() -> None:
         if isinstance(node, (ast.Import, ast.ImportFrom))
         for alias in getattr(node, "names", [])
     }
-    assert not any(name.startswith("agent_utilities") for name in imported if name)
+    assert not any(name.startswith("meristem") for name in imported if name)

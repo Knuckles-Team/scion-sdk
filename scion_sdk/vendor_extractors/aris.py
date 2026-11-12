@@ -16,7 +16,7 @@ identity under reasoning. The ARIS client is injected (duck-typed) via
 ``config["client"]``, expected to expose ``list_models()``. This module
 performs no network calls itself.
 
-Scope note: the agent-utilities source additionally lifts each process
+Scope note: the meristem source additionally lifts each process
 model's step-level EPC structure (functions/rule-operators/events ->
 ``BusinessTask``/``FLOWS_TO``) when the client also serves
 ``list_model_objects``/``list_model_connections``, via a graph-collapse
