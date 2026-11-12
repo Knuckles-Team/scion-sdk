@@ -6,13 +6,13 @@
 # ontology. A test reads scion_sdk/connector_lifecycle.py and checks that this
 # file names the same states and edges.
 
-@prefix cl:   <https://knuckles-team.github.io/scion-sdk/lifecycle#> .
-@prefix cb:   <https://knuckles-team.github.io/scion-sdk/breaker#> .
-@prefix kg:   <http://knuckles.team/kg#> .
+@prefix cl:   <https://knuckles-team.github.io/ontology/connector-lifecycle#> .
+@prefix cb:   <https://knuckles-team.github.io/ontology/circuit-breaker#> .
+@prefix kg:   <https://knuckles-team.github.io/ontology/core#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 
-<https://knuckles-team.github.io/scion-sdk/lifecycle> a owl:Ontology ;
+<https://knuckles-team.github.io/ontology/connector-lifecycle> a owl:Ontology ;
     rdfs:label "Connector lifecycle" ;
     rdfs:comment "The connector readiness machine and the circuit breaker machine." .
 

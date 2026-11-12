@@ -179,8 +179,8 @@ def test_turtle_matches_the_table_and_extends_core() -> None:
     ).read_text(encoding="utf-8")
     assert "owl:imports" not in text
     graph = parse_graph(text)
-    kg = "http://knuckles.team/kg#"
-    st = "https://knuckles-team.github.io/scion-sdk/stream#"
+    kg = "https://knuckles-team.github.io/ontology/core#"
+    st = "https://knuckles-team.github.io/ontology/stream-transport#"
     sub = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
     assert graph[st + "WebSocketStream"][sub] == [kg + "StateMachine"]
     for state in StreamState:

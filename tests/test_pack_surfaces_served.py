@@ -31,10 +31,10 @@ def _widget_server(tmp_path: Path) -> tuple[Path, Any]:
     ontology = tmp_path / "ontology"
     ontology.mkdir(exist_ok=True)
     (ontology / "widget.ttl").write_text(
-        "@prefix : <http://knuckles.team/kg#> .\n"
+        "@prefix : <https://knuckles-team.github.io/ontology/core#> .\n"
         "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
         "<http://example.invalid/widget> a owl:Ontology ; "
-        "owl:imports <http://knuckles.team/kg> .\n"
+        "owl:imports <https://knuckles-team.github.io/ontology/core> .\n"
         ":Widget a owl:Class .\n:serialNumber a owl:DatatypeProperty .\n"
     )
     _, server, _ = create_mcp_server(
@@ -152,7 +152,7 @@ async def test_factory_serves_and_packs_every_surface_with_a_parseable_contract(
         "cursor",
     )
     assert (
-        "http://knuckles.team/kg#serialNumber",
+        "https://knuckles-team.github.io/ontology/core#serialNumber",
         "serial_number",
     ) in parsed.predicates
 
@@ -168,8 +168,10 @@ async def test_source_metadata_overrides_live_descriptor(tmp_path: Path) -> None
             source_id="widgets",
             record_type="Widget",
             id_field="serial_number",
-            ontology_class="http://knuckles.team/kg#Widget",
-            fields={"serial_number": "http://knuckles.team/kg#serialNumber"},
+            ontology_class="https://knuckles-team.github.io/ontology/core#Widget",
+            fields={
+                "serial_number": "https://knuckles-team.github.io/ontology/core#serialNumber"
+            },
             pagination="page",
             page_param="page",
             page_size_param="per_page",
@@ -198,7 +200,10 @@ async def test_source_metadata_overrides_live_descriptor(tmp_path: Path) -> None
             field for field in resource["fields"] if field["name"] == "serial_number"
         )
         assert binding["mapping_status"] == "declared"
-        assert binding["ontology_property"] == "http://knuckles.team/kg#serialNumber"
+        assert (
+            binding["ontology_property"]
+            == "https://knuckles-team.github.io/ontology/core#serialNumber"
+        )
     async with McpTransport().session(TransportEndpoint(in_process=server)) as session:
         pack = await build_content_pack(
             session,
@@ -231,7 +236,7 @@ def test_contract_renderer_refuses_noncanonical_resource_identity() -> None:
     descriptor = {
         "name": "widgets",
         "uri": "data://other/widgets> <urn:evil> <urn:evil>",
-        "ontology_class": "http://knuckles.team/kg#Widget",
+        "ontology_class": "https://knuckles-team.github.io/ontology/core#Widget",
         "mapping_status": "proposed",
         "operation": "list_widgets",
         "key_field": "id",
@@ -248,7 +253,7 @@ def test_contract_renderer_refuses_values_that_cannot_round_trip() -> None:
     descriptor = {
         "name": "widgets",
         "uri": "data://widget-mcp/widgets",
-        "ontology_class": "http://knuckles.team/kg#Widget",
+        "ontology_class": "https://knuckles-team.github.io/ontology/core#Widget",
         "mapping_status": "proposed",
         "operation": "list\nwidgets",
         "key_field": "id",
@@ -266,7 +271,7 @@ def test_each_resource_has_a_distinct_stable_foreign_source_id() -> None:
         return {
             "name": name,
             "uri": f"data://widget-mcp/{name}",
-            "ontology_class": "http://knuckles.team/kg#Widget",
+            "ontology_class": "https://knuckles-team.github.io/ontology/core#Widget",
             "mapping_status": "proposed",
             "operation": f"list_{name}",
             "key_field": "id",
@@ -314,7 +319,7 @@ def test_paging_and_result_declarations_round_trip(
     descriptor = {
         "name": "widgets",
         "uri": "data://widget-mcp/widgets",
-        "ontology_class": "http://knuckles.team/kg#Widget",
+        "ontology_class": "https://knuckles-team.github.io/ontology/core#Widget",
         "mapping_status": "declared",
         "operation": "list_widgets",
         "key_field": "id",

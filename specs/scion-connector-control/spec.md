@@ -62,7 +62,7 @@ Each connector ontology declares how a consumer reads each class live. The `ac:`
 ## Pack-scoped ontology imports (SCION-CONNECTOR-CONTROL-R022)
 
 medulla accepts an `owl:imports` only when it names an ontology entry of the same pack.
-Fleet ontologies import shared hub ontologies such as `http://knuckles.team/kg`.
+Fleet ontologies import shared hub ontologies such as `https://knuckles-team.github.io/ontology/core`.
 The tenant schema composes every attached pack, so the hub import is redundant at pack scope.
 `build_content_pack` removes each import outside the pack from every ontology body.
 It records each removed IRI as `ontology-import:<iri>` in the entry's `requires_capabilities` annotation.

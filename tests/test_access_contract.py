@@ -16,7 +16,7 @@ from scion_sdk.access_contract import (
 )
 
 _HEAD = """
-@prefix ac: <https://knuckles-team.github.io/agent-connector-sdk/access#> .
+@prefix ac: <https://knuckles-team.github.io/ontology/access#> .
 @prefix ex: <https://example.invalid/fake#> .
 """
 

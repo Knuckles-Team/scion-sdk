@@ -15,7 +15,7 @@ from scion_sdk.turtle_reader import parse_graph
 pytestmark = [pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R007.4")]
 
 
-_KG = "http://knuckles.team/kg#"
+_KG = "https://knuckles-team.github.io/ontology/core#"
 _SUB = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
 
 

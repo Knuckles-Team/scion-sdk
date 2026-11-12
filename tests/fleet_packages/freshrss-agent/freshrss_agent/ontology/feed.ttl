@@ -1,4 +1,4 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix feed: <https://example.invalid/ontology/feed#> .
+@prefix feed: <https://knuckles-team.github.io/ontology/connector/feed#> .
 
 feed:Article a owl:Class .

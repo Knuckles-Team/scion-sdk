@@ -18,8 +18,8 @@ from scion_sdk.ingest.engine import EngineSettings
 
 pytestmark = pytest.mark.spec("SCION-CONNECTOR-CONTROL-R014.23")
 
-VOCAB = "http://knuckles.team/kg/quant#"
-ANALYSIS = "http://knuckles.team/kg/quant#SignalFusionAnalysis"
+VOCAB = "https://knuckles-team.github.io/ontology/quant#"
+ANALYSIS = "https://knuckles-team.github.io/ontology/quant#SignalFusionAnalysis"
 
 
 class _NotServed(Exception):

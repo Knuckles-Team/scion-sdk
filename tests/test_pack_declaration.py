@@ -21,17 +21,17 @@ _DECLARATION = {
         {
             "kind": "tool",
             "name": "list_widgets",
-            "domain_class_iri": "http://knuckles.team/kg#Widget",
+            "domain_class_iri": "https://knuckles-team.github.io/ontology/core#Widget",
         }
     ],
     "sources": [
         {
             "name": "widgets",
-            "class_iri": "http://knuckles.team/kg#Widget",
+            "class_iri": "https://knuckles-team.github.io/ontology/core#Widget",
             "field_mappings": [
                 {
                     "field": "serial",
-                    "property_iri": "http://knuckles.team/kg#serialNumber",
+                    "property_iri": "https://knuckles-team.github.io/ontology/core#serialNumber",
                 }
             ],
             "key_fields": ["serial"],
@@ -73,10 +73,11 @@ def test_declaration_round_trip_and_nested_property_refusal() -> None:
 def test_components_build_a_declaration_directly() -> None:
     source = SourceObject(
         name="widgets",
-        class_iri="http://knuckles.team/kg#Widget",
+        class_iri="https://knuckles-team.github.io/ontology/core#Widget",
         field_mappings=(
             FieldMapping(
-                field="serial", property_iri="http://knuckles.team/kg#serialNumber"
+                field="serial",
+                property_iri="https://knuckles-team.github.io/ontology/core#serialNumber",
             ),
         ),
         key_fields=("serial",),
@@ -87,7 +88,7 @@ def test_components_build_a_declaration_directly() -> None:
     node = DeclaredNode(
         kind="tool",
         name="list_widgets",
-        domain_class_iri="http://knuckles.team/kg#Widget",
+        domain_class_iri="https://knuckles-team.github.io/ontology/core#Widget",
     )
     declaration = ConnectorPackDeclaration(
         connector="widget-mcp",

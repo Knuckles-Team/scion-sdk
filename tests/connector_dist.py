@@ -7,8 +7,8 @@ import textwrap
 from pathlib import Path
 
 ONTOLOGY = """\
-@prefix kg: <http://knuckles.team/kg#> .
-@prefix demo: <https://example.invalid/ontology/demo#> .
+@prefix kg: <https://knuckles-team.github.io/ontology/core#> .
+@prefix demo: <https://knuckles-team.github.io/ontology/connector/demo#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 

@@ -43,7 +43,7 @@ async def exercise(root: Path, compressed: bytes):
                     "ontology_class": "WeatherSystem",
                 },
             },
-            ontology=b"@prefix : <http://knuckles.team/kg#> . @prefix owl: <http://www.w3.org/2002/07/owl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . :occursIn a owl:ObjectProperty ; rdfs:domain :WeatherEvent ; rdfs:range :WeatherSystem .",
+            ontology=b"@prefix : <https://knuckles-team.github.io/ontology/core#> . @prefix owl: <http://www.w3.org/2002/07/owl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . :occursIn a owl:ObjectProperty ; rdfs:domain :WeatherEvent ; rdfs:range :WeatherSystem .",
         )
 
         async def authority(_connector):

@@ -10,9 +10,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from scion_sdk.ontology_namespaces import CORE_NAMESPACE
+
 __all__ = ["CORE_NAMESPACE", "orphan_classes", "parse_triples"]
 
-CORE_NAMESPACE = "http://knuckles.team/kg#"
+
 _OWL_CLASS = "http://www.w3.org/2002/07/owl#Class"
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _SUBCLASS = "http://www.w3.org/2000/01/rdf-schema#subClassOf"

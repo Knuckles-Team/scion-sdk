@@ -1,4 +1,4 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix archivebox: <https://example.invalid/ontology/archivebox#> .
+@prefix archivebox: <https://knuckles-team.github.io/ontology/connector/archivebox#> .
 
 archivebox:Snapshot a owl:Class .
