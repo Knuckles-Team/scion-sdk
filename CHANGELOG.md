@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.11.1
+
+### Fixed
+
+- The condensed-tool finding looks for an `action` that selects an operation (a string or enum);
+  an `action` that is the upstream API's own object payload no longer counts as routing
+  (SCION-CONNECTOR-CONTROL-R916.4).
+- A `connector_sources` entry may name a tool the connector declares in `UPSTREAM_TOOLS`: the
+  declaration builder and the conformance `connector_sources` check now accept the declared
+  upstream names next to the registered tools, so a proxy connector no longer fails with
+  "declares unknown tool" (SCION-CONNECTOR-CONTROL-R916.9).
+- The rendered surface contracts are written with prefixed names and served in self-contained
+  shards (`contracts.ttl`, `contracts-2.ttl`, ...) of at most 1.5 MB, so a connector with hundreds
+  of tools stays under the connector pack's 2 MiB body bound (SCION-CONNECTOR-CONTROL-R916.3).
+
 ## 0.11.0
 
 ### Changed

@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from importlib import resources
@@ -58,6 +59,7 @@ __all__ = [
     "load_surface",
     "prompt_agent_findings",
     "render_surface_turtle",
+    "render_surface_turtle_shards",
     "surface_contract_vocabulary",
     "surface_findings",
 ]
@@ -249,13 +251,20 @@ def _segment(value: str) -> str:
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in value)
 
 
+_PN_LOCAL = re.compile(r"[A-Za-z0-9_](?:[A-Za-z0-9_:.-]*[A-Za-z0-9_:-])?")
+
+
 class _Graph:
     def __init__(self, connector: str) -> None:
         self.connector = connector
         self.subjects: dict[str, list[tuple[str, str]]] = {}
 
     def iri(self, kind: str, name: str) -> str:
-        return f"<urn:scion:{_segment(self.connector)}:{kind}:{_segment(name)}>"
+        """The node IRI, written as a prefixed name under ``u:`` when the local part allows it (smaller body)."""
+        local = f"{kind}:{_segment(name)}"
+        if _PN_LOCAL.fullmatch(local):
+            return f"u:{local}"
+        return f"<urn:scion:{_segment(self.connector)}:{local}>"
 
     def add(self, subject: str, predicate: str, obj: str) -> None:
         pairs = self.subjects.setdefault(subject, [])
@@ -269,17 +278,34 @@ class _Graph:
         return subject
 
     def turtle(self) -> str:
+        return self.turtle_shards(None)[0]
+
+    def turtle_shards(self, limit: int | None) -> list[str]:
+        """The Turtle text, cut at subject boundaries into documents of at most ``limit`` bytes (each self-contained)."""
+        header = self._header()
+        shards: list[list[str]] = [[]]
+        size = len(header.encode())
+        for subject in sorted(self.subjects):
+            pairs = sorted(self.subjects[subject], key=lambda p: (p[0] != "a", p))
+            body = " ;\n    ".join(f"{p} {o}" for p, o in pairs)
+            block = f"{subject}\n    {body} .\n"
+            cost = len(block.encode()) + 1
+            if limit is not None and shards[-1] and size + cost > limit:
+                shards.append([])
+                size = len(header.encode())
+            shards[-1].append(block)
+            size += cost
+        return [header + "\n".join(blocks) for blocks in shards]
+
+    def _header(self) -> str:
         lines = [
+            f"@prefix u: <urn:scion:{_segment(self.connector)}:> .",
             f"@prefix kg: <{CORE_NS}> .",
             f"@prefix sc: <{CONTRACT_NS}> .",
             "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
             "",
         ]
-        for subject in sorted(self.subjects):
-            pairs = sorted(self.subjects[subject], key=lambda p: (p[0] != "a", p))
-            body = " ;\n    ".join(f"{p} {o}" for p, o in pairs)
-            lines.append(f"{subject}\n    {body} .\n")
-        return "\n".join(lines)
+        return "\n".join(lines) + "\n"
 
 
 def _holds_iri(connector: str, value: str) -> str:
@@ -401,6 +427,22 @@ def render_surface_turtle(
     ``prompts`` maps each packaged prompt name to its JSON document; its
     ``agent`` object becomes the prompt's agent-definition triples.
     """
+    return _surface_graph(declaration, prompts).turtle()
+
+
+def render_surface_turtle_shards(
+    declaration: SurfaceDeclaration,
+    prompts: Mapping[str, Mapping[str, Any]] | None = None,
+    limit: int = 1_500_000,
+) -> list[str]:
+    """The same Turtle cut into self-contained documents of at most ``limit`` bytes (a connector pack bounds each body)."""
+    return _surface_graph(declaration, prompts).turtle_shards(limit)
+
+
+def _surface_graph(
+    declaration: SurfaceDeclaration,
+    prompts: Mapping[str, Mapping[str, Any]] | None,
+) -> _Graph:
     graph = _Graph(declaration.connector)
     for contract in declaration.contracts:
         _render_contract(graph, contract)
@@ -412,10 +454,24 @@ def render_surface_turtle(
         _render_role(graph, role)
     for name in sorted(prompts or {}):
         _render_agent(graph, name, (prompts or {})[name])
-    return graph.turtle()
+    return graph
 
 
 # ── findings ────────────────────────────────────────────────────────────────
+
+
+def _is_dispatch_selector(prop: Any) -> bool:
+    """Whether an ``action`` property selects an operation (anything but an object payload).
+
+    An ``action`` that is an object, or a union of objects, is the upstream API's own request
+    body field (a tagged payload), not a selector that routes to different handlers.
+    """
+    if not isinstance(prop, Mapping):
+        return False
+    variants = prop.get("anyOf") or prop.get("oneOf")
+    if variants:
+        return any(_is_dispatch_selector(v) for v in variants)
+    return not (prop.get("type") == "object" or "properties" in prop)
 
 
 def _surface_gaps(
@@ -431,7 +487,7 @@ def _surface_gaps(
         found.append("no tools served")
     for name in sorted(tool_schemas):
         properties = (tool_schemas[name] or {}).get("properties") or {}
-        if "action" in properties:
+        if _is_dispatch_selector(properties.get("action")):
             found.append(f"tool {name} routes an action parameter (condensed tool)")
     if not any(not uri.startswith(_CONTENT_SCHEMES) for uri in resources):
         found.append("no data resource served")

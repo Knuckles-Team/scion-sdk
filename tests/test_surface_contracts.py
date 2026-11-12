@@ -456,6 +456,23 @@ def test_no_declaration_serves_no_contracts_resource(demo, tmp_path: Path) -> No
         connector="demo-mcp", package_root=tmp_path / "democonn", package_version="1"
     )
     assert contracts_resource(content) is None
+    from scion_sdk.mcp.content import contracts_resources
+
+    assert contracts_resources(content) == []
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.3")
+def test_a_small_declaration_is_served_as_the_single_contracts_resource(
+    demo, tmp_path: Path
+) -> None:
+    from scion_sdk.mcp.content import ConnectorContent, contracts_resources
+
+    demo()
+    content = ConnectorContent(
+        connector="demo-mcp", package_root=tmp_path / "democonn", package_version="1"
+    )
+    served = contracts_resources(content)
+    assert [str(r.uri) for r in served] == ["ontology://demo-mcp/contracts.ttl"]
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.7")
@@ -567,3 +584,36 @@ def test_load_surface_reads_upstream_tools(demo) -> None:
     _drop_demo()
     declaration = load_surface("democonn", connector="demo-mcp")
     assert declaration is not None and declaration.upstream_tools[0].name == "up_list"
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.3")
+def test_contracts_are_cut_into_self_contained_shards_under_the_pack_bound() -> None:
+    from scion_sdk.surface_contracts import render_surface_turtle_shards
+
+    decl = _declaration()
+    whole = set(parse_triples(render_surface_turtle(decl)))
+    shards = render_surface_turtle_shards(decl, limit=600)
+    assert len(shards) > 1
+    assert all(len(text.encode()) <= 600 + 400 for text in shards)
+    assert set().union(*(set(parse_triples(text)) for text in shards)) == whole
+    assert render_surface_turtle_shards(decl) == [render_surface_turtle(decl)]
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.4")
+def test_an_action_body_field_of_the_upstream_api_is_not_a_condensed_tool() -> None:
+    payload = {
+        "anyOf": [{"type": "object", "properties": {"AddFlags": {"type": "object"}}}]
+    }
+    selector = {"type": "string", "enum": ["list", "get"]}
+    body = surface_findings(
+        _declaration(),
+        **_SERVED,
+        tool_schemas={"demo_get": {"properties": {"action": payload}}},
+    )
+    assert not [f for f in body if "condensed" in f]
+    routed = surface_findings(
+        _declaration(),
+        **_SERVED,
+        tool_schemas={"demo_get": {"properties": {"action": selector}}},
+    )
+    assert [f for f in routed if "condensed" in f]

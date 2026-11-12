@@ -115,6 +115,7 @@ def load_sources_module(package_root: Path | str | None) -> Mapping[str, Any] | 
         )
     field_sets = dict(getattr(loaded, "FIELD_SETS", {}))
     return {
+        "UPSTREAM_TOOLS": _declared_upstream_names(module),
         "SOURCES": _expanded_sources(getattr(loaded, "SOURCES", ()), field_sets),
         "SCHEMA_MAPPINGS": {
             key: expand_field_sets(mapping, field_sets)
@@ -122,6 +123,22 @@ def load_sources_module(package_root: Path | str | None) -> Mapping[str, Any] | 
         },
         "RESOURCES": tuple(getattr(loaded, "RESOURCES", ())),
     }
+
+
+def _declared_upstream_names(package: str) -> tuple[str, ...]:
+    """Served names of the tools ``<package>.connector_contracts`` declares in ``UPSTREAM_TOOLS``."""
+    try:
+        contracts = importlib.import_module(f"{package}.connector_contracts")
+    except ModuleNotFoundError as exc:
+        if exc.name in (package, f"{package}.connector_contracts"):
+            return ()
+        raise
+    return tuple(
+        sorted(
+            str(getattr(t, "name", ""))
+            for t in getattr(contracts, "UPSTREAM_TOOLS", ())
+        )
+    )
 
 
 def _collect_declared_sources(
@@ -147,6 +164,7 @@ def _declared_pairs(
     tool_list: list[Any], declared: Mapping[str, Any]
 ) -> list[tuple[str, dict[str, Any]]]:
     names = {str(getattr(t, "name", "")) for t in tool_list}
+    names |= set(declared.get("UPSTREAM_TOOLS", ()))
     pairs: list[tuple[str, dict[str, Any]]] = []
     for tool in sorted(tool_list, key=lambda t: str(getattr(t, "name", ""))):
         pairs += [(tool.name, entry) for entry in _entries(tool)]
@@ -201,7 +219,8 @@ def build_declaration(
     """Assemble the declaration from the tools' ``meta`` and a sources module.
 
     Raises:
-        ValueError: the sources module names a tool the server does not register.
+        ValueError: the sources module names a tool the server neither registers nor
+            declares in the connector's ``UPSTREAM_TOOLS``.
     """
     declared = declared or {}
     pairs = _declared_pairs(list(tools), declared)
