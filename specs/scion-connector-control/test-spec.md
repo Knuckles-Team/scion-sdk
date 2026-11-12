@@ -625,7 +625,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R916.6` | `tests/test_surface_contracts.py::test_self_check_flags_an_action_routed_tool` |
 | `SCION-CONNECTOR-CONTROL-R916.7` | `tests/test_surface_contracts.py::test_complete_drafts_a_full_declaration_for_a_bare_connector` |
 | `SCION-CONNECTOR-CONTROL-R916.8` | `tests/test_surface_contracts.py::test_prompt_agent_definitions_are_validated` |
-| `SCION-CONNECTOR-CONTROL-R916.9` | `tests/test_surface_contracts.py::test_declared_upstream_tools_count_as_served_and_are_checked_like_registered_ones`, `tests/test_surface_contracts.py::test_declared_upstream_tool_gaps_are_named` |
+| `SCION-CONNECTOR-CONTROL-R916.9` | `tests/test_surface_contracts.py::test_declared_upstream_tools_count_as_served_and_are_checked_like_registered_ones`, `tests/test_surface_contracts.py::test_declared_upstream_tool_gaps_are_named`, `tests/test_single_declaration.py::test_declared_upstream_tools_are_known_to_connector_sources` |
 
 ## SCION-CONNECTOR-CONTROL-R914 acceptance
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.1
+
+### Fixed
+
+- A `connector_sources` entry may name a tool the connector declares in `UPSTREAM_TOOLS`: the
+  declaration builder and the conformance `connector_sources` check now accept the declared
+  upstream names next to the registered tools, so a proxy connector no longer fails with
+  "declares unknown tool" (SCION-CONNECTOR-CONTROL-R916.9).
+
 ## 0.11.0
 
 ### Changed

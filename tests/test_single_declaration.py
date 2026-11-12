@@ -413,3 +413,35 @@ def test_connector_sources_module_declares_by_tool_name(
             (),
             declared={"SOURCES": ({"connector_sources": [{"tool": "nope"}]},)},
         )
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.9")
+def test_declared_upstream_tools_are_known_to_connector_sources(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A source may name a tool the connector proxies and declares in UPSTREAM_TOOLS."""
+    from scion_sdk.ingest.live_declaration import build_declaration, load_sources_module
+
+    pkg = tmp_path / "proxypkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "connector_contracts.py").write_text(
+        "from scion_sdk.surface_contracts import UpstreamTool\n"
+        "UPSTREAM_TOOLS = (UpstreamTool('remote', 'whoami', 'Who am I', {'type': 'object'}),)\n",
+        encoding="utf-8",
+    )
+    (pkg / "connector_sources.py").write_text(
+        "from scion_sdk.ingest.live_declaration import source_meta\n"
+        "SOURCES = (source_meta(tool='remote_whoami', source_id='who',"
+        " record_type='Thing', id_field='id', ontology_class='demo:Thing'),)\n",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    declared = load_sources_module(pkg)
+    assert declared is not None and declared["UPSTREAM_TOOLS"] == ("remote_whoami",)
+    tools = registered_tools(_server()).values()
+    by_name = build_declaration("proxy-mcp", tools, (), declared=declared).source("who")
+    assert by_name is not None and by_name.tools == ("remote_whoami",)
+    declared = {**declared, "UPSTREAM_TOOLS": ()}
+    with pytest.raises(ValueError, match="unknown tool 'remote_whoami'"):
+        build_declaration("proxy-mcp", tools, (), declared=declared)
