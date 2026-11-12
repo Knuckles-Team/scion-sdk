@@ -36,3 +36,4 @@ Run the served proof of the rows below from a fresh checkout after `uv sync`. Ea
 - SCION-CONNECTOR-CONTROL-R916.6: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_self_check_flags_an_action_routed_tool -q`
 - SCION-CONNECTOR-CONTROL-R916.7: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_complete_drafts_a_full_declaration_for_a_bare_connector -q`
 - SCION-CONNECTOR-CONTROL-R916.8: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py::test_prompt_agent_definitions_are_validated -q`
+- SCION-CONNECTOR-CONTROL-R916.9: `PYTHONNOUSERSITE=1 uv run pytest tests/test_surface_contracts.py -k upstream -q`

@@ -21,6 +21,7 @@ from scion_sdk.surface_contracts import (
     SurfaceLink,
     ToolStep,
     ToolUseContract,
+    UpstreamTool,
     load_surface,
     prompt_agent_findings,
     render_surface_turtle,
@@ -491,3 +492,78 @@ def test_private_helpers_agree_with_the_public_entry_points(demo) -> None:
     assert render_source(decl).startswith('"""Surface contracts')
     drafts = write_drafts("democonn", write=False)
     assert [path for path, _ in drafts] == ["connector_contracts.py"]
+
+
+def _proxy_declaration(tools: list[UpstreamTool]) -> SurfaceDeclaration:
+    """A proxy connector: no local tool, every tool declared from the upstream."""
+    return SurfaceDeclaration(
+        connector="proxy-mcp",
+        contracts=[
+            ToolUseContract(
+                "inspect",
+                [
+                    ToolStep(
+                        "up_list", ["zone"], ["items"], [Refusal("DENIED", "no scope")]
+                    )
+                ],
+            )
+        ],
+        links=[
+            SurfaceLink("inspect", tools=["up_list"], prompts=["op"], skills=["pub"])
+        ],
+        locations=[DataLocation("items", ["Item"], "primary", "up_list")],
+        upstream_tools=tools,
+    )
+
+
+_LIST = UpstreamTool(
+    "up", "list", "List items.", {"type": "object", "properties": {"zone": {}}}
+)
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.9")
+def test_declared_upstream_tools_count_as_served_and_are_checked_like_registered_ones() -> (
+    None
+):
+    served = {**_SERVED, "tools": set()}
+    assert surface_findings(_proxy_declaration([_LIST]), **served) == []
+    assert "no tools served" in surface_findings(_proxy_declaration([]), **served)
+    assert _LIST.name == "up_list"
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.9")
+def test_declared_upstream_tool_gaps_are_named() -> None:
+    served = {**_SERVED, "tools": {"up_local"}}
+    tools = [
+        _LIST,
+        UpstreamTool("up", "list", "", {"type": "array"}),
+        UpstreamTool("up", "local", "Clashes.", {"type": "object"}),
+        UpstreamTool(
+            "up", "route", "Routes.", {"type": "object", "properties": {"action": {}}}
+        ),
+        UpstreamTool("up", "bad", "Bad flag.", {"type": "object"}, destructive="yes"),  # type: ignore[arg-type]
+    ]
+    found = surface_findings(_proxy_declaration(tools), **served)
+    for gap in (
+        "upstream tool up_list is declared twice",
+        "upstream tool up_list has no description",
+        "upstream tool up_list has no object input schema",
+        "upstream tool up_local collides with a local tool",
+        "tool up_route routes an action parameter (condensed tool)",
+        "upstream tool up_bad has no destructive annotation",
+    ):
+        assert gap in found
+    assert "contract inspect step 1 names unserved tool up_list" not in found
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.9")
+def test_load_surface_reads_upstream_tools(demo) -> None:
+    root = demo()
+    (root / "democonn" / "connector_contracts.py").write_text(
+        "from scion_sdk.surface_contracts import UpstreamTool\n"
+        "UPSTREAM_TOOLS = (UpstreamTool('up', 'list', 'List.', {'type': 'object'}),)\n",
+        encoding="utf-8",
+    )
+    _drop_demo()
+    declaration = load_surface("democonn", connector="demo-mcp")
+    assert declaration is not None and declaration.upstream_tools[0].name == "up_list"

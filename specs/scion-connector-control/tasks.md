@@ -312,6 +312,7 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T305 [US1] SCION-CONNECTOR-CONTROL-R916.6 Hot-path proof: a served connector carries its contracts.
 - [x] T306 [US1] SCION-CONNECTOR-CONTROL-R916.7 Backfill: complete drafts the declaration of an existing connector.
 - [x] T307 [US1] SCION-CONNECTOR-CONTROL-R916.8 Behavior: prompts are complete agent definitions.
+- [x] T307A [US1] SCION-CONNECTOR-CONTROL-R916.9 Declared upstream tools: a proxy connector declares the tools its upstream serves.
 - [x] T308 [US1] SCION-CONNECTOR-CONTROL-R025.8 A typed refusal reaches the caller as itself, never as an internal error.
 - [ ] T309 [US1] SCION-CONNECTOR-CONTROL-R917 Connector lifecycle is one explicit state machine (rollup).
 - [x] T310 [US1] SCION-CONNECTOR-CONTROL-R917.1 Model: states, events and the transition table.
