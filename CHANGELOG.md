@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.2
+
+### Added
+
+- `scion_sdk.mcp.destructive`: the one destructive-operation declaration and guard. A
+  hand-written action-routed tool declares its destructive actions with
+  `destructive_actions(*actions)`; each becomes a per-action tool with the MCP
+  `destructiveHint` annotation and the standard `confirm` argument, and a call is refused
+  unless the live caller confirmed it. `SCION_ALLOW_DESTRUCTIVE` is the single operator
+  setting for unattended use. A served client method declares itself with
+  `destructive_operation` (SCION-CONNECTOR-CONTROL-R930).
+
 ## 0.10.1
 
 ### Added

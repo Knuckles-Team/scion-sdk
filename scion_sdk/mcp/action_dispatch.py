@@ -47,7 +47,23 @@ DISCOVERY_ACTIONS = ("list_actions", "help", "actions")
 _MAX_JSON_OBJECT_INPUT = 64 * 1024
 
 _DESTRUCTIVE_ACTION_TOKENS = frozenset(
-    {"deactivate", "delete", "destroy", "drop", "purge", "remove"}
+    {
+        "deactivate",
+        "delete",
+        "destroy",
+        "drop",
+        "erase",
+        "kill",
+        "prune",
+        "purge",
+        "remove",
+        "revoke",
+        "terminate",
+        "truncate",
+        "unassign",
+        "uninstall",
+        "wipe",
+    }
 )
 
 
