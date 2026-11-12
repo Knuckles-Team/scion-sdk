@@ -1,5 +1,5 @@
 {
-  "graph_sha256": "d5f9b531f3e4cd4e29a7ae3ddaffbdd9ad91d74bdab2372a8a2f87e55fb21f4f",
+  "graph_sha256": "e6687cf4a745a79f1740dcf455104eb5d1d6658a3d44b5359a13d96969a2e8a8",
   "installed_distributions": [
     "annotated-types==0.8.0",
     "anyio==4.15.1",
