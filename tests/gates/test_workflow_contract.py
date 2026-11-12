@@ -150,7 +150,12 @@ def test_release_publishes_only_for_a_tag_or_dispatch() -> None:
     assert set(triggers) == {"push", "workflow_dispatch"}
     assert triggers["push"] == {"tags": ["v*"]}
     assert workflow["concurrency"]["cancel-in-progress"] is False
-    assert set(workflow["jobs"]) == {"build", "publish-pypi", "github-release"}
+    assert set(workflow["jobs"]) == {
+        "build",
+        "consumer-gate",
+        "publish-pypi",
+        "github-release",
+    }
     release = workflow["jobs"]["github-release"]
     assert release["needs"] == ["publish-pypi"]
     assert release["if"] == "startsWith(github.ref, 'refs/tags/v')"
