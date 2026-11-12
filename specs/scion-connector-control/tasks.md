@@ -312,7 +312,6 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T305 [US1] SCION-CONNECTOR-CONTROL-R916.6 Hot-path proof: a served connector carries its contracts.
 - [x] T306 [US1] SCION-CONNECTOR-CONTROL-R916.7 Backfill: complete drafts the declaration of an existing connector.
 - [x] T307 [US1] SCION-CONNECTOR-CONTROL-R916.8 Behavior: prompts are complete agent definitions.
-- [x] T307A [US1] SCION-CONNECTOR-CONTROL-R916.9 Declared upstream tools: a proxy connector declares the tools its upstream serves.
 - [x] T308 [US1] SCION-CONNECTOR-CONTROL-R025.8 A typed refusal reaches the caller as itself, never as an internal error.
 - [ ] T309 [US1] SCION-CONNECTOR-CONTROL-R917 Connector lifecycle is one explicit state machine (rollup).
 - [x] T310 [US1] SCION-CONNECTOR-CONTROL-R917.1 Model: states, events and the transition table.
@@ -335,3 +334,4 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [ ] T327 [US1] SCION-CONNECTOR-CONTROL-R930.1 The guard refuses a declared action without a live confirmation. `guard_destructive` runs before a declared action reaches the backend.
 - [ ] T328 [US1] SCION-CONNECTOR-CONTROL-R930.2 One operator setting for unattended use. `SCION_ALLOW_DESTRUCTIVE` (default false) is the only configuration name for allowing destructive operations without a live confirmation, for every connector, read through `scion_sdk.config.setting`.
 - [ ] T329 [US1] SCION-CONNECTOR-CONTROL-R930.3 A client method declares itself destructive once.
+- [x] T330 [US1] SCION-CONNECTOR-CONTROL-R916.9 Declared upstream tools: a proxy connector declares the tools its upstream serves.
