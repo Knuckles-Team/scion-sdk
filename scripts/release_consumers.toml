@@ -1,0 +1,18 @@
+# Consumers a candidate scion-sdk wheel must work with before it is uploaded
+# (SCION-QUALITY-RELEASE-R007). Each consumer is cloned at `ref`, installed with
+# the candidate wheel overriding its scion-sdk requirement, imported, and its
+# tests collected. Add a consumer here in the same change that migrates it.
+
+[[consumer]]
+repo = "Knuckles-Team/arbora"
+ref = "main"
+import_module = "arbora"
+extras = ["test"]
+tests = "tests"
+
+[[consumer]]
+repo = "Knuckles-Team/gitlab-api"
+ref = "main"
+import_module = "gitlab_api"
+extras = ["test"]
+tests = "tests"

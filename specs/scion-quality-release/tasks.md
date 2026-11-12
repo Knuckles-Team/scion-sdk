@@ -11,3 +11,4 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T004 [US1] SCION-QUALITY-RELEASE-R004 Public documentation follows a task-first README and site structure.
 - [x] T005 [US1] SCION-QUALITY-RELEASE-R005.1 The SDK ships connector conformance as a test plugin.
 - [x] T006 [US1] SCION-QUALITY-RELEASE-R006 Metric scanners report weekly and never gate CI.
+- [ ] T007 [US1] SCION-QUALITY-RELEASE-R007 A candidate SDK wheel imports and collects in pinned consumers before it is uploaded.
