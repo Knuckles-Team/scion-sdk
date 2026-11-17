@@ -2,36 +2,21 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 from fastmcp.prompts import Prompt
 
-from scion_sdk.mcp.prompt_pack_meta import ContentError, _prompt_pack_metadata
+from scion_sdk.manifest.prompt_source import (
+    composed_text as _composed_text,
+)
+from scion_sdk.manifest.prompt_source import (
+    prompt_document as _prompt_document,
+)
+from scion_sdk.mcp.prompt_pack_meta import _prompt_pack_metadata
 
 #: Reverse-DNS ``_meta`` key carrying a prompt's role, topic, version and target.
 PROMPT_META_KEY = "team.knuckles/prompt"
-
-
-def _prompt_document(path: Path) -> dict[str, Any]:
-    try:
-        document = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ContentError(f"prompt {path.name} is not readable JSON") from exc
-    if not isinstance(document, dict):
-        raise ContentError(f"prompt {path.name} has no instructions.core_directive")
-    return document
-
-
-def _composed_text(path: Path, document: dict[str, Any]) -> str:
-    instructions = document.get("instructions")
-    directive = (
-        instructions.get("core_directive") if isinstance(instructions, dict) else None
-    )
-    if not isinstance(directive, str) or not directive.strip():
-        raise ContentError(f"prompt {path.name} has no instructions.core_directive")
-    return directive
 
 
 def _prompt_directive(path: Path) -> tuple[str, str]:

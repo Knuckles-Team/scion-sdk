@@ -1,4 +1,4 @@
-"""Prompt role and targets survive a live MCP capture into the engine pack."""
+"""Prompt role and targets survive, as declared, into the engine pack blueprint."""
 
 import json
 
@@ -35,14 +35,15 @@ async def test_prompt_role_and_concepts_reach_the_pack_entry(tmp_path):
                 pack.archive.data[ref.offset : ref.offset + ref.length]
             )
     assert bodies["system"]["role"] == "system"
-    assert bodies["system"]["serves"] == "https://example.org/Item"
-    assert (
-        bodies["system"]["definition"]["_meta"]["team.knuckles/prompt"]["role"]
-        == "Specialist"
-    )
-    assert bodies["default"]["role"] == "task"
+    assert bodies["system"]["ontology_class"] == "https://example.org/Item"
+    assert bodies["system"]["identity"] == {"role": "Specialist"}
+    assert "role" not in bodies["default"]
     assert bodies["default"]["serves"] == ["https://example.org/capability"]
     assert bodies["template"]["role"] == "template"
+    for name, body in bodies.items():
+        assert body["task"] == name
+        assert body["type"] == "prompt"
+        assert body["instructions"] == {"core_directive": "Read records."}
 
 
 async def test_prompt_role_rejects_unknown_role(tmp_path):

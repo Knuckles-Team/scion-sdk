@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock
 
 import mcp_types
 import pytest
+from fixture_server import PROMPT_SOURCES
 from medulla.generated.connector_pack import PackAnnotations
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
@@ -63,7 +64,7 @@ SERVER = ServerIdentity(name="demo-mcp", version="1.4.0")
 KINDS: tuple[ArtifactKind, ...] = (
     ToolArtifactKind(),
     SkillArtifactKind(),
-    PromptArtifactKind(),
+    PromptArtifactKind(PROMPT_SOURCES),
     ResourceArtifactKind(),
 )
 

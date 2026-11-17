@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from fixture_server import PROMPT_SOURCES
 from medulla.generated.connector_pack import PackEntryKind
 
 from scion_sdk.artifacts.pack import build_content_pack
@@ -18,7 +19,7 @@ from scion_sdk.testing.results import SessionFactory
 KINDS = (
     ToolArtifactKind(),
     SkillArtifactKind(),
-    PromptArtifactKind(),
+    PromptArtifactKind(PROMPT_SOURCES),
     ResourceArtifactKind(),
 )
 

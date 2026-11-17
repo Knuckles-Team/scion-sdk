@@ -1,141 +1,98 @@
-"""Capture prompt definitions and complete rendered ``prompts/get`` results."""
+"""Pack entries for served prompts: each body is the prompt's canonical blueprint."""
 
 from __future__ import annotations
 
-import mcp_types
+from collections.abc import Mapping
+from pathlib import Path
 
 from scion_sdk.artifacts.annotations import _annotations_from_mcp
-from scion_sdk.artifacts.common import (
-    json_object,
-    require_kind,
+from scion_sdk.artifacts.common import json_object, require_kind
+from scion_sdk.artifacts.prompt_blueprint import (
+    blueprint_from_source,
+    refusal,
+    validate_prompt_blueprint,
 )
 from scion_sdk.artifacts.prompts_helpers import (
-    _bound_arguments,
     _bounded_body,
-    _capture_metadata,
     _definition,
     _prompt_uri,
-    _result,
-    _synthesized_result,
-    _validate_contract,
-    _validate_identity,
 )
 from scion_sdk.contracts import CapturedArtifact, ServerIdentity
 from scion_sdk.http.bodies import DEFAULT_MAX_RESPONSE_BYTES
-from scion_sdk.ports.errors import (
-    MalformedArtifactError,
-    McpPromptRejectedError,
-)
+from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.ports.session import McpSession
 
 __all__ = ["PromptArtifactKind"]
 
 
-def _pack_meta(prompt: mcp_types.Prompt) -> dict[str, object]:
-    meta = prompt.meta or {}
-    pack_meta = meta.get("team.knuckles/prompt-pack", {})
-    if not isinstance(pack_meta, dict):
-        raise MalformedArtifactError("MCP prompt pack metadata must be an object")
-    role = pack_meta.get("role", "task")
-    if role not in ("system", "task", "template"):
-        raise MalformedArtifactError("MCP prompt pack role is invalid")
-    return {"role": role, "serves": pack_meta.get("serves")}
-
-
-def _prompt_entry(
-    prompt: mcp_types.Prompt,
-    server: ServerIdentity,
-    result: mcp_types.GetPromptResult,
-    *,
-    remaining: int,
-) -> CapturedArtifact:
-    body = {
-        "name": prompt.name,
-        **_pack_meta(prompt),
-        "description": prompt.description or "",
-        "arguments": [
-            argument.model_dump(mode="json", by_alias=True, exclude_none=True)
-            for argument in prompt.arguments or []
-        ],
-        "definition": prompt.model_dump(mode="json", by_alias=True, exclude_none=True),
-        "capture": _capture_metadata(prompt),
-        "result": result.model_dump(mode="json", by_alias=True, exclude_none=True),
-    }
-    return CapturedArtifact(
-        kind=PromptArtifactKind.kind,
-        uri=_prompt_uri(server, prompt.name),
-        name=prompt.name,
-        media_type="application/json",
-        body=_bounded_body(body, limit=remaining),
-        server=server,
-        annotations=_annotations_from_mcp(prompt),
-    )
-
-
-async def _render(
-    session: McpSession, prompt: mcp_types.Prompt
-) -> mcp_types.GetPromptResult:
-    bound = _bound_arguments(prompt)
-    try:
-        return _result(await session.get_prompt(prompt.name, bound))
-    except McpPromptRejectedError:
-        if not bound:
-            raise
-        return _synthesized_result(prompt)
-
-
 class PromptArtifactKind:
-    """Captured prompts with listing metadata, ordered messages and content types.
+    """Served prompts packed as canonical prompt blueprints.
 
-    A prompt with no required argument is captured as a render. A prompt with
-    a required argument is captured as a template: each required argument is
-    bound to a `{{name}}` placeholder so the capture stays deterministic. A
-    server that rejects a bound placeholder (for example a typed required
-    argument) still captures as a template, from the listed metadata alone,
-    instead of failing the whole capture.
+    ``sources`` maps each served prompt name to the blueprint file the
+    connector declares for it. The listing proves what is served; the body of
+    each entry is that file, read by the loader the serving path uses. A served
+    prompt with no declared file is a build error naming the prompt. There is
+    no capture shape and no synthesized blueprint.
     """
 
     kind = "prompt"
 
+    def __init__(self, sources: Mapping[str, Path] | None = None) -> None:
+        self._sources: dict[str, Path] = dict(sources or {})
+
+    def _existing(self, server: ServerIdentity) -> frozenset[str]:
+        return frozenset(_prompt_uri(server, name) for name in self._sources)
+
     async def list_entries(
         self, session: McpSession, server: ServerIdentity
     ) -> tuple[CapturedArtifact, ...]:
-        """Get each prompt with no invented values; bound the aggregate capture.
+        """One blueprint entry per served prompt, bounded in aggregate.
 
-        A required argument has no real value at capture time, so it is bound
-        to a `{{name}}` placeholder and the capture is recorded as a template.
-        Optional arguments stay unbound. A prompt with no required arguments
-        is still captured as a render, exactly as before.
-
-        A server can refuse a bound placeholder outright, most often because
-        a required argument is typed (int, float, bool, list, or enum) and
-        the string placeholder fails its validation. That refusal surfaces as
-        :class:`McpPromptRejectedError` and falls back to a synthesized
-        template capture instead of failing the whole prompt listing. A
-        prompt with no required argument never binds a placeholder, so the
-        same refusal there is a genuine failure and still raises. Any other
-        failure, such as the server being unreachable, always raises.
+        Raises:
+            MalformedArtifactError: a served prompt has no declared blueprint
+                file, or its file is not a canonical blueprint.
         """
         entries: list[CapturedArtifact] = []
         remaining = DEFAULT_MAX_RESPONSE_BYTES
         for listed in await session.list_prompts():
             prompt = _definition(listed)
-            result = await _render(session, prompt)
-            entry = _prompt_entry(prompt, server, result, remaining=remaining)
+            source = self._sources.get(prompt.name)
+            if source is None:
+                raise MalformedArtifactError(
+                    f"prompt {prompt.name!r} is served but has no blueprint source"
+                )
+            document = blueprint_from_source(
+                prompt.name,
+                source,
+                connector=server.name,
+                existing=self._existing(server),
+            )
+            entry = CapturedArtifact(
+                kind=self.kind,
+                uri=_prompt_uri(server, prompt.name),
+                name=prompt.name,
+                media_type="application/json",
+                body=_bounded_body(document, limit=remaining),
+                server=server,
+                annotations=_annotations_from_mcp(prompt),
+            )
             self.validate(entry)
             remaining -= len(entry.body)
             entries.append(entry)
         return tuple(entries)
 
     def validate(self, entry: CapturedArtifact) -> None:
-        """Require a complete typed render bound to its listed definition."""
+        """Require the engine's canonical prompt blueprint, bound to its identity."""
         require_kind(entry, self.kind)
         if len(entry.body.encode("utf-8")) > DEFAULT_MAX_RESPONSE_BYTES:
             raise MalformedArtifactError(
-                "MCP prompt capture exceeds the response byte bound"
+                "MCP prompt entry exceeds the response byte bound"
             )
         document = json_object(entry)
-        prompt = _definition(document.get("definition"))
-        _validate_identity(entry, prompt)
-        _validate_contract(document, prompt, entry)
-        _result(document.get("result"))
+        violations = validate_prompt_blueprint(document, self._existing(entry.server))
+        if violations:
+            raise refusal(entry.name, violations)
+        if entry.uri != _prompt_uri(entry.server, entry.name):
+            raise MalformedArtifactError(
+                "MCP prompt identity differs from its server and blueprint"
+            )

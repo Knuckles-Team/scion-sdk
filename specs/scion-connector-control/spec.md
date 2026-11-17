@@ -69,27 +69,20 @@ It records each removed IRI as `ontology-import:<iri>` in the entry's `requires_
 The builder handles Turtle and RDF/XML bodies.
 A body without external imports stays byte-identical.
 
-## Prompt capture with required arguments (SCION-CONNECTOR-CONTROL-R023)
+## Prompt pack entries are canonical blueprints (SCION-CONNECTOR-CONTROL-R023)
 
-A prompt with no required argument is captured by rendering it, unchanged from prior behavior.
-A prompt with a required argument is captured as a template instead of refused.
-`PromptArtifactKind` binds each required argument to a deterministic `{{name}}` placeholder.
-It calls `prompts/get` with those bound placeholders and leaves optional arguments unbound.
-The captured body records `capture.kind` as `template` and `capture.bound_arguments` as the placeholder map.
-`build_content_pack` treats a template capture the same as a rendered capture; the pack entry body is opaque bytes to the archive.
-A prompt onboarding path that previously raised `MalformedArtifactError` for a required argument now succeeds.
+Each prompt entry of a connector pack is the prompt blueprint the connector declares, not a capture of a render.
+The body holds `schema_version` `"1.0"`, a slug `task`, `type` `"prompt"`, a `source` naming the connector and the source file, and the prompt text under `instructions.core_directive`.
+The blueprint file is read by the same loader the serving path uses, so one parser reads a prompt for both.
+The builder fills an envelope field a file omits from facts it knows and never produces a body.
+Top-level `content` and `input` are refused; `extends` names a served prompt; `compose` is `append`, `prepend` or `replace`.
+The rules and their reason strings are the engine's (`MEDULLA-DECISION-ENGINE-R814.8`), asserted field by field in the L1 tests.
 
-## Prompt capture when the server rejects the bound placeholder (SCION-CONNECTOR-CONTROL-R024)
+## The build refuses a prompt that is not a blueprint (SCION-CONNECTOR-CONTROL-R024)
 
-A typed required prompt argument (`int`, `float`, `bool`, `list`, or an enum) can refuse the string `{{name}}` placeholder SCION-CONNECTOR-CONTROL-R023 binds for it.
-Capture must never depend on the server accepting a placeholder value for a typed argument.
-`McpClientSession.get_prompt` distinguishes a well-formed MCP protocol error from every other failure.
-A protocol error (`mcp.shared.exceptions.MCPError`) raises `McpPromptRejectedError`, a subclass of `McpTransportError`.
-Every other failure, including a transport failure such as a timeout or dropped connection, still raises the plain `McpTransportError` it always has.
-`PromptArtifactKind.list_entries` catches `McpPromptRejectedError` only for a prompt that bound at least one required argument.
-On that catch it builds the captured `result` from the prompt's own listed name and arguments alone, with no server-rendered content, and keeps `capture.kind` as `template`.
-A prompt with no required argument never bound a placeholder, so the same error there is a genuine rejection and still raises.
-Any failure that is not `McpPromptRejectedError` always raises, so a server that is truly unreachable still fails the capture.
+A prompt that is served but has no declared blueprint file is a build error that names the prompt.
+A capture-shaped body or a file that breaks a blueprint rule is refused at build time with its field paths and no values.
+There is no synthesized blueprint and no fallback to the capture shape; the old capture document is removed, not deprecated.
 
 ## Caller-scoped context and progress
 

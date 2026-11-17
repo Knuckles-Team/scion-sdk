@@ -2,9 +2,9 @@
 
 from typing import Any
 
+from scion_sdk.manifest.prompt_source import ContentError
 
-class ContentError(ValueError):
-    """A connector content file is malformed or missing."""
+__all__ = ["ContentError"]
 
 
 def _prompt_pack_metadata(
