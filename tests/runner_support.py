@@ -10,9 +10,12 @@ from typing import Any
 
 import anyio
 import pytest
+from fixture_server import PROMPT_SOURCES
 from fleet_declarations import DECLARATIONS
 from fleet_fixtures import (
+    ARCHIVEBOX_ROOT,
     FRESHRSS_READING_LIST,
+    FRESHRSS_ROOT,
 )
 from medulla.generated.connector_pack import (
     AgentLibraryMutationContext,
@@ -47,7 +50,18 @@ from scion_sdk.transports.mcp import McpTransport
 KINDS: tuple[ArtifactKind, ...] = (
     ToolArtifactKind(),
     SkillArtifactKind(),
-    PromptArtifactKind(),
+    PromptArtifactKind(
+        {
+            **PROMPT_SOURCES,
+            **{
+                path.stem: path
+                for root in (FRESHRSS_ROOT, ARCHIVEBOX_ROOT)
+                for path in (root / root.name.replace("-", "_") / "prompts").glob(
+                    "*.json"
+                )
+            },
+        }
+    ),
     ResourceArtifactKind(),
 )
 FAST = RunnerSettings(

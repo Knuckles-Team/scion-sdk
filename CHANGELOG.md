@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.11.2
+
+### Fixed
+
+- A connector pack's prompt entries are canonical prompt blueprints, which the engine requires
+  (MEDULLA-DECISION-ENGINE-R814.8). Each entry is the connector's declared blueprint file, read by the
+  loader the serving path uses, with `schema_version`, `task`, `type` and `source` completed from
+  provenance when the file omits them (SCION-CONNECTOR-CONTROL-R023).
+- The pack build refuses a served prompt that has no declared blueprint file, a capture-shaped body and
+  any file that breaks a blueprint rule, naming the prompt and the field paths. The old capture document
+  is removed with no compatibility path (SCION-CONNECTOR-CONTROL-R024).
+
 ## 0.11.1
 
 ### Fixed

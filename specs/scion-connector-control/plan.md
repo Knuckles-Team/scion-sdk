@@ -53,20 +53,25 @@ Unknowns settled in [research.md](research.md) for the upstream registry (`SCION
 
 Each slice is mergeable with its own conformance tests. No step requires a live home deployment for ordinary pull-request validation.
 
-### Prompt capture fallback (SCION-CONNECTOR-CONTROL-R024)
+### Prompt pack entries as blueprints (SCION-CONNECTOR-CONTROL-R023, SCION-CONNECTOR-CONTROL-R024)
 
-`transports/mcp_session.py` gains `McpPromptRejectedError(McpTransportError)`, raised from
-`McpClientSession.get_prompt` only when the underlying failure is `mcp.shared.exceptions.MCPError`
--- a well-formed protocol error the server returned, as opposed to a transport-level failure
-(timeout, dropped connection, malformed response) which keeps raising the existing
-`McpTransportError`. `artifacts/prompts.py` already imports from `transports/mcp.py`'s sibling
-module through `artifacts/pack.py`, so `artifacts/prompts.py` importing `McpPromptRejectedError`
-from `transports/mcp_session.py` keeps the same dependency direction. `PromptArtifactKind.list_entries`
-catches that one error type around `session.get_prompt`, and only when the prompt bound at least
-one required argument; it then builds the entry from a synthesized `GetPromptResult` listing the
-prompt's own argument names, never from server content. No change to `_capture_metadata`,
-`_validate_contract`, or `validate` is needed: `capture.kind` already depends only on whether an
-argument is required. It does not depend on how the result was obtained.
+`artifacts/prompt_blueprint.py` holds `validate_prompt_blueprint`, the field-by-field mirror of the engine rule
+(`MEDULLA-DECISION-ENGINE-R814.8`), and `blueprint_from_source`, which reads a declared file with the serving loader
+in `mcp/_content_prompts.py` and completes only the envelope. `PromptArtifactKind` takes a mapping from each served
+prompt name to its blueprint file; `build_connector_content_pack` builds it from `<package>/prompts/*.json`.
+`list_entries` still lists prompts over MCP to prove what is served, but it no longer calls `prompts/get`.
+A listed prompt with no source raises. `validate` runs the same validator on every entry. The capture helpers
+in `prompts_helpers.py` are removed. A generic remote session has no declared files, so it cannot build prompt entries.
+
+Pre-untangled design, one line per answer.
+
+- Owner: This repository, unit `artifacts`, which packs served content. The prompt rule itself belongs to the engine (`MEDULLA-DECISION-ENGINE-R814.8`); this unit mirrors it.
+- Cohesion: `prompt_blueprint.py` sits beside the other pack-entry kinds and holds the validator and the file-to-entry step together.
+- Dependency direction: `artifacts` imports the base `manifest.prompt_source` loader downward; `mcp` serving imports the same loader, so neither unit reaches into the other's private module and packing needs no MCP extra.
+- Interface depth: One validator, one file-to-entry function and one kind class taking a name-to-file map.
+- Special cases: None. Every prompt, system or task, takes the same path; a missing source is an error, not a branch.
+- State: None; the kind holds only its immutable source map.
+- Environment: None; the files are read from the connector package and no network is used.
 
 ### Cross-repo prerequisites (SCION-CONNECTOR-CONTROL-R037 to R044)
 

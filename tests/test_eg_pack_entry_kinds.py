@@ -14,6 +14,7 @@ from importlib import metadata
 from pathlib import Path
 
 import pytest
+from fixture_server import PROMPT_SOURCES
 from medulla.generated.connector_pack import PackEntryKind
 from packaging.requirements import Requirement
 from packaging.version import Version
@@ -94,7 +95,7 @@ async def test_a_pack_builds_against_the_engine(sessions: SessionFactory) -> Non
     kinds = (
         tools.ToolArtifactKind(),
         skills.SkillArtifactKind(),
-        prompts.PromptArtifactKind(),
+        prompts.PromptArtifactKind(PROMPT_SOURCES),
         resources.ResourceArtifactKind(),
     )
     async with sessions() as session:

@@ -20,6 +20,12 @@ what an agent can call is exactly what the knowledge graph records.
 A prompt file that has no `instructions.core_directive`, or a declared manifest
 that does not exist, is an error when the server starts.
 
+The pack entry for a prompt is that file as a canonical prompt blueprint:
+`schema_version` `"1.0"`, a slug `task`, `type` `"prompt"`, a `source` naming the
+connector and file, and the body under `instructions.core_directive`. A file that
+omits the first four gains them from provenance. A served prompt with no file, or a
+file that breaks a blueprint rule, fails the pack build and names the prompt.
+
 `ConnectorContent` also carries the publishing package version. A composition
 root that hosts declarative content from more than one package registers each
 provider explicitly, then calls

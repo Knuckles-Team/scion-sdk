@@ -2,41 +2,21 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 from fastmcp.prompts import Prompt
 
-from scion_sdk.mcp.prompt_pack_meta import ContentError, _prompt_pack_metadata
+from scion_sdk.manifest.prompt_source import composed_text, prompt_document
+from scion_sdk.mcp.prompt_pack_meta import _prompt_pack_metadata
 
 #: Reverse-DNS ``_meta`` key carrying a prompt's role, topic, version and target.
 PROMPT_META_KEY = "team.knuckles/prompt"
 
 
-def _prompt_document(path: Path) -> dict[str, Any]:
-    try:
-        document = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ContentError(f"prompt {path.name} is not readable JSON") from exc
-    if not isinstance(document, dict):
-        raise ContentError(f"prompt {path.name} has no instructions.core_directive")
-    return document
-
-
-def _composed_text(path: Path, document: dict[str, Any]) -> str:
-    instructions = document.get("instructions")
-    directive = (
-        instructions.get("core_directive") if isinstance(instructions, dict) else None
-    )
-    if not isinstance(directive, str) or not directive.strip():
-        raise ContentError(f"prompt {path.name} has no instructions.core_directive")
-    return directive
-
-
 def _prompt_directive(path: Path) -> tuple[str, str]:
-    document = _prompt_document(path)
-    return _composed_text(path, document), str(document.get("description") or "")
+    document = prompt_document(path)
+    return composed_text(path, document), str(document.get("description") or "")
 
 
 #: ``metadata`` keys already carried under their own meta name.
@@ -112,8 +92,8 @@ def _prompt_tags(document: dict[str, Any]) -> set[str]:
 
 
 def _register_prompt(mcp: Any, path: Path) -> None:
-    document = _prompt_document(path)
-    text = _composed_text(path, document)
+    document = prompt_document(path)
+    text = composed_text(path, document)
 
     def render() -> str:
         return text

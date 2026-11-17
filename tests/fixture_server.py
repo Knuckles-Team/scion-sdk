@@ -17,6 +17,10 @@ from fastmcp import FastMCP
 from scion_sdk.mcp.content import ConnectorContent, register_connector_content
 
 PACKAGE_ROOT = Path(__file__).parent / "fixture_package"
+#: Served prompt name to its declared blueprint file, for the pack builder.
+PROMPT_SOURCES = {
+    path.stem: path for path in sorted((PACKAGE_ROOT / "prompts").glob("*.json"))
+}
 CONNECTOR = "demo-agent"
 SERVER_NAME = "demo-mcp"
 SERVER_VERSION = "1.4.0"

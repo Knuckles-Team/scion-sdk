@@ -202,9 +202,14 @@ async def build_connector_content_pack(
     )
     register_connector_content(server, content)
     endpoint = TransportEndpoint(in_process=server)
+    prompt_sources = {
+        path.stem: path
+        for path in sorted((content.package_root / "prompts").glob("*.json"))
+        if not path.name.startswith("_")
+    }
     kinds: tuple[ArtifactKind, ...] = (
         SkillArtifactKind(),
-        PromptArtifactKind(),
+        PromptArtifactKind(prompt_sources),
         ResourceArtifactKind(),
     )
     async with McpTransport().session(endpoint) as session:

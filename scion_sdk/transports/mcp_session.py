@@ -10,12 +10,11 @@ import anyio
 import mcp_types
 from anyio.abc import TaskGroup
 from fastmcp import Client
-from mcp.shared.exceptions import MCPError
 
 from scion_sdk.contracts import ServerIdentity
 from scion_sdk.httpsupport.rate_limit import RateLimiter
 from scion_sdk.ports.change_source import ChangeEvent
-from scion_sdk.ports.errors import McpPromptRejectedError, McpTransportError
+from scion_sdk.ports.errors import McpTransportError
 from scion_sdk.transports._mcp_results import decode_tool_result
 from scion_sdk.transports.mcp_changes import (
     ChangeFeed,
@@ -24,7 +23,6 @@ from scion_sdk.transports.mcp_changes import (
 
 __all__ = [
     "McpClientSession",
-    "McpPromptRejectedError",
     "McpTransportError",
     "decode_tool_result",
 ]
@@ -106,20 +104,11 @@ class McpClientSession:
     async def get_prompt(
         self, name: str, arguments: Mapping[str, str]
     ) -> mcp_types.GetPromptResult:
-        """``prompts/get``; failures name the operation without source content.
-
-        A server-returned protocol error raises :class:`McpPromptRejectedError`
-        so a caller can tell "the server rejected this call" apart from any
-        other failure, which stays a plain :class:`McpTransportError`.
-        """
+        """``prompts/get``; failures name the operation without source content."""
         await self._pace_request()
         try:
             result = await self.client.get_prompt(name, dict(arguments))
             return mcp_types.GetPromptResult.model_validate(result)
-        except MCPError as exc:
-            raise McpPromptRejectedError(
-                f"MCP prompts/get failed for {name!r}"
-            ) from exc
         except Exception as exc:
             raise McpTransportError(f"MCP prompts/get failed for {name!r}") from exc
 

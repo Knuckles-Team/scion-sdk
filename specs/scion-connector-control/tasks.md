@@ -29,8 +29,8 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T022 [US1] SCION-CONNECTOR-CONTROL-R019.3 Container config mounts are declared once with an SDK schema.
 - [x] T023 [US1] SCION-CONNECTOR-CONTROL-R021 Connector ontologies declare access contracts for virtual reads.
 - [x] T024 [US1] SCION-CONNECTOR-CONTROL-R022 The pack builder scopes owl:imports to the pack.
-- [x] T025 [US1] SCION-CONNECTOR-CONTROL-R023 A prompt with a required argument becomes a template.
-- [x] T026 [US1] SCION-CONNECTOR-CONTROL-R024 A prompt the server rejects for its bound placeholder still captures as a template.
+- [x] T025 [US1] SCION-CONNECTOR-CONTROL-R023 Prompt pack entries are canonical prompt blueprints.
+- [x] T026 [US1] SCION-CONNECTOR-CONTROL-R024 The build refuses a prompt that is not a canonical blueprint.
 - [x] T027 [US1] SCION-CONNECTOR-CONTROL-R025.1 A local transport binds the SYSTEM actor.
 - [x] T028 [US1] SCION-CONNECTOR-CONTROL-R025.2 Authenticated HTTP binds the token's principal with inherited IdP roles and configured grants.
 - [x] T029 [US1] SCION-CONNECTOR-CONTROL-R025.3 Auth type none is a supported HTTP mode; it is the trusted local principal.
