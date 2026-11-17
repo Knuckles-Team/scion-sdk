@@ -8,7 +8,6 @@ from typing import Any
 
 import pytest
 from fastmcp import Client
-from fixture_server import PROMPT_SOURCES
 from pydantic import BaseModel
 
 from scion_sdk.access_contract import parse_access_contracts
@@ -129,12 +128,14 @@ async def test_factory_serves_and_packs_every_surface_with_a_parseable_contract(
             connector="widget-mcp",
             kinds=(
                 ToolArtifactKind(),
-                PromptArtifactKind(PROMPT_SOURCES),
+                PromptArtifactKind({"widget": tmp_path / "prompts" / "widget.json"}),
                 SkillArtifactKind(),
                 ResourceArtifactKind(),
             ),
         )
     entries = {entry.uri: entry for entry in pack.archive.entries}
+    assert "prompt://widget-mcp/widget" in entries
+    assert "prompt://widget-mcp/connector-status" not in entries
     assert "data://widget-mcp/widgets" in entries
     assert "ontology://widget-mcp/widget.ttl" in entries
     assert "shapes://widget-mcp/widget.ttl" in entries

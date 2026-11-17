@@ -21,6 +21,7 @@ from scion_sdk.contracts import CapturedArtifact, ServerIdentity
 from scion_sdk.http.bodies import DEFAULT_MAX_RESPONSE_BYTES
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.ports.session import McpSession
+from scion_sdk.surface_contracts import PLATFORM_PROMPTS
 
 __all__ = ["PromptArtifactKind"]
 
@@ -32,7 +33,9 @@ class PromptArtifactKind:
     connector declares for it. The listing proves what is served; the body of
     each entry is that file, read by the loader the serving path uses. A served
     prompt with no declared file is a build error naming the prompt. There is
-    no capture shape and no synthesized blueprint.
+    no capture shape and no synthesized blueprint. The prompts every SDK
+    server registers itself (``PLATFORM_PROMPTS``) are not connector content
+    and are not packed.
     """
 
     kind = "prompt"
@@ -57,6 +60,8 @@ class PromptArtifactKind:
         for listed in await session.list_prompts():
             prompt = _definition(listed)
             source = self._sources.get(prompt.name)
+            if source is None and prompt.name in PLATFORM_PROMPTS:
+                continue
             if source is None:
                 raise MalformedArtifactError(
                     f"prompt {prompt.name!r} is served but has no blueprint source"

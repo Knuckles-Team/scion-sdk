@@ -83,6 +83,7 @@ The rules and their reason strings are the engine's (`MEDULLA-DECISION-ENGINE-R8
 A prompt that is served but has no declared blueprint file is a build error that names the prompt.
 A capture-shaped body or a file that breaks a blueprint rule is refused at build time with its field paths and no values.
 There is no synthesized blueprint and no fallback to the capture shape; the old capture document is removed, not deprecated.
+The prompts every SDK server registers itself are not connector content and are not packed.
 
 ## Caller-scoped context and progress
 
