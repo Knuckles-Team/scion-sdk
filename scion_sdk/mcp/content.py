@@ -32,10 +32,10 @@ from fastmcp.resources import FileResource, TextResource
 from fastmcp.server.providers.skills import SkillsDirectoryProvider
 from pydantic import AnyUrl
 
+from scion_sdk.manifest.prompt_source import prompt_document
 from scion_sdk.mcp._content_descriptors import _register_resource_descriptors
 from scion_sdk.mcp._content_prompts import (
     PROMPT_META_KEY,
-    _prompt_document,
     _register_prompt,
 )
 from scion_sdk.mcp.prompt_pack_meta import ContentError
@@ -161,7 +161,7 @@ def contracts_resource(content: ConnectorContent) -> TextResource | None:
         return None
     uri = f"ontology://{content.connector}/contracts.ttl"
     prompts = {
-        path.stem: _prompt_document(path)
+        path.stem: prompt_document(path)
         for path in sorted((content.package_root / "prompts").glob("*.json"))
         if not path.name.startswith("_")
     }
@@ -187,7 +187,7 @@ def contracts_resources(content: ConnectorContent) -> list[TextResource]:
     if declaration is None:
         return []
     prompts = {
-        path.stem: _prompt_document(path)
+        path.stem: prompt_document(path)
         for path in sorted((content.package_root / "prompts").glob("*.json"))
         if not path.name.startswith("_")
     }

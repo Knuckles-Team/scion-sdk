@@ -7,12 +7,7 @@ from typing import Any
 
 from fastmcp.prompts import Prompt
 
-from scion_sdk.manifest.prompt_source import (
-    composed_text as _composed_text,
-)
-from scion_sdk.manifest.prompt_source import (
-    prompt_document as _prompt_document,
-)
+from scion_sdk.manifest.prompt_source import composed_text, prompt_document
 from scion_sdk.mcp.prompt_pack_meta import _prompt_pack_metadata
 
 #: Reverse-DNS ``_meta`` key carrying a prompt's role, topic, version and target.
@@ -20,8 +15,8 @@ PROMPT_META_KEY = "team.knuckles/prompt"
 
 
 def _prompt_directive(path: Path) -> tuple[str, str]:
-    document = _prompt_document(path)
-    return _composed_text(path, document), str(document.get("description") or "")
+    document = prompt_document(path)
+    return composed_text(path, document), str(document.get("description") or "")
 
 
 #: ``metadata`` keys already carried under their own meta name.
@@ -97,8 +92,8 @@ def _prompt_tags(document: dict[str, Any]) -> set[str]:
 
 
 def _register_prompt(mcp: Any, path: Path) -> None:
-    document = _prompt_document(path)
-    text = _composed_text(path, document)
+    document = prompt_document(path)
+    text = composed_text(path, document)
 
     def render() -> str:
         return text
