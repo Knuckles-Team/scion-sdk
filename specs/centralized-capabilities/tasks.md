@@ -7,9 +7,9 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T001 SCION-CENTRALIZED-CAPABILITIES-R001 implement and prove: Governed HTTP client and retry
 - [ ] T002 SCION-CENTRALIZED-CAPABILITIES-R002 implement and prove: Egress guard and pinned addresses
 - [ ] T003 SCION-CENTRALIZED-CAPABILITIES-R003 implement and prove: API client base and auth strategies
-- [ ] T004 SCION-CENTRALIZED-CAPABILITIES-R004.1 implement and prove: Refuse unsafe next-page URLs without exposing credentials
-- [ ] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
-- [ ] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
+- [x] T004 SCION-CENTRALIZED-CAPABILITIES-R004.1 implement and prove: Refuse unsafe next-page URLs without exposing credentials
+- [x] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
+- [x] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
 - [ ] T007 SCION-CENTRALIZED-CAPABILITIES-R005 implement and prove: Rate-limit telemetry and concurrency
 - [ ] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
 - [ ] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
