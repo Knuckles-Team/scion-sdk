@@ -48,7 +48,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T042 SCION-CENTRALIZED-CAPABILITIES-R037 implement and prove: Plugin entry-point groups
 - [ ] T043 SCION-CENTRALIZED-CAPABILITIES-R038 implement and prove: Connector test kit
 - [ ] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
-- [ ] T045 SCION-CENTRALIZED-CAPABILITIES-R040 implement and prove: Optional dependencies come from SDK extras
+- [x] T045 SCION-CENTRALIZED-CAPABILITIES-R040 implement and prove: Optional dependencies come from SDK extras
 - [ ] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
 - [ ] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
 - [ ] T048 SCION-CENTRALIZED-CAPABILITIES-R004.8 implement and prove: Stop repeated continuation tokens
