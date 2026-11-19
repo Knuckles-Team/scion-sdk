@@ -12,7 +12,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
 - [ ] T007 SCION-CENTRALIZED-CAPABILITIES-R005 implement and prove: Rate-limit telemetry and concurrency
 - [x] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
-- [ ] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
+- [x] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
 - [x] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
 - [x] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
 - [x] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics

@@ -29,6 +29,7 @@ from scion_sdk.testing._conformance_static import (
     _check_fleet_name,
     _check_version_from_metadata,
     _require,
+    check_error_redaction,
     trees,
 )
 
@@ -176,6 +177,11 @@ CHECKS: tuple[Check, ...] = (
     Check("kg_ingest", _ROW, check_kg_ingest),
     Check("one_entry_point", _ROW, _check_one_entry_point),
     Check("config_mounts", "SCION-CONNECTOR-CONTROL-R019.3", _check_config_mounts),
+    Check(
+        "error_redaction",
+        "SCION-CENTRALIZED-CAPABILITIES-R006.2",
+        check_error_redaction,
+    ),
     Check("surface_complete", "SCION-CONNECTOR-CONTROL-R916.5", check_surface_complete),
 )
 
