@@ -49,11 +49,11 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T043 SCION-CENTRALIZED-CAPABILITIES-R038 implement and prove: Connector test kit
 - [ ] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
 - [x] T045 SCION-CENTRALIZED-CAPABILITIES-R040 implement and prove: Optional dependencies come from SDK extras
-- [ ] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
-- [ ] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
-- [ ] T048 SCION-CENTRALIZED-CAPABILITIES-R004.8 implement and prove: Stop repeated continuation tokens
-- [ ] T049 SCION-CENTRALIZED-CAPABILITIES-R004.7 implement and prove: Protect pagination iterator state
-- [ ] T050 SCION-CENTRALIZED-CAPABILITIES-R004.6 implement and prove: Refuse malformed pagination pages
+- [x] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
+- [x] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
+- [x] T048 SCION-CENTRALIZED-CAPABILITIES-R004.8 implement and prove: Stop repeated continuation tokens
+- [x] T049 SCION-CENTRALIZED-CAPABILITIES-R004.7 implement and prove: Protect pagination iterator state
+- [x] T050 SCION-CENTRALIZED-CAPABILITIES-R004.6 implement and prove: Refuse malformed pagination pages
 - [ ] T051 SCION-CENTRALIZED-CAPABILITIES-R017.1 implement and prove: SDK A2A server takes a durable storage and serves tasks/list
 - [ ] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
 - [ ] T053 SCION-CENTRALIZED-CAPABILITIES-R041 implement and prove: connector-certify submits conformance evidence
