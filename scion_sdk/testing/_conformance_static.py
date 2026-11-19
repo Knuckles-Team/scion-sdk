@@ -110,3 +110,71 @@ def _spells_version(node: ast.AST) -> bool:
         and isinstance(value, ast.Constant)
         and isinstance(value.value, str)
     )
+
+
+def check_error_redaction(resolved: ResolvedConnector) -> None:
+    """Reject connector-local redaction and response-body error leakage."""
+    for path, tree in trees(resolved):
+        for node in ast.walk(tree):
+            finding = _error_redaction_finding(node)
+            if finding is not None:
+                raise ConformanceFailure(
+                    f"{path.name}:{getattr(node, 'lineno', 0)}: {finding}"
+                )
+
+
+def _error_redaction_finding(node: ast.AST) -> str | None:
+    if isinstance(
+        node, (ast.FunctionDef, ast.AsyncFunctionDef)
+    ) and node.name.startswith(("redact", "sanitize", "scrub", "mask_secret")):
+        return "OWN_REDACTION_HELPER"
+    if isinstance(node, ast.Raise) and _has_response_body(node.exc):
+        return "RESPONSE_BODY_IN_ERROR"
+    if _is_logging_call(node) and _has_response_body(node):
+        return "RESPONSE_BODY_IN_ERROR"
+    if isinstance(node, ast.Raise) and _raises_raw_status_error(node.exc):
+        return "RAW_ERROR_TYPE"
+    return None
+
+
+def _is_logging_call(node: ast.AST) -> bool:
+    return isinstance(node, ast.Call) and getattr(node.func, "attr", "") in {
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "exception",
+        "critical",
+    }
+
+
+def _has_response_body(node: ast.AST | None) -> bool:
+    if node is None:
+        return False
+    for candidate in ast.walk(node):
+        if not isinstance(candidate, ast.Attribute) or candidate.attr not in {
+            "text",
+            "content",
+            "body",
+        }:
+            continue
+        value = candidate.value
+        if isinstance(value, ast.Name) and value.id in {"response", "resp", "res"}:
+            return True
+        if (
+            isinstance(value, ast.Attribute)
+            and value.attr == "response"
+            and isinstance(value.value, ast.Name)
+            and value.value.id == "exc"
+        ):
+            return True
+    return False
+
+
+def _raises_raw_status_error(node: ast.AST | None) -> bool:
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    if not isinstance(func, ast.Attribute) or func.attr != "HTTPStatusError":
+        return False
+    return isinstance(func.value, ast.Name) and func.value.id in {"requests", "httpx"}

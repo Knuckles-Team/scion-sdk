@@ -7,15 +7,15 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T001 SCION-CENTRALIZED-CAPABILITIES-R001 implement and prove: Governed HTTP client and retry
 - [ ] T002 SCION-CENTRALIZED-CAPABILITIES-R002 implement and prove: Egress guard and pinned addresses
 - [ ] T003 SCION-CENTRALIZED-CAPABILITIES-R003 implement and prove: API client base and auth strategies
-- [ ] T004 SCION-CENTRALIZED-CAPABILITIES-R004.1 implement and prove: Refuse unsafe next-page URLs without exposing credentials
-- [ ] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
-- [ ] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
+- [x] T004 SCION-CENTRALIZED-CAPABILITIES-R004.1 implement and prove: Refuse unsafe next-page URLs without exposing credentials
+- [x] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
+- [x] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
 - [x] T007 SCION-CENTRALIZED-CAPABILITIES-R005 implement and prove: Rate-limit telemetry and concurrency
-- [ ] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
-- [ ] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
-- [ ] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
-- [ ] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
-- [ ] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
+- [x] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
+- [x] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
+- [x] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
+- [x] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
+- [x] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
 - [ ] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
 - [ ] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
 - [ ] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
@@ -49,11 +49,11 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T043 SCION-CENTRALIZED-CAPABILITIES-R038 implement and prove: Connector test kit
 - [ ] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
 - [x] T045 SCION-CENTRALIZED-CAPABILITIES-R040 implement and prove: Optional dependencies come from SDK extras
-- [ ] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
-- [ ] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
-- [ ] T048 SCION-CENTRALIZED-CAPABILITIES-R004.8 implement and prove: Stop repeated continuation tokens
-- [ ] T049 SCION-CENTRALIZED-CAPABILITIES-R004.7 implement and prove: Protect pagination iterator state
-- [ ] T050 SCION-CENTRALIZED-CAPABILITIES-R004.6 implement and prove: Refuse malformed pagination pages
+- [x] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
+- [x] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
+- [x] T048 SCION-CENTRALIZED-CAPABILITIES-R004.8 implement and prove: Stop repeated continuation tokens
+- [x] T049 SCION-CENTRALIZED-CAPABILITIES-R004.7 implement and prove: Protect pagination iterator state
+- [x] T050 SCION-CENTRALIZED-CAPABILITIES-R004.6 implement and prove: Refuse malformed pagination pages
 - [ ] T051 SCION-CENTRALIZED-CAPABILITIES-R017.1 implement and prove: SDK A2A server takes a durable storage and serves tasks/list
 - [ ] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
 - [ ] T053 SCION-CENTRALIZED-CAPABILITIES-R041 implement and prove: connector-certify submits conformance evidence
@@ -66,14 +66,14 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T060 SCION-CENTRALIZED-CAPABILITIES-R042.6 implement and prove: Store registry with secrets by reference
 - [ ] T061 SCION-CENTRALIZED-CAPABILITIES-R042.7 implement and prove: Storage endpoints pass the egress guard
 - [ ] T062 SCION-CENTRALIZED-CAPABILITIES-R042.8 implement and prove: Wiring: the exchange sinks write through the shared backends
-- [ ] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
-- [ ] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
-- [ ] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
-- [ ] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
-- [ ] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
-- [ ] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
-- [ ] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
-- [ ] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
+- [x] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
+- [x] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
+- [x] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
+- [x] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
+- [x] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
+- [x] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
+- [x] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
+- [x] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
 - [ ] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
 - [ ] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
 - [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.

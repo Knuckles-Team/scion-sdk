@@ -9,9 +9,11 @@ import pytest
 from connector_dist import ORPHAN, build
 
 from scion_sdk.connector import resolve_connector
+from scion_sdk.testing._conformance_static import check_error_redaction
 from scion_sdk.testing.conformance import (
     CHECKS,
     REMOVED_PROVIDER_GROUPS,
+    ConformanceFailure,
     run_check,
 )
 from scion_sdk.testing.ontology_rollup import orphan_classes
@@ -86,6 +88,34 @@ def test_breaking_one_property_fails_its_named_check(
     assert message in str(failure.value)
     for name in [m for m in sys.modules if m.split(".")[0] == "democonn"]:
         sys.modules.pop(name)
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R006.2")
+@pytest.mark.parametrize(
+    ("source", "finding"),
+    [
+        ("def redact_value(value):\n    return value\n", "OWN_REDACTION_HELPER"),
+        ("raise RuntimeError(response.text)\n", "RESPONSE_BODY_IN_ERROR"),
+        ("raise httpx.HTTPStatusError('bad')\n", "RAW_ERROR_TYPE"),
+    ],
+)
+def test_error_redaction_conformance_rejects_each_finding(
+    tmp_path, monkeypatch, source, finding
+) -> None:
+    resolved = _install(tmp_path, monkeypatch, extra_files={"leak.py": source})
+    with pytest.raises(ConformanceFailure, match=finding):
+        check_error_redaction(resolved)
+    for name in [m for m in sys.modules if m.split(".")[0] == "democonn"]:
+        sys.modules.pop(name)
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R006.2")
+def test_error_redaction_check_is_generated_for_connector_plugin() -> None:
+    assert any(
+        check.name == "error_redaction"
+        and check.spec == "SCION-CENTRALIZED-CAPABILITIES-R006.2"
+        for check in CHECKS
+    )
 
 
 @pytest.mark.spec("SCION-QUALITY-RELEASE-R005.1")
