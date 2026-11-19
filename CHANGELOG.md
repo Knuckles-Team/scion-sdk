@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.3
+
+### Fixed
+
+- The condensed-tool finding no longer flags an upstream request body field named `action` that is a
+  tagged union: object variants plus a unit variant serialized as a bare string. A union with any
+  object variant is a payload, not an operation selector; local `$ref`s in the tool schema are
+  resolved first. A scalar `action`, or a union of scalars, is still a condensed tool
+  (SCION-CONNECTOR-CONTROL-R916.4).
+
 ## 0.11.2
 
 ### Fixed
