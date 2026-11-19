@@ -66,14 +66,14 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T060 SCION-CENTRALIZED-CAPABILITIES-R042.6 implement and prove: Store registry with secrets by reference
 - [ ] T061 SCION-CENTRALIZED-CAPABILITIES-R042.7 implement and prove: Storage endpoints pass the egress guard
 - [ ] T062 SCION-CENTRALIZED-CAPABILITIES-R042.8 implement and prove: Wiring: the exchange sinks write through the shared backends
-- [ ] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
-- [ ] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
-- [ ] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
-- [ ] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
-- [ ] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
-- [ ] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
-- [ ] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
-- [ ] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
+- [x] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
+- [x] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
+- [x] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
+- [x] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
+- [x] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
+- [x] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
+- [x] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
+- [x] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
 - [ ] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
 - [ ] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
 - [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.
