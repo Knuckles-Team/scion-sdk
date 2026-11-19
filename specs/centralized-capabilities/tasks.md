@@ -4,9 +4,9 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 
 ## Tasks
 
-- [ ] T001 SCION-CENTRALIZED-CAPABILITIES-R001 implement and prove: Governed HTTP client and retry
-- [ ] T002 SCION-CENTRALIZED-CAPABILITIES-R002 implement and prove: Egress guard and pinned addresses
-- [ ] T003 SCION-CENTRALIZED-CAPABILITIES-R003 implement and prove: API client base and auth strategies
+- [x] T001 SCION-CENTRALIZED-CAPABILITIES-R001 implement and prove: Governed HTTP client and retry
+- [x] T002 SCION-CENTRALIZED-CAPABILITIES-R002 implement and prove: Egress guard and pinned addresses
+- [x] T003 SCION-CENTRALIZED-CAPABILITIES-R003 implement and prove: API client base and auth strategies
 - [x] T004 SCION-CENTRALIZED-CAPABILITIES-R004.1 implement and prove: Refuse unsafe next-page URLs without exposing credentials
 - [x] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
 - [x] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
