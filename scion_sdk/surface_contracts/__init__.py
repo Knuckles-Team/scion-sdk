@@ -460,18 +460,48 @@ def _surface_graph(
 # ── findings ────────────────────────────────────────────────────────────────
 
 
-def _is_dispatch_selector(prop: Any) -> bool:
-    """Whether an ``action`` property selects an operation (anything but an object payload).
+def _resolve_ref(prop: Any, root: Mapping[str, Any]) -> Any:
+    """Follow a local ``#/$defs/...`` (or ``#/definitions/...``) reference in the tool schema."""
+    seen: set[str] = set()
+    while isinstance(prop, Mapping) and isinstance(prop.get("$ref"), str):
+        ref = prop["$ref"]
+        if ref in seen or not ref.startswith("#/"):
+            return prop
+        seen.add(ref)
+        target: Any = root
+        for part in ref[2:].split("/"):
+            target = target.get(part) if isinstance(target, Mapping) else None
+        if target is None:
+            return prop
+        prop = target
+    return prop
 
-    An ``action`` that is an object, or a union of objects, is the upstream API's own request
-    body field (a tagged payload), not a selector that routes to different handlers.
+
+def _is_object_payload(prop: Any, root: Mapping[str, Any]) -> bool:
+    prop = _resolve_ref(prop, root)
+    return isinstance(prop, Mapping) and (
+        prop.get("type") == "object" or "properties" in prop
+    )
+
+
+def _is_dispatch_selector(prop: Any, root: Mapping[str, Any]) -> bool:
+    """Whether an ``action`` property selects an operation.
+
+    A selector is a scalar (typically a string naming the operation). An ``action`` that is
+    an object, or a union with any object variant, is the upstream API's own request body
+    field: a tagged payload such as ``oneOf: [{AddFlags: {...}}, ..., "ClearAllFlags"]``,
+    where a unit variant serializes as a bare string next to the object variants. A tool
+    carrying such a field is still one tool per upstream operation, so it is not condensed.
     """
+    prop = _resolve_ref(prop, root)
     if not isinstance(prop, Mapping):
         return False
     variants = prop.get("anyOf") or prop.get("oneOf")
     if variants:
-        return any(_is_dispatch_selector(v) for v in variants)
-    return not (prop.get("type") == "object" or "properties" in prop)
+        if any(_is_object_payload(v, root) for v in variants):
+            return False
+        return any(_is_dispatch_selector(v, root) for v in variants)
+    return not _is_object_payload(prop, root)
 
 
 def _surface_gaps(
@@ -486,8 +516,9 @@ def _surface_gaps(
     if not tools:
         found.append("no tools served")
     for name in sorted(tool_schemas):
-        properties = (tool_schemas[name] or {}).get("properties") or {}
-        if _is_dispatch_selector(properties.get("action")):
+        schema = tool_schemas[name] or {}
+        properties = schema.get("properties") or {}
+        if _is_dispatch_selector(properties.get("action"), schema):
             found.append(f"tool {name} routes an action parameter (condensed tool)")
     if not any(not uri.startswith(_CONTENT_SCHEMES) for uri in resources):
         found.append("no data resource served")

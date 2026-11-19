@@ -617,3 +617,50 @@ def test_an_action_body_field_of_the_upstream_api_is_not_a_condensed_tool() -> N
         tool_schemas={"demo_get": {"properties": {"action": selector}}},
     )
     assert [f for f in routed if "condensed" in f]
+
+
+def _flag_variant(tag: str) -> dict[str, object]:
+    return {
+        "type": "object",
+        "required": [tag],
+        "properties": {
+            tag: {
+                "type": "object",
+                "required": ["flags"],
+                "properties": {"flags": {"type": "array", "items": {"type": "string"}}},
+            }
+        },
+    }
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R916.4")
+def test_a_tagged_union_body_field_with_a_unit_variant_is_not_a_condensed_tool() -> (
+    None
+):
+    """An upstream ``action`` body field that mixes object variants with one bare-string
+    unit variant (an externally tagged enum) is a payload, not an operation selector."""
+    tagged = {
+        "anyOf": [
+            *(_flag_variant(t) for t in ("AddFlags", "RemoveFlags", "KeepFlags")),
+            {"type": "string", "enum": ["ClearAllFlags"]},
+        ]
+    }
+    referenced = {
+        "type": "object",
+        "$defs": {"EditFlags": {"oneOf": tagged["anyOf"]}},
+        "properties": {"action": {"$ref": "#/$defs/EditFlags"}},
+    }
+    for schema in ({"properties": {"action": tagged}}, referenced):
+        found = surface_findings(
+            _declaration(), **_SERVED, tool_schemas={"demo_get": schema}
+        )
+        assert not [f for f in found if "condensed" in f], schema
+    scalar_union = {
+        "anyOf": [{"type": "string", "enum": ["list", "get"]}, {"type": "null"}]
+    }
+    routed = surface_findings(
+        _declaration(),
+        **_SERVED,
+        tool_schemas={"demo_get": {"properties": {"action": scalar_union}}},
+    )
+    assert routed == ["tool demo_get routes an action parameter (condensed tool)"]
