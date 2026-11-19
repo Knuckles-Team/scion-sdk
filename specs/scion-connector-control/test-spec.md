@@ -570,7 +570,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R039` | `tests/test_access_contracts.py::test_deployment_contract_matches_served_fixture` |
 | `SCION-CONNECTOR-CONTROL-R045.12` | `tests/test_operation_descriptors.py::test_tools_list_carries_descriptor_and_scopes` |
 | `SCION-CONNECTOR-CONTROL-R050.2` | `tests/test_ordered_progress.py::test_concurrent_updates_are_ordered`, `tests/test_request_cache.py::test_entries_expire_at_deadline` |
-| `SCION-CONNECTOR-CONTROL-R050.3` | `tests/test_tool_context_served.py::test_both_registrars_share_context_identity` |
+| `SCION-CONNECTOR-CONTROL-R050.3` | planned `tests/test_tool_context_served.py::test_both_registrars_share_context_identity` |
 | `SCION-CONNECTOR-CONTROL-R050.4` | `tests/test_tool_context_served.py::test_refusals_make_zero_backend_calls` |
 | `SCION-CONNECTOR-CONTROL-R050.5` | `tests/test_tool_context_served.py::test_receipt_correlates_and_redacts` |
 | `SCION-CONNECTOR-CONTROL-R050.6` | `tests/test_tool_context_served.py::test_served_context_progress_and_approval` |
@@ -663,3 +663,4 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | Planned | `SCION-CONNECTOR-CONTROL-R930.1` | `tests/test_destructive_declaration.py::test_undeclared_action_runs_and_declared_action_needs_confirmation` (L3) proves zero effects without confirmation and one effect with `confirm=true`. |
 | Planned | `SCION-CONNECTOR-CONTROL-R930.2` | `tests/test_destructive_declaration.py::test_operator_setting_allows_unattended_destructive_call` (L3). |
 | Planned | `SCION-CONNECTOR-CONTROL-R930.3` | `tests/test_destructive_declaration.py::test_declared_client_method_is_destructive_and_asks_first` (L3). |
+| Planned | `SCION-CONNECTOR-CONTROL-R931` | `tests/test_fixture_mode.py::test_fixture_mode_serves_recorded_answers_and_refuses_unrecorded_offline` (L3) starts a fixture connector with `--fixture-mode`, lists tools, resources and prompts, calls a recorded tool and an unrecorded one with sockets blocked and no credentials, and checks the answer, `fixture_not_found` and `fixture_mode: true`; `tests/test_fixture_mode.py::test_fixture_mode_is_never_implicit` (L2) checks that a missing credential or a failed backend never selects it. |
