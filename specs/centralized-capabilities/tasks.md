@@ -11,11 +11,11 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
 - [ ] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
 - [ ] T007 SCION-CENTRALIZED-CAPABILITIES-R005 implement and prove: Rate-limit telemetry and concurrency
-- [ ] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
+- [x] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
 - [ ] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
-- [ ] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
-- [ ] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
-- [ ] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
+- [x] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
+- [x] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
+- [x] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
 - [ ] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
 - [ ] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
 - [ ] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
