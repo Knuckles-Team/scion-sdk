@@ -16,7 +16,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
 - [x] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
 - [x] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
-- [ ] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
+- [x] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
 - [x] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
 - [x] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
 - [x] T016 SCION-CENTRALIZED-CAPABILITIES-R010 implement and prove: Selected-provider credential profile
@@ -27,7 +27,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
 - [x] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
 - [ ] T023 SCION-CENTRALIZED-CAPABILITIES-R018 implement and prove: Engine client adapter and compute
-- [ ] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
+- [x] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
 - [x] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
 - [x] T026 SCION-CENTRALIZED-CAPABILITIES-R021 implement and prove: Feed and document sources
 - [x] T027 SCION-CENTRALIZED-CAPABILITIES-R022 implement and prove: Message streams
@@ -39,7 +39,8 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T033 SCION-CENTRALIZED-CAPABILITIES-R028 implement and prove: Connector declaration and fingerprints
 - [ ] T034 SCION-CENTRALIZED-CAPABILITIES-R029 implement and prove: Certification and fingerprints
 - [x] T035 SCION-CENTRALIZED-CAPABILITIES-R030 implement and prove: Connector identity
-- [ ] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
+- [x] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
+- [ ] T037 SCION-CENTRALIZED-CAPABILITIES-R032 implement and prove: Runner and CLI bootstrap
 - [x] T040 SCION-CENTRALIZED-CAPABILITIES-R035 implement and prove: Privacy, entitlements, and external access
 - [x] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
 - [x] T037 SCION-CENTRALIZED-CAPABILITIES-R032 implement and prove: Runner and CLI bootstrap
@@ -74,7 +75,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
 - [x] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
 - [x] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
-- [ ] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
+- [x] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
 - [x] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
 - [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.
 - [ ] T074 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.1 Removed-path table with an absence test. Size: S, 1 PR, 2 hours.
