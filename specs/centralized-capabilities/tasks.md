@@ -40,15 +40,14 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T034 SCION-CENTRALIZED-CAPABILITIES-R029 implement and prove: Certification and fingerprints
 - [x] T035 SCION-CENTRALIZED-CAPABILITIES-R030 implement and prove: Connector identity
 - [x] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
-- [ ] T037 SCION-CENTRALIZED-CAPABILITIES-R032 implement and prove: Runner and CLI bootstrap
-- [x] T040 SCION-CENTRALIZED-CAPABILITIES-R035 implement and prove: Privacy, entitlements, and external access
-- [x] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
 - [x] T037 SCION-CENTRALIZED-CAPABILITIES-R032 implement and prove: Runner and CLI bootstrap
 - [x] T038 SCION-CENTRALIZED-CAPABILITIES-R033 implement and prove: Health and observability
 - [x] T039 SCION-CENTRALIZED-CAPABILITIES-R034 implement and prove: Configuration, paths, and locks
+- [x] T040 SCION-CENTRALIZED-CAPABILITIES-R035 implement and prove: Privacy, entitlements, and external access
 - [ ] T041 SCION-CENTRALIZED-CAPABILITIES-R036 implement and prove: Source client and repository transport
 - [x] T042 SCION-CENTRALIZED-CAPABILITIES-R037 implement and prove: Plugin entry-point groups
 - [x] T043 SCION-CENTRALIZED-CAPABILITIES-R038 implement and prove: Connector test kit
+- [x] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
 - [x] T045 SCION-CENTRALIZED-CAPABILITIES-R040 implement and prove: Optional dependencies come from SDK extras
 - [x] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
 - [x] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
