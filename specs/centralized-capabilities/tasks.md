@@ -25,7 +25,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T019 SCION-CENTRALIZED-CAPABILITIES-R013 implement and prove: Browser OAuth with PKCE
 - [ ] T020 SCION-CENTRALIZED-CAPABILITIES-R014 implement and prove: MCP server factory and served security
 - [ ] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
-- [ ] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
+- [x] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
 - [ ] T023 SCION-CENTRALIZED-CAPABILITIES-R018 implement and prove: Engine client adapter and compute
 - [ ] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
 - [ ] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
