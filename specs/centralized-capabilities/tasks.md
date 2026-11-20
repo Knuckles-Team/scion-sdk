@@ -39,7 +39,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T033 SCION-CENTRALIZED-CAPABILITIES-R028 implement and prove: Connector declaration and fingerprints
 - [ ] T034 SCION-CENTRALIZED-CAPABILITIES-R029 implement and prove: Certification and fingerprints
 - [ ] T035 SCION-CENTRALIZED-CAPABILITIES-R030 implement and prove: Connector identity
-- [ ] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
+- [x] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
 - [ ] T037 SCION-CENTRALIZED-CAPABILITIES-R032 implement and prove: Runner and CLI bootstrap
 - [ ] T038 SCION-CENTRALIZED-CAPABILITIES-R033 implement and prove: Health and observability
 - [ ] T039 SCION-CENTRALIZED-CAPABILITIES-R034 implement and prove: Configuration, paths, and locks
