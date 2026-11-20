@@ -27,7 +27,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
 - [x] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
 - [ ] T023 SCION-CENTRALIZED-CAPABILITIES-R018 implement and prove: Engine client adapter and compute
-- [ ] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
+- [x] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
 - [x] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
 - [x] T026 SCION-CENTRALIZED-CAPABILITIES-R021 implement and prove: Feed and document sources
 - [x] T027 SCION-CENTRALIZED-CAPABILITIES-R022 implement and prove: Message streams
