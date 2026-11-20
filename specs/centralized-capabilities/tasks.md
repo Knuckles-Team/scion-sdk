@@ -4,50 +4,50 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 
 ## Tasks
 
-- [ ] T001 SCION-CENTRALIZED-CAPABILITIES-R001 implement and prove: Governed HTTP client and retry
-- [ ] T002 SCION-CENTRALIZED-CAPABILITIES-R002 implement and prove: Egress guard and pinned addresses
-- [ ] T003 SCION-CENTRALIZED-CAPABILITIES-R003 implement and prove: API client base and auth strategies
+- [x] T001 SCION-CENTRALIZED-CAPABILITIES-R001 implement and prove: Governed HTTP client and retry
+- [x] T002 SCION-CENTRALIZED-CAPABILITIES-R002 implement and prove: Egress guard and pinned addresses
+- [x] T003 SCION-CENTRALIZED-CAPABILITIES-R003 implement and prove: API client base and auth strategies
 - [x] T004 SCION-CENTRALIZED-CAPABILITIES-R004.1 implement and prove: Refuse unsafe next-page URLs without exposing credentials
 - [x] T005 SCION-CENTRALIZED-CAPABILITIES-R004.2 implement and prove: Link pagination stays on the admitted origin
 - [x] T006 SCION-CENTRALIZED-CAPABILITIES-R004.4 implement and prove: Valid window sizes
-- [ ] T007 SCION-CENTRALIZED-CAPABILITIES-R005 implement and prove: Rate-limit telemetry and concurrency
+- [x] T007 SCION-CENTRALIZED-CAPABILITIES-R005 implement and prove: Rate-limit telemetry and concurrency
 - [x] T008 SCION-CENTRALIZED-CAPABILITIES-R006.1 implement and prove: Do not expose upstream problem fields in governed response errors
 - [x] T009 SCION-CENTRALIZED-CAPABILITIES-R006.2 implement and prove: Fleet error redaction
 - [x] T010 SCION-CENTRALIZED-CAPABILITIES-R006.3 implement and prove: Limit governed HTTP diagnostics to the origin
 - [x] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
 - [x] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
-- [ ] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
-- [ ] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
-- [ ] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
-- [ ] T016 SCION-CENTRALIZED-CAPABILITIES-R010 implement and prove: Selected-provider credential profile
-- [ ] T017 SCION-CENTRALIZED-CAPABILITIES-R011 implement and prove: Token providers and source credentials
-- [ ] T018 SCION-CENTRALIZED-CAPABILITIES-R012 implement and prove: OIDC delegation and actor identity
-- [ ] T019 SCION-CENTRALIZED-CAPABILITIES-R013 implement and prove: Browser OAuth with PKCE
-- [ ] T020 SCION-CENTRALIZED-CAPABILITIES-R014 implement and prove: MCP server factory and served security
-- [ ] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
-- [ ] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
+- [x] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
+- [x] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
+- [x] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
+- [x] T016 SCION-CENTRALIZED-CAPABILITIES-R010 implement and prove: Selected-provider credential profile
+- [x] T017 SCION-CENTRALIZED-CAPABILITIES-R011 implement and prove: Token providers and source credentials
+- [x] T018 SCION-CENTRALIZED-CAPABILITIES-R012 implement and prove: OIDC delegation and actor identity
+- [x] T019 SCION-CENTRALIZED-CAPABILITIES-R013 implement and prove: Browser OAuth with PKCE
+- [x] T020 SCION-CENTRALIZED-CAPABILITIES-R014 implement and prove: MCP server factory and served security
+- [x] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
+- [x] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
 - [ ] T023 SCION-CENTRALIZED-CAPABILITIES-R018 implement and prove: Engine client adapter and compute
-- [ ] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
-- [ ] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
-- [ ] T026 SCION-CENTRALIZED-CAPABILITIES-R021 implement and prove: Feed and document sources
-- [ ] T027 SCION-CENTRALIZED-CAPABILITIES-R022 implement and prove: Message streams
-- [ ] T028 SCION-CENTRALIZED-CAPABILITIES-R023 implement and prove: Market data
-- [ ] T029 SCION-CENTRALIZED-CAPABILITIES-R024 implement and prove: Data preparation
-- [ ] T030 SCION-CENTRALIZED-CAPABILITIES-R025 implement and prove: Embedding client
-- [ ] T031 SCION-CENTRALIZED-CAPABILITIES-R026 implement and prove: Vendor extractors
-- [ ] T032 SCION-CENTRALIZED-CAPABILITIES-R027 implement and prove: Ontology and content packs
+- [x] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
+- [x] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
+- [x] T026 SCION-CENTRALIZED-CAPABILITIES-R021 implement and prove: Feed and document sources
+- [x] T027 SCION-CENTRALIZED-CAPABILITIES-R022 implement and prove: Message streams
+- [x] T028 SCION-CENTRALIZED-CAPABILITIES-R023 implement and prove: Market data
+- [x] T029 SCION-CENTRALIZED-CAPABILITIES-R024 implement and prove: Data preparation
+- [x] T030 SCION-CENTRALIZED-CAPABILITIES-R025 implement and prove: Embedding client
+- [x] T031 SCION-CENTRALIZED-CAPABILITIES-R026 implement and prove: Vendor extractors
+- [x] T032 SCION-CENTRALIZED-CAPABILITIES-R027 implement and prove: Ontology and content packs
 - [ ] T033 SCION-CENTRALIZED-CAPABILITIES-R028 implement and prove: Connector declaration and fingerprints
 - [ ] T034 SCION-CENTRALIZED-CAPABILITIES-R029 implement and prove: Certification and fingerprints
 - [ ] T035 SCION-CENTRALIZED-CAPABILITIES-R030 implement and prove: Connector identity
-- [ ] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
+- [x] T036 SCION-CENTRALIZED-CAPABILITIES-R031 implement and prove: Governed write-back
 - [ ] T037 SCION-CENTRALIZED-CAPABILITIES-R032 implement and prove: Runner and CLI bootstrap
 - [ ] T038 SCION-CENTRALIZED-CAPABILITIES-R033 implement and prove: Health and observability
 - [ ] T039 SCION-CENTRALIZED-CAPABILITIES-R034 implement and prove: Configuration, paths, and locks
-- [ ] T040 SCION-CENTRALIZED-CAPABILITIES-R035 implement and prove: Privacy, entitlements, and external access
+- [x] T040 SCION-CENTRALIZED-CAPABILITIES-R035 implement and prove: Privacy, entitlements, and external access
 - [ ] T041 SCION-CENTRALIZED-CAPABILITIES-R036 implement and prove: Source client and repository transport
 - [ ] T042 SCION-CENTRALIZED-CAPABILITIES-R037 implement and prove: Plugin entry-point groups
 - [ ] T043 SCION-CENTRALIZED-CAPABILITIES-R038 implement and prove: Connector test kit
-- [ ] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
+- [x] T044 SCION-CENTRALIZED-CAPABILITIES-R039 implement and prove: Domain record models
 - [x] T045 SCION-CENTRALIZED-CAPABILITIES-R040 implement and prove: Optional dependencies come from SDK extras
 - [x] T046 SCION-CENTRALIZED-CAPABILITIES-R004.3 implement and prove: Bound Link-header parsing work
 - [x] T047 SCION-CENTRALIZED-CAPABILITIES-R004.5 implement and prove: Refuse an unsafe partial-page cursor
@@ -57,28 +57,28 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T051 SCION-CENTRALIZED-CAPABILITIES-R017.1 implement and prove: SDK A2A server takes a durable storage and serves tasks/list
 - [ ] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
 - [ ] T053 SCION-CENTRALIZED-CAPABILITIES-R041 implement and prove: connector-certify submits conformance evidence
-- [ ] T054 SCION-CENTRALIZED-CAPABILITIES-R042 implement and prove: Object store and file-share backends (rollup)
-- [ ] T055 SCION-CENTRALIZED-CAPABILITIES-R042.1 implement and prove: Model: one backend protocol for every store
-- [ ] T056 SCION-CENTRALIZED-CAPABILITIES-R042.2 implement and prove: S3-compatible backend
-- [ ] T057 SCION-CENTRALIZED-CAPABILITIES-R042.3 implement and prove: Hosted cloud object store backends
-- [ ] T058 SCION-CENTRALIZED-CAPABILITIES-R042.4 implement and prove: Local filesystem backend
-- [ ] T059 SCION-CENTRALIZED-CAPABILITIES-R042.5 implement and prove: WebDAV file-share backend
-- [ ] T060 SCION-CENTRALIZED-CAPABILITIES-R042.6 implement and prove: Store registry with secrets by reference
-- [ ] T061 SCION-CENTRALIZED-CAPABILITIES-R042.7 implement and prove: Storage endpoints pass the egress guard
-- [ ] T062 SCION-CENTRALIZED-CAPABILITIES-R042.8 implement and prove: Wiring: the exchange sinks write through the shared backends
-- [ ] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
-- [ ] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
-- [ ] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
-- [ ] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
-- [ ] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
-- [ ] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
-- [ ] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
-- [ ] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
+- [x] T054 SCION-CENTRALIZED-CAPABILITIES-R042 implement and prove: Object store and file-share backends (rollup)
+- [x] T055 SCION-CENTRALIZED-CAPABILITIES-R042.1 implement and prove: Model: one backend protocol for every store
+- [x] T056 SCION-CENTRALIZED-CAPABILITIES-R042.2 implement and prove: S3-compatible backend
+- [x] T057 SCION-CENTRALIZED-CAPABILITIES-R042.3 implement and prove: Hosted cloud object store backends
+- [x] T058 SCION-CENTRALIZED-CAPABILITIES-R042.4 implement and prove: Local filesystem backend
+- [x] T059 SCION-CENTRALIZED-CAPABILITIES-R042.5 implement and prove: WebDAV file-share backend
+- [x] T060 SCION-CENTRALIZED-CAPABILITIES-R042.6 implement and prove: Store registry with secrets by reference
+- [x] T061 SCION-CENTRALIZED-CAPABILITIES-R042.7 implement and prove: Storage endpoints pass the egress guard
+- [x] T062 SCION-CENTRALIZED-CAPABILITIES-R042.8 implement and prove: Wiring: the exchange sinks write through the shared backends
+- [x] T063 SCION-CENTRALIZED-CAPABILITIES-R043 implement and prove: Artifact exchange for tools that produce files (rollup)
+- [x] T064 SCION-CENTRALIZED-CAPABILITIES-R043.1 implement and prove: Model: exchange settings and sinks
+- [x] T065 SCION-CENTRALIZED-CAPABILITIES-R043.2 implement and prove: Per-run staging directories
+- [x] T066 SCION-CENTRALIZED-CAPABILITIES-R043.3 implement and prove: Input resolution from sinks and URLs
+- [x] T067 SCION-CENTRALIZED-CAPABILITIES-R043.4 implement and prove: Output publication to every sink
+- [x] T068 SCION-CENTRALIZED-CAPABILITIES-R043.5 implement and prove: Tool results carry resource links
+- [x] T069 SCION-CENTRALIZED-CAPABILITIES-R043.6 implement and prove: Lineage records for published artifacts
+- [x] T070 SCION-CENTRALIZED-CAPABILITIES-R043.7 implement and prove: Hot-path proof: a served upstream call exchanges its files
 - [x] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
-- [ ] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
+- [x] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
 - [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.
 - [ ] T074 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.1 Removed-path table with an absence test. Size: S, 1 PR, 2 hours.
 - [ ] T075 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.2 Version 0.10.0 and the changelog entry. Size: S, 1 PR, 1 hour.
 - [ ] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.
 - [x] T077 [US1] SCION-CENTRALIZED-CAPABILITIES-R006.6 Typed category on a GraphQL query error, without server text. Size: S, 1 PR, 2 hours.
-- [ ] T078 [US1] SCION-CENTRALIZED-CAPABILITIES-R047 The shared state-machine census runs in staged mode.
+- [x] T078 [US1] SCION-CENTRALIZED-CAPABILITIES-R047 The shared state-machine census runs in staged mode.
