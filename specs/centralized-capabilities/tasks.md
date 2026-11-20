@@ -17,10 +17,10 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T011 SCION-CENTRALIZED-CAPABILITIES-R006.4 implement and prove: Keep GraphQL failures out of logs and errors
 - [x] T012 SCION-CENTRALIZED-CAPABILITIES-R006.5 implement and prove: Protect GraphQL close diagnostics
 - [ ] T013 SCION-CENTRALIZED-CAPABILITIES-R007 implement and prove: Payment challenge handling
-- [ ] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
-- [ ] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
-- [ ] T016 SCION-CENTRALIZED-CAPABILITIES-R010 implement and prove: Selected-provider credential profile
-- [ ] T017 SCION-CENTRALIZED-CAPABILITIES-R011 implement and prove: Token providers and source credentials
+- [x] T014 SCION-CENTRALIZED-CAPABILITIES-R008 implement and prove: TLS profiles
+- [x] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
+- [x] T016 SCION-CENTRALIZED-CAPABILITIES-R010 implement and prove: Selected-provider credential profile
+- [x] T017 SCION-CENTRALIZED-CAPABILITIES-R011 implement and prove: Token providers and source credentials
 - [ ] T018 SCION-CENTRALIZED-CAPABILITIES-R012 implement and prove: OIDC delegation and actor identity
 - [ ] T019 SCION-CENTRALIZED-CAPABILITIES-R013 implement and prove: Browser OAuth with PKCE
 - [ ] T020 SCION-CENTRALIZED-CAPABILITIES-R014 implement and prove: MCP server factory and served security
