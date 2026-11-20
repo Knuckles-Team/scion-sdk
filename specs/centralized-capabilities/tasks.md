@@ -28,14 +28,14 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
 - [ ] T023 SCION-CENTRALIZED-CAPABILITIES-R018 implement and prove: Engine client adapter and compute
 - [ ] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
-- [ ] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
-- [ ] T026 SCION-CENTRALIZED-CAPABILITIES-R021 implement and prove: Feed and document sources
-- [ ] T027 SCION-CENTRALIZED-CAPABILITIES-R022 implement and prove: Message streams
-- [ ] T028 SCION-CENTRALIZED-CAPABILITIES-R023 implement and prove: Market data
-- [ ] T029 SCION-CENTRALIZED-CAPABILITIES-R024 implement and prove: Data preparation
-- [ ] T030 SCION-CENTRALIZED-CAPABILITIES-R025 implement and prove: Embedding client
-- [ ] T031 SCION-CENTRALIZED-CAPABILITIES-R026 implement and prove: Vendor extractors
-- [ ] T032 SCION-CENTRALIZED-CAPABILITIES-R027 implement and prove: Ontology and content packs
+- [x] T025 SCION-CENTRALIZED-CAPABILITIES-R020 implement and prove: Database sources
+- [x] T026 SCION-CENTRALIZED-CAPABILITIES-R021 implement and prove: Feed and document sources
+- [x] T027 SCION-CENTRALIZED-CAPABILITIES-R022 implement and prove: Message streams
+- [x] T028 SCION-CENTRALIZED-CAPABILITIES-R023 implement and prove: Market data
+- [x] T029 SCION-CENTRALIZED-CAPABILITIES-R024 implement and prove: Data preparation
+- [x] T030 SCION-CENTRALIZED-CAPABILITIES-R025 implement and prove: Embedding client
+- [x] T031 SCION-CENTRALIZED-CAPABILITIES-R026 implement and prove: Vendor extractors
+- [x] T032 SCION-CENTRALIZED-CAPABILITIES-R027 implement and prove: Ontology and content packs
 - [ ] T033 SCION-CENTRALIZED-CAPABILITIES-R028 implement and prove: Connector declaration and fingerprints
 - [ ] T034 SCION-CENTRALIZED-CAPABILITIES-R029 implement and prove: Certification and fingerprints
 - [ ] T035 SCION-CENTRALIZED-CAPABILITIES-R030 implement and prove: Connector identity
