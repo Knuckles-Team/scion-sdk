@@ -21,10 +21,10 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T015 SCION-CENTRALIZED-CAPABILITIES-R009 implement and prove: Credential and secret-reference resolution
 - [x] T016 SCION-CENTRALIZED-CAPABILITIES-R010 implement and prove: Selected-provider credential profile
 - [x] T017 SCION-CENTRALIZED-CAPABILITIES-R011 implement and prove: Token providers and source credentials
-- [ ] T018 SCION-CENTRALIZED-CAPABILITIES-R012 implement and prove: OIDC delegation and actor identity
-- [ ] T019 SCION-CENTRALIZED-CAPABILITIES-R013 implement and prove: Browser OAuth with PKCE
-- [ ] T020 SCION-CENTRALIZED-CAPABILITIES-R014 implement and prove: MCP server factory and served security
-- [ ] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
+- [x] T018 SCION-CENTRALIZED-CAPABILITIES-R012 implement and prove: OIDC delegation and actor identity
+- [x] T019 SCION-CENTRALIZED-CAPABILITIES-R013 implement and prove: Browser OAuth with PKCE
+- [x] T020 SCION-CENTRALIZED-CAPABILITIES-R014 implement and prove: MCP server factory and served security
+- [x] T021 SCION-CENTRALIZED-CAPABILITIES-R015 implement and prove: Tool surface and tool context
 - [x] T022 SCION-CENTRALIZED-CAPABILITIES-R016 implement and prove: GraphQL
 - [ ] T023 SCION-CENTRALIZED-CAPABILITIES-R018 implement and prove: Engine client adapter and compute
 - [ ] T024 SCION-CENTRALIZED-CAPABILITIES-R019 implement and prove: Ingest bindings and source adapters
