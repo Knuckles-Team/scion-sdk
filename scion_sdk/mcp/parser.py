@@ -105,6 +105,12 @@ def _add_typed_flags(parser: argparse.ArgumentParser) -> None:
         "--token-issuer",
         default=setting("OIDC_ISSUER") or setting("FASTMCP_SERVER_AUTH_JWT_ISSUER"),
     )
+    parser.add_argument(
+        "--fixture-mode",
+        action="store_true",
+        default=setting("SCION_FIXTURE_MODE", False),
+        help="Serve recorded fixtures; never opens a network connection or reads a credential.",
+    )
     parser.add_argument("--help", action="store_true")
 
 

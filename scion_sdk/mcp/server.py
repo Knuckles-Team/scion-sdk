@@ -94,8 +94,15 @@ def _lifespan(
     )
 
 
-async def _health(request: Request) -> JSONResponse:
-    return JSONResponse({"status": "ok"}, headers={"Cache-Control": "no-store"})
+def _health_for(fixture_mode: bool) -> Callable[[Request], Any]:
+    async def _health(request: Request) -> JSONResponse:
+        body: dict[str, Any] = {"status": "ok"}
+        if fixture_mode:
+            # R931: the served descriptor says these are recorded answers.
+            body["fixture_mode"] = True
+        return JSONResponse(body, headers={"Cache-Control": "no-store"})
+
+    return _health
 
 
 def create_mcp_server(
@@ -163,7 +170,7 @@ def create_mcp_server(
     except ServedSecurityError as exc:
         _logger.error("Refusing to build MCP server: %s", exc)
         raise SystemExit(1) from exc
-    mcp.custom_route("/health", methods=["GET"])(_health)
+    mcp.custom_route("/health", methods=["GET"])(_health_for(bool(args.fixture_mode)))
     mcp.add_transform(
         VisibilityTransform(
             VisibilityPolicy.from_settings(args.tools, args.disabled_tools)
@@ -181,7 +188,33 @@ def create_mcp_server(
         register_enterprise_tools(mcp, enterprise_dispatcher)
     if content is not None:
         register_connector_content(mcp, content)
-    return args, mcp, build_middleware(no_auth=no_auth)
+    middlewares = build_middleware(no_auth=no_auth)
+    if args.fixture_mode:
+        middlewares.append(_fixture_middleware(content))
+    return args, mcp, middlewares
+
+
+def _fixture_middleware(content: ConnectorContent | None) -> Any:
+    """The fixture dispatcher for ``--fixture-mode`` (SCION-CONNECTOR-CONTROL-R931).
+
+    The fixtures live in the connector package's ``fixtures/`` directory. A
+    connector with no content directory, or no fixtures, refuses to start in
+    this mode rather than serving nothing.
+    """
+    from scion_sdk.mcp.fixture_mode import (
+        FIXTURE_DIRECTORY,
+        FixtureMiddleware,
+        FixtureStore,
+    )
+
+    if content is None:
+        _logger.error("Refusing fixture mode: the connector declares no content root")
+        raise SystemExit(1)
+    store = FixtureStore.load(content.package_root / FIXTURE_DIRECTORY)
+    if not len(store):
+        _logger.error("Refusing fixture mode: the connector ships no fixtures")
+        raise SystemExit(1)
+    return FixtureMiddleware(store)
 
 
 def _register_native_primitives(mcp: FastMCP[Any], name: str) -> None:

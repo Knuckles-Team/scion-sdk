@@ -335,4 +335,4 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [ ] T328 [US1] SCION-CONNECTOR-CONTROL-R930.2 One operator setting for unattended use. `SCION_ALLOW_DESTRUCTIVE` (default false) is the only configuration name for allowing destructive operations without a live confirmation, for every connector, read through `scion_sdk.config.setting`.
 - [ ] T329 [US1] SCION-CONNECTOR-CONTROL-R930.3 A client method declares itself destructive once.
 - [x] T330 [US1] SCION-CONNECTOR-CONTROL-R916.9 Declared upstream tools: a proxy connector declares the tools its upstream serves.
-- [ ] T331 [US1] SCION-CONNECTOR-CONTROL-R931 Explicit fixture serving mode for any connector. It serves the declared surface from shipped fixtures with no credentials and no network, refuses unrecorded calls with `fixture_not_found`, and is never implicit.
+- [x] T331 [US1] SCION-CONNECTOR-CONTROL-R931 Explicit fixture serving mode for any connector. It serves the declared surface from shipped fixtures with no credentials and no network, refuses unrecorded calls with `fixture_not_found`, and is never implicit.
