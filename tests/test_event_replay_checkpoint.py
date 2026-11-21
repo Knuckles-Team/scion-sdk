@@ -26,6 +26,7 @@ from test_event_feeds import (
 )
 
 from scion_sdk.adapters.event_feed_bindings import rum_source_adapter
+from scion_sdk.finance.liquidity_records import SOURCE_RECORD_ID
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
 from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.testing.sinks import InMemorySink
@@ -164,7 +165,7 @@ def test_fresh_worker_replays_against_real_graph(live_ingest):  # noqa: F811
     assert final.accepted_checkpoint.watermark == status.accepted_checkpoint.watermark
     assert older_replay.accepted == 1
     events = [row["n"] for row in rows if row["n"].get("source_stream") == "rum-stream"]
-    assert sorted(event["source_record_id"] for event in events) == ["first", "other"]
+    assert sorted(event[SOURCE_RECORD_ID] for event in events) == ["first", "other"]
 
 
 async def _prepare_restart_graph():
@@ -214,4 +215,4 @@ def test_restart_worker_process_against_real_graph(live_ingest):  # noqa: F811
     assert first["accepted"] == 1 and first["receipt"]
     assert second == {"accepted": 0, "receipt": first["receipt"]}
     events = asyncio.run_coroutine_threadsafe(_read_restart_graph(), loop).result(30)
-    assert [event["source_record_id"] for event in events] == ["restart-proof"]
+    assert [event[SOURCE_RECORD_ID] for event in events] == ["restart-proof"]

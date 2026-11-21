@@ -26,6 +26,7 @@ from scion_sdk.finance.csv_source import (
     csv_activity_preset,
     register_csv_activity_tool,
 )
+from scion_sdk.finance.liquidity_records import SOURCE_RECORD_ID
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
 from scion_sdk.sinks.medulla import MedullaSink
@@ -148,7 +149,7 @@ async def _exercise():
         activities = [
             row["n"] for row in rows if row["n"].get("source_stream") == "activities"
         ]
-        ids = [activity["source_record_id"] for activity in activities]
+        ids = [activity[SOURCE_RECORD_ID] for activity in activities]
         assert len(ids) == len(set(ids)) == 6
         assert {activity["account_id"] for activity in activities} == {
             "account-1",

@@ -11,7 +11,7 @@ httpx2==2.13.1
 httpx==0.28.1
 idna==3.20
 mcp-types==2.3.0
-medulla==3.2.0
+medulla==3.3.4
 msgpack==1.2.3
 pycparser==3.11
 pydantic-core==2.50.1

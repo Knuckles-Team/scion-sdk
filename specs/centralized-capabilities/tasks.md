@@ -82,3 +82,4 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.
 - [x] T077 [US1] SCION-CENTRALIZED-CAPABILITIES-R006.6 Typed category on a GraphQL query error, without server text. Size: S, 1 PR, 2 hours.
 - [x] T078 [US1] SCION-CENTRALIZED-CAPABILITIES-R047 The shared state-machine census runs in staged mode.
+- [ ] T079 [US1] SCION-CENTRALIZED-CAPABILITIES-R048 Migrate to the medulla 3.3.x client contracts. Size: S, 1 PR, 3 hours.

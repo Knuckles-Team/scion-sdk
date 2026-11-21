@@ -355,3 +355,9 @@ Entry point: a connector's console script starts its server module, which calls 
 
 - Arbora served agent: `ARBORA-A2A-R001.3` consumes rows `SCION-CENTRALIZED-CAPABILITIES-R017.1` and `SCION-CENTRALIZED-CAPABILITIES-R017.2`; see [contracts/a2a-storage.md](contracts/a2a-storage.md).
 - Engine conformance evidence: `MEDULLA-TYPED-PACKS-R807` receives the record of `SCION-CENTRALIZED-CAPABILITIES-R041`; see [contracts/conformance-evidence.md](contracts/conformance-evidence.md).
+
+## Amendments
+
+### 2026-11-20 medulla 3.3.x client contracts (R048)
+
+The engine client floor rises to `medulla>=3.3.4`. `SourceIngestionReceipt` now requires `classes`, `governance`, `report` and `stream_object_id`, so the in-memory conformance sink fills them from the batch it commits or replays. The engine also stores the source record identity and mapping reference of a graph node under ontology-IRI keys, so the liquidity record reader uses those keys. The release pin, the lock and the pinned import graph name the 3.3.4 wheel. No module is added. A digest struct that the 3.3.4 client refuses for the undeclared field `column_profiles` is an engine client defect fixed in 3.3.5. The SDK does not work around it.
