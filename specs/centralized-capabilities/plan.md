@@ -325,6 +325,18 @@ Sequence. `.1` first (it fixes the table), then `.2`, then tag `v0.10.0`, then `
 | `world-reference-mcp` | `create_async_http_client` | 1 |
 | `arbora` | `create_async_http_client`, `create_http_client` | 13 |
 
+### Amendment 2026-11-20: medulla 3.3.x client contracts (R048)
+
+The engine client floor rises to `medulla>=3.3.4`. `SourceIngestionReceipt` now requires `classes`, `governance`, `report` and `stream_object_id`, so the in-memory conformance sink fills them from the batch it commits or replays. The engine also stores the source record identity and mapping reference of a graph node under ontology-IRI keys, so the liquidity record reader uses those keys. The release pin, the lock and the pinned import graph name the 3.3.4 wheel. A digest struct that the 3.3.4 client refuses for the undeclared field `column_profiles` is an engine client defect fixed in 3.3.5. The SDK does not work around it.
+
+- Owner: this repository. `scion_sdk/testing/sinks.py` and `scion_sdk/finance/liquidity_records.py` already own the two touched shapes.
+- Cohesion: the floor, the lock, the release pin and the receipt shape change together, because each follows the one engine release.
+- Dependency direction: the SDK reads generated engine contracts from the installed package. Nothing in the engine reads the SDK.
+- Interface depth: none. No module, function or option is added. Two constants name the engine's ontology-IRI keys.
+- Special cases: none. The 3.3.4 shape is the only shape. There is no fallback to the older keys.
+- State: none. The receipt is a value built per submission.
+- Environment: none. The floor and pins hold no host data.
+
 ## Phase 2: Task approach
 
 Order the work producer first. R042.1 lands before the backends, and R042.6 before R043.1. R043.2 to R043.6 land before the served proof R043.7 and `SCION-CONNECTOR-CONTROL-R914.13`. Rows that extend the A2A server (R017.1, R017.2) and the certify submission (R041) wait for their provider rows in the Arbora and Medulla specs. Index rows need no task order. Each task line in tasks.md names one row.
@@ -355,9 +367,3 @@ Entry point: a connector's console script starts its server module, which calls 
 
 - Arbora served agent: `ARBORA-A2A-R001.3` consumes rows `SCION-CENTRALIZED-CAPABILITIES-R017.1` and `SCION-CENTRALIZED-CAPABILITIES-R017.2`; see [contracts/a2a-storage.md](contracts/a2a-storage.md).
 - Engine conformance evidence: `MEDULLA-TYPED-PACKS-R807` receives the record of `SCION-CENTRALIZED-CAPABILITIES-R041`; see [contracts/conformance-evidence.md](contracts/conformance-evidence.md).
-
-## Amendments
-
-### 2026-11-20 medulla 3.3.x client contracts (R048)
-
-The engine client floor rises to `medulla>=3.3.4`. `SourceIngestionReceipt` now requires `classes`, `governance`, `report` and `stream_object_id`, so the in-memory conformance sink fills them from the batch it commits or replays. The engine also stores the source record identity and mapping reference of a graph node under ontology-IRI keys, so the liquidity record reader uses those keys. The release pin, the lock and the pinned import graph name the 3.3.4 wheel. No module is added. A digest struct that the 3.3.4 client refuses for the undeclared field `column_profiles` is an engine client defect fixed in 3.3.5. The SDK does not work around it.
