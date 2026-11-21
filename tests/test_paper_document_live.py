@@ -129,7 +129,7 @@ async def exercise_refusal(
                     policy_revision="v1",
                     minimum_spacing_ns=1,
                 ),
-                max_bytes=max_bytes,
+                max_document_bytes=max_bytes,
             )
 
         service = PaperDocumentService(SharedPaperQuota(client), authorize)
@@ -188,10 +188,11 @@ def test_provider_auth_and_size_refusals_leave_no_artifact(live_ingest, tmp_path
         assert reason == "unauthorized"
         assert list(tmp_path.iterdir()) == []
     with ScriptedHttpServer(
-        ScriptedResponse(body=b"oversized", headers={"Content-Type": "text/html"})
+        ScriptedResponse(body=b"x" * 1_048_577, headers={"Content-Type": "text/html"})
     ) as server:
         reason = asyncio.run_coroutine_threadsafe(
-            exercise_refusal(server.base_url, tmp_path, max_bytes=3), live_ingest._loop
+            exercise_refusal(server.base_url, tmp_path, max_bytes=1_048_576),
+            live_ingest._loop,
         ).result(30)
         assert reason == "size_exceeded"
         assert list(tmp_path.iterdir()) == []

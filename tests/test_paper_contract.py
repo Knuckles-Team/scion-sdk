@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 from datetime import date
+from pathlib import Path
 
 import pytest
+from live_engine import live_ingest, scoped_client  # noqa: F401
 from pydantic import ValidationError
 
+from scion_sdk.adapters.paper_download import (
+    DocumentAdmission,
+    DocumentRefusal,
+    DocumentRequest,
+    PaperDocumentService,
+)
 from scion_sdk.adapters.paper_merge import merge_paper_records
 from scion_sdk.adapters.paper_models import (
     DocumentOffer,
@@ -20,7 +30,16 @@ from scion_sdk.adapters.paper_models import (
     ProviderReference,
     ProviderReport,
 )
-from scion_sdk.adapters.paper_provider import ProviderPaper
+from scion_sdk.adapters.paper_provider import (
+    ProviderFailure,
+    ProviderPage,
+    ProviderPaper,
+)
+from scion_sdk.adapters.paper_quota import PaperQuotaPolicy, SharedPaperQuota
+from scion_sdk.adapters.paper_search import PaperSearchService, ProviderBinding
+from scion_sdk.http.options import HttpClientOptions
+from scion_sdk.http.retry import RetryPolicy
+from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
 
 
 def _query(**changes):
@@ -189,3 +208,145 @@ def test_merge_omits_signed_offers_and_redacts_provider_reference():
         "https://example.test/public.pdf"
     ]
     assert "secret" not in merged.model_dump_json()
+
+
+class _Fixed:
+    """A provider that returns canned papers, or fails when given none."""
+
+    def __init__(self, name, papers=None):
+        self.name, self.papers = name, papers
+
+    async def search(self, query, cursor):
+        if self.papers is None:
+            raise ProviderFailure("provider_failed")
+        return ProviderPage(records=self.papers)
+
+
+def _policy(name, group):
+    return PaperQuotaPolicy(
+        provider_id=name,
+        credential_group=group,
+        policy_revision="v1",
+        minimum_spacing_ns=1,
+    )
+
+
+async def _allow(query, ctx):
+    return query.tenant == "tenant"
+
+
+async def _search_and_download(engine, url, root):
+    quota = SharedPaperQuota(engine)
+    names = ("first", "second", "broken")
+    bindings = {
+        "first": ProviderBinding(
+            _Fixed("first", (_paper("first", "1", doi="10.1234/AbC"),)),
+            _policy("first", "g-first"),
+            retries=0,
+        ),
+        "second": ProviderBinding(
+            _Fixed(
+                "second", (_paper("second", "x", title="Other", doi="doi:10.1234/abc"),)
+            ),
+            _policy("second", "g-second"),
+            retries=0,
+        ),
+        "broken": ProviderBinding(
+            _Fixed("broken"), _policy("broken", "g-broken"), retries=0
+        ),
+    }
+    service = PaperSearchService(bindings, quota=quota, authorize=_allow)
+    result = await service.search(_query(provider_ids=names), object())
+    with pytest.raises(ValueError):
+        PaperSearchService(bindings, quota=quota, authorize=_allow, max_providers=33)
+    narrow = PaperSearchService(
+        bindings, quota=quota, authorize=_allow, max_providers=1
+    )
+    refused = await narrow.search(_query(provider_ids=names), object())
+
+    doc_policy = _policy("arxiv", "g-doc")
+
+    async def admit(request, ctx):
+        return DocumentAdmission(
+            root=Path(root),
+            http=HttpClientOptions(
+                base_url=url,
+                pin_egress=True,
+                allow_loopback=True,
+                retry=RetryPolicy(max_attempts=1),
+            ),
+            quota=doc_policy,
+        )
+
+    downloads = PaperDocumentService(quota, admit)
+    request = DocumentRequest(
+        tenant="tenant",
+        paper_id="doi:10.1234/abc",
+        revision="v1",
+        offer=DocumentOffer(
+            provider_id="arxiv", url=url + "/paper?token=x", media_type="text/html"
+        ),
+    )
+    receipt = await downloads.download(request, object())
+    async with quota.request_slot(doc_policy):
+        with pytest.raises(DocumentRefusal) as busy:
+            await downloads.download(request, object())
+    return result, refused, receipt, busy.value.reason
+
+
+async def _with_engine(url, root):
+    engine = await scoped_client(
+        ["kv:read", "kv:write", "kv:shared:read", "kv:shared:write"]
+    )
+    try:
+        return await _search_and_download(engine, url, root)
+    finally:
+        await engine.close()
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.2")
+def test_dedup_partial_failure_quota_download_and_metadata_fallback(
+    live_ingest,  # noqa: F811
+    tmp_path,
+):
+    from scion_sdk.adapters.paper_document_metadata import apply_document_fallback
+
+    body = (
+        b'<html><head><title>Doc</title><meta name="author" content="Jane">'
+        b"</head><body>Research</body></html>"
+    )
+    with ScriptedHttpServer(
+        ScriptedResponse(body=body, headers={"Content-Type": "text/html"})
+    ) as server:
+        result, refused, receipt, busy = asyncio.run_coroutine_threadsafe(
+            _with_engine(server.base_url, tmp_path),
+            live_ingest._loop,
+        ).result(30)
+        assert len(server.requests) == 1
+    assert result.completeness == "partial"
+    assert [r.outcome for r in result.reports] == ["ok", "ok", "failed"]
+    (merged,) = result.records
+    assert merged.canonical_id == "doi:10.1234/abc"
+    assert {ref.provider_id for ref in merged.references} == {"first", "second"}
+    assert refused.completeness == "failed"
+    assert {r.reason for r in refused.reports} == {"invalid_query"}
+    assert busy == "rate_limited"
+    assert "token" not in receipt.source_url
+    assert (tmp_path / receipt.artifact_ref).read_bytes() == body
+    assert [p.name for p in tmp_path.iterdir()] == [receipt.artifact_ref]
+    enriched = apply_document_fallback(merged, receipt, tmp_path)
+    assert enriched.title == merged.title and enriched.authors == ("Jane",)
+    assert enriched.field_provenance["authors"][0].document_sha256 == receipt.sha256
+    for bad in (
+        {"page_bound": 1001},
+        {"deadline_seconds": 601},
+        {"deadline_seconds": 0.5},
+    ):
+        with pytest.raises(ValidationError):
+            _query(**bad)
+    for bad_retries in (-1, 6):
+        with pytest.raises(ValueError):
+            ProviderBinding(
+                _Fixed("first", ()), _policy("first", "g"), retries=bad_retries
+            )
+    assert json.dumps(result.model_dump(mode="json"))
