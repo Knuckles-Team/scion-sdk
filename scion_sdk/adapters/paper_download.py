@@ -67,8 +67,8 @@ class DocumentAdmission:
     root: Path
     http: HttpClientOptions
     quota: PaperQuotaPolicy
-    max_bytes: int = 50 * 1024 * 1024
-    deadline_seconds: float = 30.0
+    max_document_bytes: int = 50 * 1024 * 1024
+    transfer_deadline_seconds: float = 30.0
 
 
 class PaperDocumentService:
@@ -111,9 +111,8 @@ def _validate_admission(
     ):
         raise DocumentRefusal("unauthorized")
     if (
-        admission.max_bytes < 1
-        or admission.max_bytes > 2**31
-        or not 0 < admission.deadline_seconds <= 3600
+        not 1_048_576 <= admission.max_document_bytes <= 1_073_741_824
+        or not 1 <= admission.transfer_deadline_seconds <= 600
     ):
         raise DocumentRefusal("unauthorized")
     if _origin(admission.http.base_url) != _origin(request.offer.url):
@@ -124,8 +123,8 @@ def _validate_admission(
 async def _bounded_download(
     request: DocumentRequest, admission: DocumentAdmission, quota: SharedPaperQuota
 ) -> DocumentReceipt:
-    with anyio.fail_after(admission.deadline_seconds):
-        deadline = anyio.current_time() + admission.deadline_seconds
+    with anyio.fail_after(admission.transfer_deadline_seconds):
+        deadline = anyio.current_time() + admission.transfer_deadline_seconds
         async with quota.request_slot(admission.quota) as slot:
             return await _retry_download(
                 request, admission, slot=slot, deadline=deadline

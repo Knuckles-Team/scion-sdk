@@ -51,7 +51,9 @@ async def _receive(
 ) -> tuple[int, str]:
     declared = _check_response(response, request, admission=admission, slot=slot)
     digest = hashlib.sha256()
-    total = await _copy_response(response, admission.max_bytes, fd=fd, digest=digest)
+    total = await _copy_response(
+        response, admission.max_document_bytes, fd=fd, digest=digest
+    )
     if total == 0 or (declared is not None and declared != total):
         raise DocumentRefusal("integrity_failed")
     _check_digest(response, digest)
@@ -103,7 +105,7 @@ def _check_response(
         raise DocumentRefusal("unsupported_media")
     declared = response.headers.get("content-length")
     if declared is not None and (
-        not declared.isdecimal() or int(declared) > admission.max_bytes
+        not declared.isdecimal() or int(declared) > admission.max_document_bytes
     ):
         raise DocumentRefusal("size_exceeded")
     return int(declared) if declared is not None else None

@@ -39,7 +39,7 @@ class ProviderBinding:
     retries: int = 2
 
     def __post_init__(self) -> None:
-        if type(self.retries) is not int or not 0 <= self.retries <= 10:
+        if type(self.retries) is not int or not 0 <= self.retries <= 5:
             raise ValueError("invalid provider retry budget")
         if getattr(self.provider, "quota_policy", self.quota) != self.quota:
             raise ValueError("provider request pacing disagrees with quota")
@@ -58,7 +58,11 @@ class PaperSearchService:
         *,
         quota: SharedPaperQuota,
         authorize: Callable[[PaperQuery, Any], Awaitable[bool]],
+        max_providers: int = 8,
     ) -> None:
+        if type(max_providers) is not int or not 1 <= max_providers <= 32:
+            raise ValueError("max_providers must be between 1 and 32")
+        self._max_providers = max_providers
         self._providers = dict(providers)
         self._quota = quota
         self._authorize = authorize
@@ -71,6 +75,8 @@ class PaperSearchService:
     async def search(self, query: PaperQuery, context: Any) -> PaperSearchResult:
         """Return ordered provider outcomes without suppressing healthy results."""
         query = PaperQuery.model_validate(query.model_dump())
+        if len(query.provider_ids) > self._max_providers:
+            return _unavailable(query, "invalid_query")
         deadline = anyio.current_time() + query.deadline_seconds
         try:
             with anyio.fail_after(query.deadline_seconds):
