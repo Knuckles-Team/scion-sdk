@@ -6,6 +6,10 @@ from types import SimpleNamespace
 import pytest
 
 from scion_sdk.finance.liquidity_panel import read_liquidity_panel
+from scion_sdk.finance.liquidity_records import (
+    SOURCE_MAPPING_REFERENCE,
+    SOURCE_RECORD_ID,
+)
 from scion_sdk.ports.errors import SourceContractError
 
 
@@ -13,8 +17,8 @@ def node(stream, series, value, text):
     period, vintage = "2026-10-21", "2026-10-22"
     return {
         "source_stream": stream,
-        "source_record_id": f"{series}:{period}:{vintage}",
-        "source_mapping_reference": "connector:bellwether-mcp#mappings/EconomicIndicator",
+        SOURCE_RECORD_ID: f"{series}:{period}:{vintage}",
+        SOURCE_MAPPING_REFERENCE: "connector:bellwether-mcp#mappings/EconomicIndicator",
         "source_raw_sha256": "a" * 64,
         "source_provenance": {
             "connector": "bellwether-mcp",
@@ -83,7 +87,7 @@ async def test_graph_sources_are_forwarded_exactly_to_engine():
     [
         {"source_stream": "other"},
         {"series_id": "WDTGAL"},
-        {"source_record_id": "other"},
+        {SOURCE_RECORD_ID: "other"},
         {"source_raw_sha256": "bad"},
         {
             "source_provenance": {

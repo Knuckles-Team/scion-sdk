@@ -2559,7 +2559,7 @@ wheels = [
 
 [[package]]
 name = "medulla"
-version = "3.2.0"
+version = "3.3.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -2567,11 +2567,10 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyoxigraph" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/07/26/da63d54d421b1dc6677190072e34e1c326c1e154e8d6d1d83e8d8f63ba70/medulla-3.2.0.tar.gz", hash = "sha256:82bccd7916fd0b2de897ffde29b62bfebd9590f594b80f8b1d38309fc6902d4f", size = 12194077, upload-time = "2026-11-07T16:33:23.143Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/60/7203d2b7ef27dc5cd4c1210b9f65c5cc8102dd2faca2f8a9a168e30520d4/medulla-3.2.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:7246ccd880a73c7e6b9e5dfc3e7445c810697032429b5484bc37e415eb4b587a", size = 83722384, upload-time = "2026-11-07T19:18:00.407Z" },
-    { url = "https://files.pythonhosted.org/packages/22/7c/8d74d8a8ec3530787f9e31cca1f96e2d78b598d3e2aa00eb57c5668ed8ae/medulla-3.2.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:dcae94c38e2c6961af0345f4175ca0dbff3a6e33d7783fdb5e4d6222995ba1ba", size = 76107290, upload-time = "2026-11-07T19:13:37.985Z" },
-    { url = "https://files.pythonhosted.org/packages/47/0b/807c685e6b37b9123072a3d877b9b906e3cf3ee1bda9dc3b281a3e8d1edd/medulla-3.2.0-cp39-abi3-win_amd64.whl", hash = "sha256:cdfb9c4b45afad41c954e5528f335b04a93948d17d4a056939dbbe4c5db2f86c", size = 82880669, upload-time = "2026-11-07T19:11:00.737Z" },
+    { url = "https://files.pythonhosted.org/packages/88/d6/c9897305c120d6be6e19c16a440738c2b6a86b321a5a69599200f630f663/medulla-3.3.4-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:e236b53c2d70b52e9a7ee94c4c3d0e65502ca63edea6d0bf9695388c4d5c24f0", size = 104288870, upload-time = "2026-11-17T10:49:38.657Z" },
+    { url = "https://files.pythonhosted.org/packages/30/5d/4d1e97c971d4469b4ea72ca59242caab4a339cf6c553cbab2568ebae0135/medulla-3.3.4-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:92b95ac8dd93ed47aebdcfd8234a3680349efa19a00b520afd537912000e1053", size = 96943266, upload-time = "2026-11-17T08:59:53.687Z" },
+    { url = "https://files.pythonhosted.org/packages/26/64/5de9bda4d88b49495773b49a31fc799d023a012f13ac7c1477429dc36428/medulla-3.3.4-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:1462647a578bf8f9baa9b0d2a85fd26a4016969e9e1a1f48e98ff5cbfe393b38", size = 87493349, upload-time = "2026-11-17T12:31:08.082Z" },
 ]
 
 [[package]]
@@ -5269,7 +5268,7 @@ requires-dist = [
     { name = "llama-index-vector-stores-chroma", marker = "extra == 'vector-chroma'", specifier = ">=0.5.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2.3.0,<3" },
     { name = "mcp-types", specifier = ">=2.3.0,<3" },
-    { name = "medulla", specifier = ">=3.2.0,<4.0.0" },
+    { name = "medulla", specifier = ">=3.3.4,<4.0.0" },
     { name = "oracledb", marker = "extra == 'db'", specifier = ">=2.5.0" },
     { name = "pandas", marker = "extra == 'market'", specifier = ">=2.2.0" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'db'", specifier = ">=3.2.0" },
