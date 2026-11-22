@@ -713,3 +713,120 @@ def test_base_api_client_sends_route_host_and_refuses_malformed() -> None:
     assert seen[0].url.host == "api.example.test"
     with pytest.raises(ValueError, match="route_host"):
         BaseApiClient("https://api.example.test/api", route_host="host/path")
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R048")
+def test_header_pair_auth_injects_resolves_and_redacts(monkeypatch) -> None:
+    from scion_sdk.exceptions import ParameterError
+    from scion_sdk.httpsupport.api_client import BaseApiClient
+    from scion_sdk.httpsupport.auth import (
+        BasicAuth,
+        HeaderPairAuth,
+        TokenAuth,
+        header_auth_from_settings,
+    )
+    from scion_sdk.httpsupport.redaction import LogRedactor
+
+    pair = HeaderPairAuth({"X-Proxy-Token": "s3cret-proxy", "X-Proxy-Org": "org-42"})
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"ok": True})
+
+    # Injection: the service-token headers travel on the wire.
+    client = BaseApiClient(
+        "https://api.example.test/api",
+        auth=pair,
+        transport=httpx.MockTransport(handler),
+    )
+    assert client.get("items")["status_code"] == 200
+    assert seen[0].headers["X-Proxy-Token"] == "s3cret-proxy"
+    assert seen[0].headers["X-Proxy-Org"] == "org-42"
+
+    # Composition: the proxy token and the application credential travel
+    # together on one request.
+    composed = BaseApiClient(
+        "https://api.example.test/api",
+        auth=(pair, TokenAuth("app-token")),
+        transport=httpx.MockTransport(handler),
+    )
+    composed.get("items")
+    assert seen[1].headers["Authorization"] == "Bearer app-token"
+    assert seen[1].headers["X-Proxy-Token"] == "s3cret-proxy"
+    basic = BaseApiClient(
+        "https://api.example.test/api",
+        auth=[pair, BasicAuth("svc", "app-password")],
+        transport=httpx.MockTransport(handler),
+    )
+    basic.get("items")
+    assert seen[2].headers["Authorization"].startswith("Basic ")
+    assert seen[2].headers["X-Proxy-Token"] == "s3cret-proxy"
+
+    # Refusals: reserved names (case-insensitive) and line breaks; the
+    # error text names the header only, never the value.
+    secret = (
+        "s3cret-value"  # sanitizer:ignore - synthetic fixture, never a real credential
+    )
+    cases = (
+        ("Authorization", secret),
+        ("authorization", secret),
+        ("Host", secret),
+        ("Cookie", secret),
+        ("Content-Length", secret),
+        ("TRANSFER-ENCODING", secret),
+        ("connection", secret),
+        ("X-Bad\r\nName", secret),
+        ("X-Bad\nName", secret),
+        ("X-Token", "bad\r\nvalue"),
+        ("X-Token", "bad\nvalue"),
+        ("X-Token", ""),
+    )
+    for name, value in cases:
+        with pytest.raises(ValueError, match="service-token header") as raised:
+            HeaderPairAuth({name: value})
+        assert secret not in str(raised.value)
+
+    # Resolution: reference values resolve, literals stay; malformed
+    # settings refuse.
+    monkeypatch.setenv("DEMO_PROXY_TOKEN", "resolved-token")
+    monkeypatch.setenv(
+        "DEMO_ACCESS_HEADERS",
+        '{"X-Proxy-Token": "env://DEMO_PROXY_TOKEN", "X-Proxy-Org": "literal-org"}',
+    )
+    assert header_auth_from_settings("DEMO").headers() == {
+        "X-Proxy-Token": "resolved-token",
+        "X-Proxy-Org": "literal-org",
+    }
+    for bad in ("not json", '{"X-Proxy-Token": 5}', '["X-Proxy-Token"]'):
+        monkeypatch.setenv("DEMO_ACCESS_HEADERS", bad)
+        with pytest.raises(ValueError, match="ACCESS_HEADERS"):
+            header_auth_from_settings("DEMO")
+    monkeypatch.delenv("DEMO_ACCESS_HEADERS")
+    assert header_auth_from_settings("DEMO").headers() == {}
+
+    # Redaction: error text and log records carry the header name only.
+    def reject(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            400,
+            json={
+                "detail": (f"X-Proxy-Token {request.headers['X-Proxy-Token']} denied")
+            },
+        )
+
+    guarded = BaseApiClient(
+        "https://api.example.test/api",
+        auth=pair,
+        transport=httpx.MockTransport(reject),
+    )
+    with pytest.raises(ParameterError) as raised:
+        guarded.get("items")
+    assert "s3cret-proxy" not in str(raised.value)
+    assert "X-Proxy-Token" in str(raised.value)
+
+    redactor = LogRedactor(secrets_provider=lambda: pair.secrets())
+    record = logging.LogRecord(
+        "t", logging.INFO, "t", 1, "s3cret-proxy org-42", None, None
+    )
+    redactor.filter(record)
+    assert "s3cret-proxy" not in record.getMessage()

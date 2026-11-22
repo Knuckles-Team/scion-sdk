@@ -133,6 +133,7 @@ global fallback, and `SSL_CERT_FILE`/`SSL_CERT_DIR`.
 | API key | `api_key_auth(ref, header="X-Api-Key")` or `query="apikey"` |
 | OAuth 2.0 client credentials | `client_credentials_auth(ClientCredentialsConfig(...))`, or `ClientCredentialsTokenProvider` + `ClientCredentialsAuth` |
 | On behalf of the MCP caller (RFC 8693) | `DelegatedTokenAuth(DelegationSettings.from_settings(), http_client=...)` |
+| Zero-trust proxy service tokens | `header_auth_from_settings("DEMO")` (reads `DEMO_ACCESS_HEADERS`); pair with the application credential, e.g. `auth=(pair, bearer_token)` on `BaseApiClient` |
 
 Client-credentials tokens are cached, refreshed 30 seconds before expiry and
 re-minted once on a 401; the client secret is resolved at every mint, so a
