@@ -32,15 +32,21 @@ __all__ = [
     "A2ATaskStatus",
     "AgentCard",
     "AgentSkill",
+    "ForeignContextError",
+    "Storage",
     "TaskState",
     "TextPart",
     "create_a2a_app",
 ]
 
+#: Server-side names, imported on first use so the base install never loads
+#: the server stack.
+_LAZY_SERVER_NAMES = frozenset({"create_a2a_app", "Storage", "ForeignContextError"})
+
 
 def __getattr__(name: str) -> Any:
-    if name == "create_a2a_app":
-        from .app import create_a2a_app
+    if name in _LAZY_SERVER_NAMES:
+        from . import app
 
-        return create_a2a_app
+        return getattr(app, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

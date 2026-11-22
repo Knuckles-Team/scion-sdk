@@ -288,7 +288,13 @@ def test_a2a_app_serves_tasks_using_caller_broker_and_storage() -> None:
 
     from scion_sdk.a2a import create_a2a_app
 
-    storage = InMemoryStorage()
+    class Storage(InMemoryStorage):
+        """The in-memory task double with the caller-scoped context page."""
+
+        async def list_contexts(self, caller, cursor, limit):
+            return [], None
+
+    storage = Storage()
     broker = InMemoryBroker()
     agent = Agent(TestModel(custom_output_text="finished"))
     app = create_a2a_app(
@@ -341,3 +347,148 @@ def test_a2a_app_serves_tasks_using_caller_broker_and_storage() -> None:
         assert task["status"]["state"] == "completed"
         assert task["history"][-1]["parts"][0]["text"] == "finished"
         assert task_id in storage.tasks
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.1")
+def test_tasks_list_serves_durable_storage() -> None:
+    pytest.importorskip("fasta2a")
+    from fasta2a.broker import InMemoryBroker
+    from fasta2a.storage import InMemoryStorage
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+    from starlette.testclient import TestClient
+
+    from scion_sdk.a2a import create_a2a_app
+    from scion_sdk.a2a.app import ForeignContextError
+
+    class DurableStorage(InMemoryStorage):
+        """Caller-scoped context store on the in-memory task test double."""
+
+        def __init__(self) -> None:
+            super().__init__()
+            self._contexts = {
+                "alice": [{"contextId": "ctx-a"}, {"contextId": "ctx-b"}],
+                "bob": [{"contextId": "ctx-c"}],
+            }
+
+        async def list_contexts(self, caller, cursor, limit):
+            if cursor is not None and cursor != f"cursor-{caller}":
+                raise ForeignContextError
+            page = self._contexts.get(caller, [])[:limit]
+            next_cursor = f"cursor-{caller}" if len(page) == limit else None
+            return page, next_cursor
+
+    app = create_a2a_app(
+        Agent(TestModel(custom_output_text="done")),
+        name="fixture",
+        url="http://testserver",
+        version="1",
+        storage=DurableStorage(),
+        broker=InMemoryBroker(),
+    )
+    with TestClient(app) as client:
+        # The page lists the caller's contexts; no more than one page.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tasks/list",
+                "params": {"caller": "alice", "limit": 10},
+            },
+        )
+        assert reply.status_code == 200
+        result = reply.json()["result"]
+        assert result["tasks"] == [{"contextId": "ctx-a"}, {"contextId": "ctx-b"}]
+        assert result["next_cursor"] is None
+
+        # A bounded page carries the continuation cursor.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tasks/list",
+                "params": {"caller": "alice", "limit": 1},
+            },
+        )
+        assert reply.json()["result"]["tasks"] == [{"contextId": "ctx-a"}]
+        assert reply.json()["result"]["next_cursor"] == "cursor-alice"
+
+        # A context the caller does not own is refused with -32001.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tasks/list",
+                "params": {"caller": "bob", "contextId": "ctx-a"},
+            },
+        )
+        assert reply.json()["error"] == {"code": -32001, "message": "foreign context"}
+
+        # A cursor from another caller is refused with the same code, no data.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 4,
+                "method": "tasks/list",
+                "params": {"caller": "bob", "cursor": "cursor-alice"},
+            },
+        )
+        assert reply.json()["error"]["code"] == -32001
+        assert "result" not in reply.json()
+
+        # Malformed params refuse without echoing caller input.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 5,
+                "method": "tasks/list",
+                "params": {"caller": "alice", "limit": 101},
+            },
+        )
+        assert reply.json()["error"] == {"code": -32602, "message": "Invalid params"}
+
+        # The protocol methods still reach the agent.
+        response = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 6,
+                "method": "message/send",
+                "params": {
+                    "message": {
+                        "kind": "message",
+                        "messageId": "m1",
+                        "role": "user",
+                        "parts": [{"kind": "text", "text": "hello"}],
+                    }
+                },
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["result"]["status"]["state"] == "submitted"
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.1")
+def test_a2a_app_refuses_a_storage_without_list_contexts() -> None:
+    pytest.importorskip("fasta2a")
+    from fasta2a.broker import InMemoryBroker
+    from fasta2a.storage import InMemoryStorage
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+
+    from scion_sdk.a2a import create_a2a_app
+
+    with pytest.raises(TypeError, match="list_contexts"):
+        create_a2a_app(
+            Agent(TestModel(custom_output_text="done")),
+            name="fixture",
+            url="http://testserver",
+            version="1",
+            storage=InMemoryStorage(),
+            broker=InMemoryBroker(),
+        )
