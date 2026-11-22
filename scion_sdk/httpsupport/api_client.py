@@ -29,6 +29,7 @@ from scion_sdk.exceptions import (
     ParameterError,
     UnauthorizedError,
 )
+from scion_sdk.http.options import _route_host_problem
 from scion_sdk.httpsupport.api_client_mixins import _ResponseDecoding, _VerbMethods
 from scion_sdk.httpsupport.api_client_rate import (
     RateLimitSnapshot,
@@ -77,6 +78,8 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
 
     Args:
         base_url: Root URL relative endpoints join under.
+        route_host: Upstream site name sent as the ``Host`` header while the
+            client dials the ``base_url`` host; ``None`` keeps the base host.
         auth: An :class:`AuthHeaderInjector` strategy; ``None`` is anonymous.
         headers: Extra default headers merged over :meth:`default_headers`.
         tls_service: Settings prefix of the runtime TLS profile.
@@ -97,6 +100,7 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
         base_url: str,
         *,
         auth: AuthHeaderInjector | None = None,
+        route_host: str | None = None,
         headers: dict[str, str] | None = None,
         tls_service: str = "fleet-http",
         tls_profile: str | None = None,
@@ -113,6 +117,9 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
     ) -> None:
         if {"verify", "cert", "proxy", "trust_env"}.intersection(httpx_kwargs):
             raise ValueError("transport security must use a TLS profile")
+        route_problem = _route_host_problem(route_host)
+        if route_problem is not None:
+            raise ValueError(route_problem)
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.max_retries_429 = max_retries_429
@@ -123,6 +130,7 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
         self.default_error = default_error
         self._auth = auth or AuthHeaderInjector()
         self._extra_headers = dict(headers or {})
+        self._route_host = route_host
         self._last_rate_limit: RateLimitSnapshot | None = None
         if transport is not None:
             httpx_kwargs["transport"] = transport
@@ -167,6 +175,10 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
             merged["Content-Type"] = content_type
         if accept:
             merged["Accept"] = accept
+        if self._route_host is not None:
+            # A deployment-level site name; it names the upstream site for the
+            # wire while dial, pin and SNI keep using the base_url host.
+            merged["Host"] = self._route_host
         return merged
 
     def _merged_params(self, params: dict[str, Any] | None) -> dict[str, Any] | None:
