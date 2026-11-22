@@ -15,6 +15,8 @@ Every client built here:
   each attempt to the ``scion_sdk.http`` logger with secrets redacted;
 * with ``pin_egress``, resolves each request once, refuses non-public
   destinations (except ``allowed_private_hosts``) and dials only that address;
+* with ``route_host``, sends that site name as the ``Host`` header while
+  dialing, pinning and verifying the ``base_url`` host;
 * rejects credential-bearing default headers: credentials go through ``auth``;
 * enforces ``AIRGAP_MODE`` before either transport sends a request.
 
@@ -172,6 +174,10 @@ def _client_kwargs(options: HttpClientOptions) -> dict[str, Any]:
         )
     headers = httpx.Headers(standard_headers())
     headers.update(options.headers)
+    if options.route_host is not None:
+        # The site name for the wire; dial, pin, SNI and the egress guard all
+        # keep using the base_url host.
+        headers["Host"] = options.route_host
     return {
         "base_url": options.base_url,
         "timeout": options.timeout,
@@ -319,6 +325,7 @@ def build_http_client(
             allowed_private_hosts=options.allowed_private_hosts,
             allow_loopback=options.allow_loopback,
             verify_peer=options.verify_pinned_peer,
+            route_host=options.route_host,
         )
     proxy = options.tls.proxy_url if options.tls else None
     final_transport = airgap_type(governed, proxy)

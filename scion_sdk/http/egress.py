@@ -63,8 +63,13 @@ def _resolve_pinned_request(
     *,
     allowed_private_hosts: frozenset[str],
     allow_loopback: bool,
+    route_host: str | None = None,
 ) -> tuple[str, str, tuple[str, int]]:
-    """Resolve one request once and rewrite it to the chosen IP, keeping Host/SNI."""
+    """Resolve one request once and rewrite it to the chosen IP, keeping Host/SNI.
+
+    The ``Host`` header takes the deployment's ``route_host`` when one is set;
+    resolution, pinning and SNI always use the logical (base URL) host.
+    """
     logical_url = request.url
     scheme, host = _checked_logical_target(logical_url)
     ips = _candidate_ips(
@@ -78,7 +83,9 @@ def _resolve_pinned_request(
     if scheme == "http" and not (address.is_loopback or host in allowed_private_hosts):
         raise PinnedEgressViolation("unencrypted public egress is not permitted")
 
-    request.headers["Host"] = logical_url.netloc.decode("ascii")
+    request.headers["Host"] = (
+        route_host if route_host is not None else logical_url.netloc.decode("ascii")
+    )
     request.url = logical_url.copy_with(host=pinned_ip)
     if scheme == "https":
         request.extensions = {**request.extensions, "sni_hostname": host}
@@ -97,12 +104,14 @@ class _PinState:
         *,
         policy: EgressOptions,
         verify_peer: bool,
+        route_host: str | None = None,
     ) -> None:
         self.allowed_private_hosts = normalize_private_hosts(
             policy.allowed_private_hosts
         )
         self.allow_loopback = policy.allow_loopback
         self.verify_peer = verify_peer
+        self.route_host = route_host
         self._origin_hosts: dict[tuple[str, int], str] = {}
         self._lock = threading.Lock()
 
@@ -111,6 +120,7 @@ class _PinState:
             request,
             allowed_private_hosts=self.allowed_private_hosts,
             allow_loopback=self.allow_loopback,
+            route_host=self.route_host,
         )
 
     def pin(self, request: httpx.Request) -> str:
@@ -136,6 +146,7 @@ class _PinnedTransportBase:
         allowed_private_hosts: Collection[str] = (),
         allow_loopback: bool = False,
         verify_peer: bool = True,
+        route_host: str | None = None,
     ) -> None:
         self._inner = inner
         self._state = _PinState(
@@ -144,6 +155,7 @@ class _PinnedTransportBase:
                 allow_loopback=allow_loopback,
             ),
             verify_peer=verify_peer,
+            route_host=route_host,
         )
 
 
@@ -152,8 +164,10 @@ class DnsPinnedEgressTransport(_PinnedTransportBase, httpx.BaseTransport):
 
     Public destinations must resolve to public addresses. A host named in
     ``allowed_private_hosts`` must resolve into loopback, RFC 1918, RFC 6598 or
-    IPv6 ULA space. The original name stays in ``Host`` and TLS SNI. Unless
-    ``verify_peer`` is off, the connected peer must equal the pinned address.
+    IPv6 ULA space. The original name stays in ``Host`` and TLS SNI, unless a
+    ``route_host`` site name is set, which then replaces only the ``Host``
+    header. Unless ``verify_peer`` is off, the connected peer must equal the
+    pinned address.
     """
 
     _inner: httpx.BaseTransport

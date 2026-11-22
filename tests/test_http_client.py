@@ -593,3 +593,123 @@ async def test_served_tool_refuses_invalid_window_size() -> None:
     async with Client(server) as client:
         result = await client.call_tool("list_items", {}, raise_on_error=False)
     assert result.is_error
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R049")
+def test_route_host_overrides_host_without_changing_the_dial_target() -> None:
+    ok = ScriptedResponse(body=b"[]", headers=_JSON)
+    with ScriptedHttpServer(ok) as server:
+        options = HttpClientOptions(
+            base_url=server.base_url,
+            retry=_FAST,
+            route_host="api.example.org",
+            pin_egress=True,
+            allow_loopback=True,
+        )
+        with build_http_client(options) as client:
+            assert request_json(client, "GET", "/items") == []
+    received = server.requests[0]
+    assert received.path == "/items"
+    assert received.headers["host"] == "api.example.org"
+    # pin_egress resolved and dialed the base host (loopback), not the site
+    # name; a public-name dial would have failed the egress guard.
+    assert "127.0.0.1" in server.base_url
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R049")
+def test_route_host_keeps_base_host_for_pinning_and_tls_server_name(
+    certificates: CertificateSet, tmp_path: Path
+) -> None:
+    ok = ScriptedResponse(body=b"[]", headers=_JSON)
+    with ScriptedHttpServer(
+        ok, ssl_context=certificates.server_context(tmp_path)
+    ) as server:
+        profile = resolve_tls_profile(
+            "demo", profile={"ca_bundle_pem": certificates.ca_pem}
+        )
+        try:
+            options = HttpClientOptions(
+                base_url=server.base_url,
+                retry=_FAST,
+                tls=profile,
+                route_host="api.example.org",
+                pin_egress=True,
+                allow_loopback=True,
+            )
+            with build_http_client(options) as client:
+                assert request_json(client, "GET", "/items") == []
+        finally:
+            profile.cleanup()
+    # The certificate names 127.0.0.1/localhost: a successful handshake with
+    # route_host set proves SNI and the peer pin used the base_url host.
+    assert server.requests[0].headers["host"] == "api.example.org"
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R049")
+def test_route_host_is_not_carried_by_a_redirect_to_another_origin() -> None:
+    redirect = ScriptedResponse(
+        status=307, headers={"Location": "https://other.example.org/elsewhere"}
+    )
+    with ScriptedHttpServer(redirect) as server:
+        options = HttpClientOptions(
+            base_url=server.base_url, retry=_FAST, route_host="api.example.org"
+        )
+        with build_http_client(options) as client:
+            response = client.get("/items")
+    assert response.status_code == 307
+    assert response.headers["location"] == "https://other.example.org/elsewhere"
+    assert len(server.requests) == 1
+    assert server.requests[0].headers["host"] == "api.example.org"
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R049")
+def test_route_host_refuses_malformed_values() -> None:
+    base = "https://api.example.invalid"
+    for value in (
+        "",
+        ":",
+        ":8080",
+        "host:",
+        "host:0",
+        "host:65536",
+        "host\n",
+        "host\r\n",
+        "host/path",
+        "user@host",
+        " host",
+        "host ",
+        "host name",
+        "exa_mple.org",
+        "example..org",
+        "-host",
+        "host-",
+        ".host",
+        "host.",
+    ):
+        with pytest.raises(ValueError, match="route_host"):
+            HttpClientOptions(base_url=base, route_host=value)
+    # A bare name and a name with a valid port are accepted.
+    for value in ("api.example.org", "api.example.org:8443"):
+        HttpClientOptions(base_url=base, route_host=value)
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R049")
+def test_base_api_client_sends_route_host_and_refuses_malformed() -> None:
+    from scion_sdk.httpsupport.api_client import BaseApiClient
+
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"ok": True})
+
+    client = BaseApiClient(
+        "https://api.example.test/api",
+        transport=httpx.MockTransport(handler),
+        route_host="api.example.org",
+    )
+    assert client.request("GET", "items", raise_for_status=False)["status_code"] == 200
+    assert seen[0].headers["Host"] == "api.example.org"
+    assert seen[0].url.host == "api.example.test"
+    with pytest.raises(ValueError, match="route_host"):
+        BaseApiClient("https://api.example.test/api", route_host="host/path")
