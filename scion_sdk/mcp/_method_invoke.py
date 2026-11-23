@@ -11,6 +11,7 @@ from mcp.types import InputRequiredResult
 from pydantic import Field
 from pydantic_core import to_jsonable_python
 
+from scion_sdk.entitlements import require_entitled
 from scion_sdk.mcp._method_params import _ParamShape
 from scion_sdk.mcp.action_dispatch import parse_json_object
 from scion_sdk.mcp.concurrency import invoke_client_method
@@ -22,6 +23,15 @@ _CONFIRM_PARAMETER = "confirm"
 _CONFIRM_DESCRIPTION = (
     "Explicitly confirm this destructive operation. Needed only when the client "
     "cannot answer a confirmation prompt."
+)
+
+#: Named-instance argument advertised on every operation tool of a
+#: connector that opts in (SCION-CENTRALIZED-CAPABILITIES-R050).
+_INSTANCE_PARAMETER = "instance"
+_INSTANCE_FALLBACK_PARAMETER = "upstream_instance"
+_INSTANCE_DESCRIPTION = (
+    "Name of the upstream instance to call; the connector's default "
+    "instance when omitted."
 )
 
 
@@ -53,6 +63,13 @@ def _context_name(params: list[inspect.Parameter]) -> str:
     return "ctx" if "ctx" not in taken else "mcp_ctx"
 
 
+def _instance_name(params: list[inspect.Parameter]) -> str:
+    taken = {p.name for p in params}
+    if _INSTANCE_PARAMETER not in taken:
+        return _INSTANCE_PARAMETER
+    return _INSTANCE_FALLBACK_PARAMETER
+
+
 async def _invoke(
     method_name: str,
     get_client: Any,
@@ -62,6 +79,8 @@ async def _invoke(
     destructive: bool,
     coercer: Callable[[Any], Any],
     confirm: bool = False,
+    instance: str | None = None,
+    instances: Any = None,
 ) -> Any:
     if destructive:
         confirmation = await ctx_confirm_destructive(
@@ -74,7 +93,13 @@ async def _invoke(
             return confirmation
         if confirmation is not True:
             return confirmation_refusal(ctx, method_name)
-    client = await _resolve_client(get_client)
+    if instances is not None and instance is not None:
+        # The caller's entitlement check applies per instance, before any
+        # instance client is built (SCION-CENTRALIZED-CAPABILITIES-R050).
+        require_entitled(instances.namespace, instance)
+        client = instances.client_for(instance)
+    else:
+        client = await _resolve_client(get_client)
     result = await invoke_client_method(getattr(client, method_name), **kwargs)
     coerced = coercer(result)
     return await coerced if inspect.isawaitable(coerced) else coerced
@@ -88,10 +113,12 @@ def _typed_tool(
     destructive: bool,
     coercer: Callable[[Any], Any],
     returns: Any = Any,
+    instances: Any = None,
 ) -> Callable[..., Any]:
     """A tool whose signature mirrors the operation's typed parameters."""
     params = shape.params
     ctx_name = _context_name(params)
+    inst_name = _instance_name(params) if instances is not None else None
     declared = {p.name for p in params}
     with_confirm = destructive and _CONFIRM_PARAMETER not in declared
 
@@ -100,6 +127,7 @@ def _typed_tool(
         confirm = (
             bool(arguments.pop(_CONFIRM_PARAMETER, False)) if with_confirm else False
         )
+        instance = arguments.pop(inst_name, None) if inst_name else None
         extra = parse_json_object(arguments.pop("params_json", None))
         kwargs = {
             k: v
@@ -115,6 +143,8 @@ def _typed_tool(
             destructive=destructive,
             coercer=coercer,
             confirm=confirm,
+            instance=instance,
+            instances=instances,
         )
 
     ordered = [p for p in params if p.default is inspect.Parameter.empty] + [
@@ -136,6 +166,17 @@ def _typed_tool(
                 inspect.Parameter.KEYWORD_ONLY,
                 default=False,
                 annotation=Annotated[bool, Field(description=_CONFIRM_DESCRIPTION)],
+            )
+        )
+    if inst_name:
+        ordered.append(
+            inspect.Parameter(
+                inst_name,
+                inspect.Parameter.KEYWORD_ONLY,
+                default=None,
+                annotation=Annotated[
+                    str | None, Field(description=_INSTANCE_DESCRIPTION)
+                ],
             )
         )
     ordered.append(
@@ -161,6 +202,7 @@ def _untyped_tool(
     *,
     destructive: bool,
     coercer: Callable[[Any], Any],
+    instances: Any = None,
 ) -> Callable[..., Any]:
     """A ``params_json`` tool for an operation with no typed surface."""
 
@@ -170,6 +212,9 @@ def _untyped_tool(
         ),
         confirm: bool = Field(default=False, description=_CONFIRM_DESCRIPTION),
         ctx: Context | None = None,
+        instance: Annotated[
+            str | None, Field(description=_INSTANCE_DESCRIPTION)
+        ] = None,
     ) -> Any:
         kwargs = parse_json_object(params_json)
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
@@ -181,12 +226,24 @@ def _untyped_tool(
             destructive=destructive,
             coercer=coercer,
             confirm=destructive and confirm is True,
+            instance=instance if instances is not None else None,
+            instances=instances,
         )
 
+    signature = inspect.signature(_tool)
     if not destructive:
-        signature = inspect.signature(_tool)
-        _tool.__signature__ = signature.replace(  # type: ignore[attr-defined]
+        signature = signature.replace(
             parameters=[p for p in signature.parameters.values() if p.name != "confirm"]
         )
         _tool.__annotations__.pop("confirm", None)
+    if instances is None:
+        signature = signature.replace(
+            parameters=[
+                p
+                for p in signature.parameters.values()
+                if p.name != _INSTANCE_PARAMETER
+            ]
+        )
+        _tool.__annotations__.pop(_INSTANCE_PARAMETER, None)
+    _tool.__signature__ = signature  # type: ignore[attr-defined]
     return _tool

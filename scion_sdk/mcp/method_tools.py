@@ -123,12 +123,17 @@ def _build_tool(
     destructive: bool,
     coercer: Callable[[Any], Any],
     returns: Any,
+    instances: Any = None,
 ) -> tuple[Callable[[], Callable[..., Any]] | None, Callable[..., Any]]:
     """``(typed-tool factory or None, untyped fallback)`` for one operation."""
     params = _manifest_parameters(operation)
     shape = _ParamShape(params) if params is not None else _method_parameters(method)
     untyped = _untyped_tool(
-        method_name, get_client, destructive=destructive, coercer=coercer
+        method_name,
+        get_client,
+        destructive=destructive,
+        coercer=coercer,
+        instances=instances,
     )
     if shape is None:
         return None, untyped
@@ -140,6 +145,7 @@ def _build_tool(
         destructive=destructive,
         coercer=coercer,
         returns=returns,
+        instances=instances,
     )
     return typed, untyped
 
@@ -178,6 +184,7 @@ def _register_operation(
     get_client: Any,
     coercer: Callable[[Any], Any],
     typed_returns: bool,
+    instances: Any = None,
 ) -> bool:
     verb = operation_verb(method, operation)
     declared = is_declared_destructive(method)
@@ -199,6 +206,7 @@ def _register_operation(
         or is_destructive_action(method_name, operation),
         coercer=coercer,
         returns=_json_return(method) if typed_returns else Any,
+        instances=instances,
     )
     return _register_tool(mcp, options, tools)
 
@@ -211,6 +219,7 @@ def register_method_tools(
     prefix: str,
     manifest: list[dict[str, Any]] | None = None,
     result_coercer: Callable[[Any], Any] | None = None,
+    instances: Any = None,
 ) -> list[str]:
     """Register one typed, annotated MCP tool per public method of ``client_cls``.
 
@@ -222,6 +231,11 @@ def register_method_tools(
     signature and type hints do. ``get_client`` is called fresh on every
     invocation (synchronous or returning an awaitable). ``result_coercer``
     shapes each client return value; :func:`jsonable_result` is the default.
+
+    ``instances``, when given, advertises an optional ``instance`` argument
+    on every registered tool; a named instance resolves its client through
+    the connector's :class:`~scion_sdk.config.instances.ConnectorInstances`
+    instead of the default client (SCION-CENTRALIZED-CAPABILITIES-R050).
 
     Skips methods defined only on a base-infrastructure class (auth,
     pagination, retry machinery -- never a real operation). A destructive
@@ -256,6 +270,7 @@ def register_method_tools(
             get_client=get_client,
             coercer=coercer,
             typed_returns=result_coercer is None,
+            instances=instances,
         )
         if not typed:
             untyped.add(tool_name)
