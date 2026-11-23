@@ -30,6 +30,7 @@ from scion_sdk.testing._conformance_static import (
     _check_version_from_metadata,
     _require,
     check_error_redaction,
+    check_repository_hydration,
     trees,
 )
 
@@ -183,6 +184,11 @@ CHECKS: tuple[Check, ...] = (
         check_error_redaction,
     ),
     Check("surface_complete", "SCION-CONNECTOR-CONTROL-R916.5", check_surface_complete),
+    Check(
+        "repository_hydration",
+        "SCION-REPOSITORY-TRANSPORT-R002",
+        check_repository_hydration,
+    ),
 )
 
 
