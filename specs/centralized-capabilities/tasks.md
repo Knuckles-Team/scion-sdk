@@ -79,7 +79,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.
 - [x] T074 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.1 Removed-path table with an absence test. Size: S, 1 PR, 2 hours.
 - [x] T075 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.2 Version 0.10.0 and the changelog entry. Size: S, 1 PR, 1 hour.
-- [ ] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.
+- [x] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.
 - [x] T077 [US1] SCION-CENTRALIZED-CAPABILITIES-R006.6 Typed category on a GraphQL query error, without server text. Size: S, 1 PR, 2 hours.
 - [x] T078 [US1] SCION-CENTRALIZED-CAPABILITIES-R047 The shared state-machine census runs in staged mode.
 - [ ] T079 [US1] SCION-CENTRALIZED-CAPABILITIES-R048 Service-token header pair auth strategy.

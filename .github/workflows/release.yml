@@ -96,6 +96,33 @@ jobs:
           uv publish --check-url https://pypi.org/simple/ \
             dist/scion_sdk-*.whl dist/scion_sdk-*.tar.gz
 
+  # SCION-CENTRALIZED-CAPABILITIES-R046.3: after the wheel is on PyPI, a fresh
+  # environment installs the published distribution and imports the
+  # replacement name of every row of the removed-path table, so a rename that
+  # left a file out of the wheel fails here, before a consumer finds it.
+  post-publish-import-check:
+    name: post-publish-import-check
+    needs: [publish-pypi]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-uv
+      - name: Import every replacement name from the published distribution
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          uv venv "$RUNNER_TEMP/import-check" --python 3.14
+          uv pip install --python "$RUNNER_TEMP/import-check/bin/python" \
+            "scion-sdk==$version"
+          "$RUNNER_TEMP/import-check/bin/python" scripts/check_published_imports.py
+
   # The GitHub release for the tag, created only after the wheel is on PyPI, so
   # the release always links to a package that exists.
   github-release:
