@@ -1,0 +1,248 @@
+# The removed-path table: the one source of truth for the release 0.10.0
+# hard cutover (SCION-CENTRALIZED-CAPABILITIES-R046.1). One entry per row of
+# the plan's removed-path map in specs/centralized-capabilities/plan.md.
+#
+# old   the dotted module or function name that is gone.
+# new   the dotted replacement that imports.
+# kind  module   the old module is absent; the new module imports.
+#        function the old name is gone from its former module, which still
+#                 ships; the new name imports from the new module.
+#        argument like function, plus: the replacement exposes the named
+#                 argument (or, for a command module, the subcommand).
+#
+# The decide row of the plan map names two removed functions; each carries
+# its own entry so each old name is proven absent.
+
+[[removed]]
+old = "scion_sdk.credentials.provider_profile"
+new = "scion_sdk.auth.provider_profile"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.credentials.source"
+new = "scion_sdk.auth.source_credentials"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.testing.successor_parity"
+new = "scion_sdk.certify.successor_parity"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._connector_decl"
+new = "scion_sdk.connector._decl"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._connector_serve"
+new = "scion_sdk.connector._serve"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._connector_metadata"
+new = "scion_sdk.connector_identity._metadata"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._contract_fields"
+new = "scion_sdk.contract_fields"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.data_prep._classification"
+new = "scion_sdk.data_prep.classification"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.ports.decide_runner"
+new = "scion_sdk.decide.runner"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._embedding_providers"
+new = "scion_sdk.embeddings._providers"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._extras"
+new = "scion_sdk.extras"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._lock_unavailable"
+new = "scion_sdk.file_lock._unavailable"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._file_lock_windows"
+new = "scion_sdk.file_lock._windows"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.http._bounded_provider"
+new = "scion_sdk.http.bounded_provider"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.http.support"
+new = "scion_sdk.httpsupport.api_client"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.http.support_mixins"
+new = "scion_sdk.httpsupport.api_client_mixins"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.http.support_rate"
+new = "scion_sdk.httpsupport.api_client_rate"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.runner.backoff"
+new = "scion_sdk.ingest.backoff"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.ingest._stream_checkpoint"
+new = "scion_sdk.ingest.stream_checkpoint"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.certify.fingerprints"
+new = "scion_sdk.manifest.fingerprints"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.ingest.for_each"
+new = "scion_sdk.manifest.for_each"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.artifacts.resource_derivation"
+new = "scion_sdk.manifest.resource_derivation"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.artifacts.resource_descriptor"
+new = "scion_sdk.manifest.resource_descriptor"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.artifacts.resource_descriptor_model"
+new = "scion_sdk.manifest.resource_descriptor_model"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.ingest.sources"
+new = "scion_sdk.manifest.sources"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._platform_paths"
+new = "scion_sdk.paths._platform"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._payment_guard"
+new = "scion_sdk.payments._guard"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._payment_models"
+new = "scion_sdk.payments._models"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.writeback.models"
+new = "scion_sdk.ports.writeback_models"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._privacy_urls"
+new = "scion_sdk.privacy._urls"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.ports.connector_registry"
+new = "scion_sdk.runner.connector_registry"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._stream_bus"
+new = "scion_sdk.streaming._bus"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._stream_types"
+new = "scion_sdk.streaming._types"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._stream_websocket"
+new = "scion_sdk.streaming._websocket"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._surface_agents"
+new = "scion_sdk.surface_contracts._agents"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._surface_complete"
+new = "scion_sdk.testing.surface_draft"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._turtle"
+new = "scion_sdk.turtle_reader"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._utc_records"
+new = "scion_sdk.utc_records"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk._version"
+new = "scion_sdk.version"
+kind = "module"
+
+[[removed]]
+old = "scion_sdk.http.client.create_http_client"
+new = "scion_sdk.http.client.build_http_client"
+kind = "function"
+
+[[removed]]
+old = "scion_sdk.http.client.create_async_http_client"
+new = "scion_sdk.http.client.build_http_client"
+kind = "argument"
+argument = "async_"
+
+[[removed]]
+old = "scion_sdk.mcp.auth.proxies.configure_oauth_proxy"
+new = "scion_sdk.mcp.auth.proxies.configure_proxy"
+kind = "function"
+
+[[removed]]
+old = "scion_sdk.mcp.auth.proxies.configure_oidc_proxy"
+new = "scion_sdk.mcp.auth.proxies.configure_proxy"
+kind = "argument"
+argument = "flow"
+
+[[removed]]
+old = "scion_sdk.decide.consumers.connector_tool"
+new = "scion_sdk.decide.consumers.bounded_choice"
+kind = "function"
+
+[[removed]]
+old = "scion_sdk.decide.consumers.triage_event"
+new = "scion_sdk.decide.consumers.bounded_choice"
+kind = "argument"
+argument = "question_id"
+
+[[removed]]
+old = "scion_sdk._surface_complete"
+new = "scion_sdk.testing.surface_draft"
+kind = "argument"
+argument = "complete"
