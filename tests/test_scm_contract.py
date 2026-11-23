@@ -1,8 +1,13 @@
-"""SCION-SCM-R003.1: the change-proposal records are frozen closed-set records."""
+"""SCION-SCM-R003.1/R003.2: the frozen records and the verified webhook
+normalization of the SCM feedback surface."""
 
 from __future__ import annotations
 
+import hashlib
+import hmac as hmac_module
+import json
 import typing
+from collections.abc import Mapping
 from datetime import UTC, datetime
 
 import pytest
@@ -14,6 +19,12 @@ from scion_sdk.scm import (
     ReviewRecord,
     ReviewThreadRecord,
     ScmFeedbackEvent,
+)
+from scion_sdk.scm.events import (
+    SCM_SCHEMES,
+    ScmEventNormalizer,
+    ScmWebhookRefused,
+    verify_webhook,
 )
 from scion_sdk.scm.records import (
     SCM_FEEDBACK_KINDS,
@@ -132,3 +143,81 @@ def test_records_are_frozen_and_closed_sets_refuse_unknown_values() -> None:
         _event(body_digest="short")
     with pytest.raises(ValidationError, match="head_sha"):
         _proposal(head_sha="not a sha")
+
+
+class _StubNormalizer:
+    """A connector-side normalizer over a two-action provider payload."""
+
+    provider = "github"
+
+    def normalize(self, headers: Mapping[str, str], body: bytes) -> ScmFeedbackEvent:
+        action = json.loads(body)["action"]
+        kinds: dict[str, str] = {"pull_request": "proposal_merged"}
+        kind = kinds.get(action)
+        if kind is None:
+            raise ScmWebhookRefused(
+                "SCM_EVENT_UNSUPPORTED", "webhook event type is unsupported"
+            )
+        return ScmFeedbackEvent(
+            event_id="evt-2",
+            provider="github",
+            kind=kind,
+            proposal=_proposal(),
+            actor="octo",
+            actor_kind="person",
+            at=NOW,
+            body_digest=DIGEST,
+        )
+
+
+@pytest.mark.spec("SCION-SCM-R003.2")
+def test_verifier_refuses_bad_signatures_in_constant_time_and_unknown_events(
+    monkeypatch,
+) -> None:
+    """A valid signature or token passes; every other delivery is refused
+    with the typed code, in constant time, without the secret in the
+    message; the normalizer refuses unsupported event types without
+    emitting an event."""
+    monkeypatch.setenv("SCM_WEBHOOK_SECRET", "s3cret")
+    secret_ref = "env://SCM_WEBHOOK_SECRET"
+    body = b'{"action": "pull_request"}'
+    signature = "sha256=" + hmac_module.new(b"s3cret", body, hashlib.sha256).hexdigest()
+    headers = {"x-hub-signature-256": signature}
+
+    compare_calls: list[tuple[str, str]] = []
+    real = hmac_module.compare_digest
+
+    def spy(a: str, b: str) -> bool:
+        compare_calls.append((a, b))
+        return real(a, b)
+
+    monkeypatch.setattr(hmac_module, "compare_digest", spy)
+
+    # The valid hmac_sha256 signature and the valid shared token pass.
+    verify_webhook("hmac_sha256", secret_ref, headers, body)
+    verify_webhook("shared_token", secret_ref, {"X-Gitlab-Token": "s3cret"}, body)
+    assert len(compare_calls) == 2  # both comparisons ran compare_digest
+
+    # Missing or wrong signature, token, or an unknown scheme refuses.
+    bad = (
+        ("hmac_sha256", {}, body),
+        ("hmac_sha256", {"X-Hub-Signature-256": "sha256=" + "0" * 64}, body),
+        ("shared_token", {"X-Gitlab-Token": "wrong"}, body),
+        ("shared_token", {}, body),
+        ("mtls", headers, body),
+    )
+    for scheme, hdrs, b in bad:
+        with pytest.raises(ScmWebhookRefused) as failure:
+            verify_webhook(scheme, secret_ref, hdrs, b)
+        assert failure.value.code == "SCM_SIGNATURE_INVALID"
+        assert "s3cret" not in str(failure.value)
+
+    # The stub normalizer implements the protocol; unknown types refuse.
+    stub = _StubNormalizer()
+    assert isinstance(stub, ScmEventNormalizer)
+    assert stub.normalize(headers, body).kind == "proposal_merged"
+    with pytest.raises(ScmWebhookRefused) as failure:
+        stub.normalize(headers, b'{"action": "release_published"}')
+    assert failure.value.code == "SCM_EVENT_UNSUPPORTED"
+
+    assert SCM_SCHEMES == ("hmac_sha256", "shared_token")
