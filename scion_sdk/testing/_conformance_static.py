@@ -178,3 +178,40 @@ def _raises_raw_status_error(node: ast.AST | None) -> bool:
     if not isinstance(func, ast.Attribute) or func.attr != "HTTPStatusError":
         return False
     return isinstance(func.value, ast.Name) and func.value.id in {"requests", "httpx"}
+
+
+def check_repository_hydration(resolved: ResolvedConnector) -> None:
+    """Reject hydration outside the SDK; the one path is
+    ``scion_sdk.repository.index_repository_snapshot``."""
+    for path, tree in trees(resolved):
+        for node in ast.walk(tree):
+            finding = _hydration_finding(node)
+            if finding is not None:
+                raise ConformanceFailure(
+                    f"{path.name}:{getattr(node, 'lineno', 0)}: {finding}"
+                )
+
+
+def _hydration_finding(node: ast.AST) -> str | None:
+    if (
+        isinstance(node, ast.Call)
+        and getattr(node.func, "attr", "") == "index_repository"
+    ):
+        return "HYDRATION_OUTSIDE_SDK"
+    if isinstance(node, ast.Name) and node.id == "IndexRepository":
+        return "HYDRATION_OUTSIDE_SDK"
+    if isinstance(node, ast.ImportFrom):
+        module = node.module or ""
+        if module.startswith("scion_sdk.repository._"):
+            return "HYDRATION_PRIVATE_IMPORT"
+        if module == "scion_sdk.repository":
+            if any(alias.name == "IndexRepository" for alias in node.names):
+                return "HYDRATION_OUTSIDE_SDK"
+            if any(alias.name.startswith("_") for alias in node.names):
+                return "HYDRATION_PRIVATE_IMPORT"
+        return None
+    if isinstance(node, ast.Import) and any(
+        name.name.startswith("scion_sdk.repository._") for name in node.names
+    ):
+        return "HYDRATION_PRIVATE_IMPORT"
+    return None
