@@ -124,6 +124,40 @@ global fallback, and `SSL_CERT_FILE`/`SSL_CERT_DIR`.
 `ResolvedTLSProfile` adapts to `httpx_kwargs()`, `requests_kwargs()`,
 `configure_requests_session()`, `psycopg_kwargs()` and `pymongo_kwargs()`.
 
+## Named upstream instances
+
+A connector process may serve several upstream instances of one system.
+`ConnectorInstances` (`scion_sdk.config.instances`) reads
+`<PREFIX>_INSTANCES`, a JSON object mapping an instance name to an entry
+with `base_url`, optional `route_host`, optional `access_headers` (header
+name to a secret reference) and optional `tls_profile_ref`, plus
+`<PREFIX>_DEFAULT_INSTANCE` (default: the first entry):
+
+```json
+{
+  "prod": {
+    "base_url": "https://prod.example.com",
+    "route_host": "prod.example.com",
+    "access_headers": {"X-Service-Token": "openbao://secret/data/prod#TOKEN"},
+    "tls_profile_ref": "openbao://secret/data/prod#TLS_PROFILE"
+  },
+  "staging": {"base_url": "https://staging.example.com"}
+}
+```
+
+`ConnectorInstances("CRM", client_cls=CrmClient, resolver=...)` keeps the
+connector's own client class; `client_for("prod")` builds one client from
+the entry, resolving access-header values through the injected resolver.
+An unknown name raises `UnknownInstanceError`, which lists the instance
+names only. With no map set, the one-URL settings (`CRM_BASE_URL`,
+`CRM_ROUTE_HOST`, `CRM_ACCESS_HEADERS`, `CRM_TLS_PROFILE_REF`) name the
+implicit `default` instance, so a deployment that sets no map is unchanged.
+
+`register_tool_surface(..., instances=...)` advertises an optional
+`instance` argument on every operation tool; the served call first checks
+the caller's entitlement to `<namespace>:<instance>` (the namespace is the
+lowercased prefix unless named), then builds that instance's client.
+
 ## Outbound authentication
 
 | Need | Use |

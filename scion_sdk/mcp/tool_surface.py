@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from scion_sdk.config import setting
+from scion_sdk.config.instances import ConnectorInstances
 from scion_sdk.mcp._tool_surface_actions import _operation_methods, _settle_action_tools
 from scion_sdk.mcp._tool_surface_base import (
     ACTION_DISPATCH_TAG,
@@ -151,6 +152,7 @@ def _register_operations(
     manifest: list[dict[str, Any]] | None,
     verbose_targets: list[dict[str, Any]] | None,
     result_coercer: Callable[[Any], Any] | None,
+    instances: ConnectorInstances | None = None,
 ) -> list[str]:
     targets: list[dict[str, Any]] = []
     if client_cls is not None and get_client is not None:
@@ -169,6 +171,7 @@ def _register_operations(
             prefix=str(target.get("prefix") or prefix),
             manifest=target.get("manifest"),
             result_coercer=target.get("result_coercer", result_coercer),
+            instances=instances,
         )
     return names
 
@@ -190,6 +193,7 @@ def register_tool_surface(
     action_dispatch: bool = False,
     result_coercer: Callable[[Any], Any] | None = None,
     package_root: Path | None = None,
+    instances: ConnectorInstances | None = None,
 ) -> list[str]:
     """Register one tool per API operation, plus the connector's other tools.
 
@@ -199,6 +203,11 @@ def register_tool_surface(
     ``<prefix>_<operation>`` where ``prefix`` is ``tool_prefix`` or derived
     from ``service`` (:func:`operation_prefix`). ``manifest`` carries the
     OpenAPI operation entries for ``client_cls``.
+
+    ``instances``, when given, advertises an optional ``instance`` argument
+    on every operation tool; a named instance resolves its client through the
+    connector's :class:`~scion_sdk.config.instances.ConnectorInstances`
+    instead of the default client (SCION-CENTRALIZED-CAPABILITIES-R050).
 
     Registrar tools come from exactly one of ``tool_registry``
     (``[(tag, toggle_setting, fn)]``), ``tools_module`` (every
@@ -258,6 +267,7 @@ def register_tool_surface(
         manifest=manifest,
         verbose_targets=verbose_targets,
         result_coercer=result_coercer,
+        instances=instances,
     )
     _gate_operations(mcp, operations)
     _register_declared_sources(

@@ -62,6 +62,14 @@ The index rows hold no unknowns. The storage and exchange rows (R042, R043) held
 
 Governing spec: [spec.md](spec.md).
 
+- **Owner:** This spec family; every row in the capability index below keeps the owner row named there, and rows owned by "this spec" add their capability here.
+- **Cohesion:** One capability index and one rule for connectors: use the SDK-provided capability instead of building their own; each row carries its owner, module and conformance evidence.
+- **Dependency direction:** Connectors depend on `scion_sdk` (foundation below transport below serve); the SDK never imports connector code, and `config/instances.py` stays in the foundation layer by taking the client class by injection.
+- **Interface depth:** Shallow: rows point at public modules (`BaseApiClient`, `ConnectorInstances`, `Storage`, `register_tool_surface`) with no private reach-through.
+- **Special cases:** A deployment that sets no instance map is unchanged (one implicit instance); named instances gate the served call by per-instance entitlement; unknown instance names refuse with a typed error that lists names only; fasta2a 0.6.1 has no `tasks/list`, so the A2A gate serves it.
+- **State:** Stateless per request beyond process settings read through `setting`; spec status is computed from git history and never tracked.
+- **Environment:** Settings read from environment variables (for example `CRM_INSTANCES`, `CONNECTOR_CONFIG_FILE`); credentials only as `env://`/`openbao://` references resolved through the credentials resolver; XDG paths for the config document and runtime material.
+
 ### Existing system and reuse
 
 The SDK already owns each capability below in an earlier row. This spec adds the `RateLimiter` class in `httpsupport/rate_limit.py`, the `next_url` pagination mode in `httpsupport/pagination.py`, and two extras, `vector` and `vector-chroma`. It indexes the capabilities and states the rule for connectors in one row each. Owner rows keep their contracts. Rows marked "this spec" had no earlier owner.
@@ -105,7 +113,7 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 | `SCION-CENTRALIZED-CAPABILITIES-R031` | Governed write-back | `SCION-GOVERNED-WRITEBACK-R002`, `SCION-GOVERNED-WRITEBACK-R003` | `writeback/`, `writeback_sinks/` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R032` | Runner and CLI bootstrap | `SCION-CONNECTOR-CONTROL-R014.14`, `SCION-SOURCE-INGEST-R805` | `runner/`, `mcp/env_drift.py`, script `connector-sync` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R033` | Health and observability | `SCION-CONNECTOR-CONTROL-R065`, `SCION-CONNECTOR-CONTROL-R050` | `runner/health_state.py`, `runner/health_server.py`, `runner/logs.py`, `progress.py` | unchecked |
-| `SCION-CENTRALIZED-CAPABILITIES-R034` | Configuration, paths, and locks | `SCION-CONNECTOR-CONTROL-R016`, `SCION-CONNECTOR-CONTROL-R029`, `SCION-CONNECTOR-CONTROL-R014.7`, `SCION-CONNECTOR-CONTROL-R014.2`, `SCION-CONNECTOR-CONTROL-R034`, `SCION-CONNECTOR-CONTROL-R780.5` | `config.py`, `utilities.py`, `paths/`, `file_lock/`, `library_state.py` | unchecked |
+| `SCION-CENTRALIZED-CAPABILITIES-R034` | Configuration, paths, and locks | `SCION-CONNECTOR-CONTROL-R016`, `SCION-CONNECTOR-CONTROL-R029`, `SCION-CONNECTOR-CONTROL-R014.7`, `SCION-CONNECTOR-CONTROL-R014.2`, `SCION-CONNECTOR-CONTROL-R034`, `SCION-CONNECTOR-CONTROL-R780.5` | `config/`, `utilities.py`, `paths/`, `file_lock/`, `library_state.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R035` | Privacy, entitlements, and external access | `SCION-CONNECTOR-CONTROL-R014.6`, `SCION-CONNECTOR-CONTROL-R014.13`, `SCION-CONNECTOR-CONTROL-R014.15`, `SCION-CONNECTOR-CONTROL-R025`, `SCION-CONNECTOR-CONTROL-R036` | `privacy*.py`, `entitlements.py`, `contracts.py`, `access_contract.py` | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R036` | Repository transport and planned source client | `SCION-SCM-R001`, `SCION-REPOSITORY-TRANSPORT-R001` | `repository/` (source client pending) | unchecked |
 | `SCION-CENTRALIZED-CAPABILITIES-R037` | Plugin entry-point groups | `SCION-CONNECTOR-CONTROL-R014.20` | `pyproject.toml` entry-point groups | unchecked |
