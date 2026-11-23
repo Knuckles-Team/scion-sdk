@@ -5,6 +5,7 @@ from __future__ import annotations
 import builtins
 import json
 import sys
+import time
 
 import httpx
 import pytest
@@ -291,8 +292,20 @@ def test_a2a_app_serves_tasks_using_caller_broker_and_storage() -> None:
     class Storage(InMemoryStorage):
         """The in-memory task double with the caller-scoped context page."""
 
+        def __init__(self) -> None:
+            super().__init__()
+            self._turn_logs: dict[str, list[dict]] = {}
+
         async def list_contexts(self, caller, cursor, limit):
             return [], None
+
+        async def append_turn_event(self, task_id, event):
+            log = self._turn_logs.setdefault(task_id, [])
+            log.append({**event, "seq": len(log) + 1})
+            return len(log)
+
+        async def turn_events_after(self, caller, task_id, after_seq):
+            return []
 
     storage = Storage()
     broker = InMemoryBroker()
@@ -370,6 +383,7 @@ def test_tasks_list_serves_durable_storage() -> None:
                 "alice": [{"contextId": "ctx-a"}, {"contextId": "ctx-b"}],
                 "bob": [{"contextId": "ctx-c"}],
             }
+            self._turn_logs: dict[str, list[dict]] = {}
 
         async def list_contexts(self, caller, cursor, limit):
             if cursor is not None and cursor != f"cursor-{caller}":
@@ -377,6 +391,22 @@ def test_tasks_list_serves_durable_storage() -> None:
             page = self._contexts.get(caller, [])[:limit]
             next_cursor = f"cursor-{caller}" if len(page) == limit else None
             return page, next_cursor
+
+        async def append_turn_event(self, task_id, event):
+            log = self._turn_logs.setdefault(task_id, [])
+            log.append({**event, "seq": len(log) + 1})
+            return len(log)
+
+        async def turn_events_after(self, caller, task_id, after_seq):
+            task = self.tasks.get(task_id)
+            owned = {entry["contextId"] for entry in self._contexts.get(caller, [])}
+            if task is None or task.get("context_id") not in owned:
+                raise ForeignContextError
+            return [
+                entry
+                for entry in self._turn_logs.get(task_id, [])
+                if entry["seq"] > after_seq
+            ]
 
     app = create_a2a_app(
         Agent(TestModel(custom_output_text="done")),
@@ -491,4 +521,380 @@ def test_a2a_app_refuses_a_storage_without_list_contexts() -> None:
             version="1",
             storage=InMemoryStorage(),
             broker=InMemoryBroker(),
+        )
+
+
+def _sse_frames(response) -> list:
+    frames = []
+    for line in response.iter_lines():
+        if line.startswith("data: "):
+            frames.append(json.loads(line[len("data: ") :]))
+    return frames
+
+
+def _stream_request(message_id: str = "m1", context_id: str = "ctx-a") -> dict:
+    return {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "message/stream",
+        "params": {
+            "message": {
+                "kind": "message",
+                "messageId": message_id,
+                "role": "user",
+                "contextId": context_id,
+                "parts": [{"kind": "text", "text": "hello"}],
+            }
+        },
+    }
+
+
+def _turn_storage():
+    from fasta2a.storage import InMemoryStorage
+
+    from scion_sdk.a2a.app import ForeignContextError
+
+    class TurnStorage(InMemoryStorage):
+        """The in-memory task double with the caller page and the durable
+        turn log."""
+
+        def __init__(self) -> None:
+            super().__init__()
+            self._contexts = {"alice": [{"contextId": "ctx-a"}]}
+            self._logs: dict[str, list[dict]] = {}
+
+        async def list_contexts(self, caller, cursor, limit):
+            if cursor is not None and cursor != f"cursor-{caller}":
+                raise ForeignContextError
+            page = self._contexts.get(caller, [])[:limit]
+            next_cursor = f"cursor-{caller}" if len(page) == limit else None
+            return page, next_cursor
+
+        async def append_turn_event(self, task_id, event):
+            log = self._logs.setdefault(task_id, [])
+            log.append({**event, "seq": len(log) + 1})
+            return len(log)
+
+        async def turn_events_after(self, caller, task_id, after_seq):
+            task = self.tasks.get(task_id)
+            owned = {entry["contextId"] for entry in self._contexts.get(caller, [])}
+            if task is None or task.get("context_id") not in owned:
+                raise ForeignContextError
+            return [
+                entry
+                for entry in self._logs.get(task_id, [])
+                if entry["seq"] > after_seq
+            ]
+
+    return TurnStorage()
+
+
+def _streaming_app(storage, agent):
+    from fasta2a.broker import InMemoryBroker
+
+    from scion_sdk.a2a import create_a2a_app
+
+    return create_a2a_app(
+        agent,
+        name="fixture",
+        url="http://testserver",
+        version="1",
+        storage=storage,
+        broker=InMemoryBroker(),
+    )
+
+
+def _wait_a_turn(storage: dict, task_id: str) -> None:
+    """Block until the background turn has reached a terminal state."""
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        task = storage.get(task_id)
+        if task is not None and task["status"]["state"] in {
+            "completed",
+            "failed",
+        }:
+            return
+        time.sleep(0.01)
+    raise AssertionError(f"task {task_id} did not reach a terminal state")
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.2")
+def test_resubscribe_replays_events_after_cursor() -> None:
+    pytest.importorskip("fasta2a")
+    from pydantic import TypeAdapter
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+    from pydantic_ai.toolsets.function import FunctionToolset
+    from starlette.testclient import TestClient
+
+    from scion_sdk.a2a import TurnEvent
+
+    def wait() -> str:
+        """Pause before the reply so the stream spans time."""
+        time.sleep(0.2)
+        return "paused"
+
+    storage = _turn_storage()
+    agent = Agent(
+        TestModel(call_tools=["wait"], custom_output_text="done"),
+        toolsets=[FunctionToolset([wait])],
+    )
+    app = _streaming_app(storage, agent)
+    adapter = TypeAdapter(TurnEvent)
+    with TestClient(app) as client:
+        # Stream one turn; drop the connection after the first event.
+        with client.stream("POST", "/", json=_stream_request()) as response:
+            assert response.status_code == 200
+            assert response.headers["content-type"] == "text/event-stream"
+            received = []
+            for line in response.iter_lines():
+                if line.startswith("data: "):
+                    received.append(json.loads(line[len("data: ") :]))
+                if received:
+                    break
+        assert received[0]["kind"] == "tool-call"
+        task_id = received[0]["taskId"]
+        _wait_a_turn(storage.tasks, task_id)
+
+        # Every streamed frame is a valid turn event on the durable sequence.
+        for frame in received:
+            adapter.validate_json(json.dumps(frame))
+        cursor = received[-1]["seq"]
+
+        # Resubscribe from the cursor: the tail replays once, in order.
+        with client.stream(
+            "POST",
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tasks/resubscribe",
+                "params": {"id": task_id, "caller": "alice", "afterSeq": cursor},
+            },
+        ) as response:
+            assert response.status_code == 200
+            tail = _sse_frames(response)
+        for frame in tail:
+            adapter.validate_json(json.dumps(frame))
+        assert all(frame["seq"] > cursor for frame in tail)
+        assert [frame["seq"] for frame in tail] == sorted(
+            frame["seq"] for frame in tail
+        )
+        # No gaps and no duplicates across the live stream and the replay.
+        assert [frame["seq"] for frame in received + tail] == list(
+            range(1, len(received) + len(tail) + 1)
+        )
+        assert tail[-1]["kind"] == "final-state"
+        assert tail[-1]["state"] == "completed"
+        # The turn survived the drop and completed like message/send would.
+        task = storage.tasks[task_id]
+        assert task["status"]["state"] == "completed"
+        assert task["history"][-1]["parts"][0]["text"] == "done"
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.2")
+def test_stream_emits_the_turn_events_in_order() -> None:
+    pytest.importorskip("fasta2a")
+    from pydantic import TypeAdapter
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+    from pydantic_ai.toolsets.function import FunctionToolset
+    from starlette.testclient import TestClient
+
+    from scion_sdk.a2a import TurnEvent
+
+    def wait() -> str:
+        """A tool the turn calls before its reply."""
+        return "paused"
+
+    storage = _turn_storage()
+    agent = Agent(
+        TestModel(call_tools=["wait"], custom_output_text="done"),
+        toolsets=[FunctionToolset([wait])],
+    )
+    app = _streaming_app(storage, agent)
+    adapter = TypeAdapter(TurnEvent)
+    with (
+        TestClient(app) as client,
+        client.stream("POST", "/", json=_stream_request()) as response,
+    ):
+        frames = _sse_frames(response)
+    assert frames, "the stream produced no events"
+    for frame in frames:
+        adapter.validate_json(json.dumps(frame))
+    kinds = [frame["kind"] for frame in frames]
+    assert kinds[0] == "tool-call"
+    assert kinds.index("tool-result") == 1
+    assert kinds.count("text-delta") == 2
+    assert (
+        "".join(frame["text"] for frame in frames if frame["kind"] == "text-delta")
+        == "done"
+    )
+    assert kinds[-1] == "final-state"
+    assert frames[-1]["state"] == "completed"
+    assert [frame["seq"] for frame in frames] == list(range(1, len(frames) + 1))
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.2")
+def test_resubscribe_refuses_foreign_and_malformed_requests() -> None:
+    pytest.importorskip("fasta2a")
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+    from starlette.testclient import TestClient
+
+    storage = _turn_storage()
+    app = _streaming_app(storage, Agent(TestModel(custom_output_text="done")))
+    with TestClient(app) as client:
+        # Stream one turn to completion so the log is non-empty.
+        with client.stream("POST", "/", json=_stream_request()) as response:
+            frames = _sse_frames(response)
+        assert frames[-1]["kind"] == "final-state"
+        task_id = frames[0]["taskId"]
+
+        # A caller that does not own the task's context is refused, no data.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tasks/resubscribe",
+                "params": {"id": task_id, "caller": "bob"},
+            },
+        )
+        assert reply.status_code == 200
+        assert reply.json()["error"] == {
+            "code": -32001,
+            "message": "foreign context",
+        }
+        assert "result" not in reply.json()
+
+        # A task the caller does not have is refused the same way, so
+        # existence never leaks.
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tasks/resubscribe",
+                "params": {"id": "unknown", "caller": "alice"},
+            },
+        )
+        assert reply.json()["error"]["code"] == -32001
+
+        # Malformed params refuse without running the replay.
+        for params in (
+            {"caller": "alice"},
+            {"id": task_id},
+            {"id": task_id, "caller": "alice", "afterSeq": "3"},
+            {"id": task_id, "caller": "alice", "afterSeq": True},
+            {"id": task_id, "caller": "alice", "afterSeq": -1},
+            {"id": 7, "caller": "alice"},
+        ):
+            reply = client.post(
+                "/",
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tasks/resubscribe",
+                    "params": params,
+                },
+            )
+            assert reply.json()["error"] == {
+                "code": -32602,
+                "message": "Invalid params",
+            }
+
+        # An omitted cursor replays the whole log, in order.
+        with client.stream(
+            "POST",
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 5,
+                "method": "tasks/resubscribe",
+                "params": {"id": task_id, "caller": "alice"},
+            },
+        ) as response:
+            whole = _sse_frames(response)
+        assert [frame["seq"] for frame in whole] == [frame["seq"] for frame in frames]
+
+        # A stream request without a message is refused before the task
+        # store is touched.
+        before = len(storage.tasks)
+        reply = client.post(
+            "/",
+            json={
+                "jsonrpc": "2.0",
+                "id": 6,
+                "method": "message/stream",
+                "params": {},
+            },
+        )
+        assert reply.json()["error"]["code"] == -32602
+        assert len(storage.tasks) == before
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.2")
+def test_a2a_app_refuses_a_storage_without_turn_events() -> None:
+    pytest.importorskip("fasta2a")
+    from fasta2a.broker import InMemoryBroker
+    from fasta2a.storage import InMemoryStorage
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+
+    from scion_sdk.a2a import create_a2a_app
+
+    class ListOnlyStorage(InMemoryStorage):
+        async def list_contexts(self, caller, cursor, limit):
+            return [], None
+
+    with pytest.raises(TypeError, match="append_turn_event"):
+        create_a2a_app(
+            Agent(TestModel(custom_output_text="done")),
+            name="fixture",
+            url="http://testserver",
+            version="1",
+            storage=ListOnlyStorage(),
+            broker=InMemoryBroker(),
+        )
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.2")
+def test_turn_event_wire_models_round_trip() -> None:
+    from pydantic import TypeAdapter
+
+    from scion_sdk.a2a import (
+        FinalStateEvent,
+        TextDeltaEvent,
+        ToolCallEvent,
+        ToolResultEvent,
+        TurnEvent,
+    )
+
+    adapter = TypeAdapter(TurnEvent)
+    delta = adapter.validate_json(
+        '{"kind": "text-delta", "taskId": "t1", "contextId": "c1", "seq": 1, "text": "hi"}'
+    )
+    assert isinstance(delta, TextDeltaEvent) and delta.text == "hi"
+    call = adapter.validate_json(
+        '{"kind": "tool-call", "taskId": "t1", "contextId": "c1", "seq": 2, "toolName": "t", "arguments": {"x": 1}}'
+    )
+    assert isinstance(call, ToolCallEvent) and call.arguments == {"x": 1}
+    result = adapter.validate_json(
+        '{"kind": "tool-result", "taskId": "t1", "contextId": "c1", "seq": 3, "toolName": "t", "result": "ok"}'
+    )
+    assert isinstance(result, ToolResultEvent) and result.result == "ok"
+    final = adapter.validate_json(
+        '{"kind": "final-state", "taskId": "t1", "contextId": "c1", "seq": 4, "state": "completed"}'
+    )
+    assert isinstance(final, FinalStateEvent) and final.state == "completed"
+    # A kind outside the turn-event set is refused.
+    with pytest.raises(ValueError):
+        adapter.validate_json(
+            '{"kind": "artifact-update", "taskId": "t1", "contextId": "c1", "seq": 5}'
+        )
+    # The cursor is a 1-based durable sequence; zero is not a sequence.
+    with pytest.raises(ValueError):
+        adapter.validate_json(
+            '{"kind": "text-delta", "taskId": "t1", "contextId": "c1", "seq": 0, "text": "x"}'
         )

@@ -55,7 +55,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T049 SCION-CENTRALIZED-CAPABILITIES-R004.7 implement and prove: Protect pagination iterator state
 - [x] T050 SCION-CENTRALIZED-CAPABILITIES-R004.6 implement and prove: Refuse malformed pagination pages
 - [ ] T051 SCION-CENTRALIZED-CAPABILITIES-R017.1 implement and prove: SDK A2A server takes a durable storage and serves tasks/list
-- [ ] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
+- [x] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
 - [ ] T053 SCION-CENTRALIZED-CAPABILITIES-R041 implement and prove: connector-certify submits conformance evidence
 - [x] T054 SCION-CENTRALIZED-CAPABILITIES-R042 implement and prove: Object store and file-share backends (rollup)
 - [x] T055 SCION-CENTRALIZED-CAPABILITIES-R042.1 implement and prove: Model: one backend protocol for every store
