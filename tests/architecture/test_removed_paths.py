@@ -5,7 +5,9 @@ map: a module move, a function or argument change, and the
 surface-drafting command. The cutover leaves no alias: every old path is
 absent, every new path imports, nothing in the package still names an old
 path, and git rename history backs the table
-(SCION-CENTRALIZED-CAPABILITIES-R046.1).
+(SCION-CENTRALIZED-CAPABILITIES-R046.1). The last test proves the
+published-import gate, which the release workflow runs against the
+installed distribution (SCION-CENTRALIZED-CAPABILITIES-R046.3).
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ import importlib.util
 import inspect
 import io
 import subprocess
+import sys
 import tomllib
 from collections.abc import Iterator
 from pathlib import Path
@@ -242,3 +245,28 @@ def test_table_covers_every_renamed_file_since_the_last_tag() -> None:
         assert _reaches(pairs, old_file, new_file), (
             f"history shows no rename {entry['old']} -> {entry['new']}"
         )
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R046.3")
+def test_import_check_script_fails_on_a_missing_replacement(tmp_path: Path) -> None:
+    """The published-import gate names a missing replacement and exits nonzero;
+    the real table imports cleanly in the installed package."""
+    script = ROOT / "scripts" / "check_published_imports.py"
+    assert script.exists(), "scripts/check_published_imports.py is missing"
+    table = tmp_path / "removed_paths.toml"
+    table.write_text(
+        "[[removed]]\n"
+        'old = "scion_sdk.fake_old"\n'
+        'new = "scion_sdk.does_not_import_xyz"\n'
+        'kind = "module"\n',
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [sys.executable, str(script), str(table)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "scion_sdk.does_not_import_xyz" in result.stdout
+    ok = subprocess.run([sys.executable, str(script)], capture_output=True, text=True)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
