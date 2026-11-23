@@ -20,8 +20,13 @@ from .models import (
     A2ATaskStatus,
     AgentCard,
     AgentSkill,
+    FinalStateEvent,
     TaskState,
+    TextDeltaEvent,
     TextPart,
+    ToolCallEvent,
+    ToolResultEvent,
+    TurnEvent,
 )
 
 __all__ = [
@@ -32,10 +37,15 @@ __all__ = [
     "A2ATaskStatus",
     "AgentCard",
     "AgentSkill",
+    "FinalStateEvent",
     "ForeignContextError",
     "Storage",
     "TaskState",
+    "TextDeltaEvent",
     "TextPart",
+    "ToolCallEvent",
+    "ToolResultEvent",
+    "TurnEvent",
     "create_a2a_app",
 ]
 

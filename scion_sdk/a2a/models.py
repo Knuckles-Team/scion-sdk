@@ -6,7 +6,7 @@ CONCEPT:SCION-CONNECTOR-CONTROL-R014.21
 from __future__ import annotations
 
 import uuid
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -110,3 +110,54 @@ class A2ATask(_Wire):
             if message.role != "user":
                 return message
         return None
+
+
+class _TurnEvent(_Wire):
+    """One event of a streamed turn, in the order the turn produced it.
+
+    SCION-CENTRALIZED-CAPABILITIES-R017.2: the served app emits these for
+    ``message/stream`` and replays them for ``tasks/resubscribe``. ``seq``
+    is the durable 1-based sequence the storage assigned, and the cursor
+    for a resubscribe.
+    """
+
+    task_id: str = Field(min_length=1, alias="taskId")
+    context_id: str = Field(min_length=1, alias="contextId")
+    seq: int = Field(ge=1)
+
+
+class TextDeltaEvent(_TurnEvent):
+    """Incremental agent text."""
+
+    kind: Literal["text-delta"] = "text-delta"
+    text: str
+
+
+class ToolCallEvent(_TurnEvent):
+    """The agent called a tool with these arguments."""
+
+    kind: Literal["tool-call"] = "tool-call"
+    tool_name: str = Field(min_length=1, alias="toolName")
+    arguments: dict[str, Any] = Field(default_factory=dict)
+
+
+class ToolResultEvent(_TurnEvent):
+    """The result a tool call returned to the agent."""
+
+    kind: Literal["tool-result"] = "tool-result"
+    tool_name: str = Field(min_length=1, alias="toolName")
+    result: Any = None
+
+
+class FinalStateEvent(_TurnEvent):
+    """The terminal state of the task the turn ran."""
+
+    kind: Literal["final-state"] = "final-state"
+    state: TaskState
+
+
+#: One streamed turn event, discriminated by its kind.
+TurnEvent = Annotated[
+    TextDeltaEvent | ToolCallEvent | ToolResultEvent | FinalStateEvent,
+    Field(discriminator="kind"),
+]
