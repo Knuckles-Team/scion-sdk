@@ -567,6 +567,7 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.twenty",
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
+    "scion_sdk.scm",
 ]
 
 # Inputs of the shared hooks (Knuckles-Team/pipelines .pre-commit-hooks.yaml).
@@ -609,6 +610,7 @@ units = [
     "privacy_reference",
     "privacy_rules",
     "progress",
+    "scm",
     "schema_contract",
     "schema_drift",
     "schema_repair",

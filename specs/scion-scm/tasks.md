@@ -18,7 +18,7 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T011 [US1] SCION-SCM-R002.5 Evidence.
 - [x] T012 [US1] SCION-SCM-R002.6 Hot-path proof.
 - [ ] T013 [US2] SCION-SCM-R003 Change-proposal contract (rollup).
-- [ ] T014 [US2] SCION-SCM-R003.1 Model: change-proposal records.
+- [x] T014 [US2] SCION-SCM-R003.1 Model: change-proposal records.
 - [ ] T015 [US2] SCION-SCM-R003.2 Behavior: event normalizer protocol and shared signature verifier.
 - [ ] T016 [US2] SCION-SCM-R003.3 Behavior: owner-approval flag on merge tools.
 - [ ] T017 [US2] SCION-SCM-R003.4 Wiring: connectors register their normalizer.
