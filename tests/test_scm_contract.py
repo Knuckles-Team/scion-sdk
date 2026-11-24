@@ -1,8 +1,11 @@
-"""SCION-SCM-R003.1/R003.2: the frozen records and the verified webhook
-normalization of the SCM feedback surface."""
+"""SCION-SCM-R003.1 through R003.4: the frozen records, the verified
+webhook normalization, the owner-approval flag and the normalizer
+registration of the SCM feedback surface."""
 
 from __future__ import annotations
 
+import argparse
+import base64
 import hashlib
 import hmac as hmac_module
 import json
@@ -14,6 +17,7 @@ import pytest
 from fastmcp import FastMCP
 from pydantic import ValidationError
 
+from scion_sdk.connector_hooks import RegistrationContext
 from scion_sdk.mcp.method_tools import register_method_tools
 from scion_sdk.mcp.tool_surface import registered_tools
 from scion_sdk.scm import (
@@ -27,6 +31,7 @@ from scion_sdk.scm.events import (
     SCM_SCHEMES,
     ScmEventNormalizer,
     ScmWebhookRefused,
+    register_scm_normalizer,
     verify_webhook,
 )
 from scion_sdk.scm.records import (
@@ -293,3 +298,87 @@ async def test_merge_tools_need_the_flag_and_refuse_without_approval_ref() -> No
     # With approval_ref the client is called.
     assert await tool.fn(number=7, approval_ref="approval-42", ctx=None) == "merged 7"
     assert calls == [("merge_pull_request", 7)]
+
+
+def _context(server: FastMCP) -> RegistrationContext:
+    return RegistrationContext(
+        server=server,
+        name="scm-demo",
+        version="0.0.0",
+        settings=argparse.Namespace(),
+        client_factory=None,
+        auth=None,
+    )
+
+
+@pytest.mark.spec("SCION-SCM-R003.4")
+async def test_registration_adds_one_normalize_tool(monkeypatch) -> None:
+    """The registration adds one read tool per connector that verifies the
+    delivery, resolves the secret from the setting, and refuses without
+    emitting an event."""
+    monkeypatch.setenv("SCM_WEBHOOK_SECRET", "s3cret")
+    monkeypatch.delenv("SCM_WEBHOOK_SECRET_REF", raising=False)
+
+    deliveries: list[tuple[Mapping[str, str], bytes]] = []
+
+    class _RecordingNormalizer(_StubNormalizer):
+        def normalize(
+            self, headers: Mapping[str, str], body: bytes
+        ) -> ScmFeedbackEvent:
+            deliveries.append((dict(headers), body))
+            return super().normalize(headers, body)
+
+    normalizer = _RecordingNormalizer()
+    server = FastMCP("scm-demo")
+    register_scm_normalizer(normalizer)(_context(server))
+    tools = registered_tools(server)
+    assert set(tools) == {"scm_demo_normalize_scm_event"}
+    tool = tools["scm_demo_normalize_scm_event"]
+
+    # While the setting is empty the tool refuses with SCM_SECRET_UNSET
+    # and nothing is normalized.
+    refused = await tool.fn(headers={}, body="")
+    assert refused == {
+        "refused": True,
+        "code": "SCM_SECRET_UNSET",
+        "reason": "the SCM_WEBHOOK_SECRET_REF setting is empty",
+    }
+    assert deliveries == []
+
+    raw = b'{"action": "pull_request"}'
+    encoded = base64.b64encode(raw).decode()
+    signature = "sha256=" + hmac_module.new(b"s3cret", raw, hashlib.sha256).hexdigest()
+    signed = {"X-Hub-Signature-256": signature}
+
+    # The secret ref from the setting verifies the delivery; one event.
+    monkeypatch.setenv("SCM_WEBHOOK_SECRET_REF", "env://SCM_WEBHOOK_SECRET")
+    event = await tool.fn(headers=signed, body=encoded)
+    assert event["event_id"] == "evt-2"
+    assert event["kind"] == "proposal_merged"
+    assert deliveries == [(signed, raw)]
+
+    # A wrong signature refuses with SCM_SIGNATURE_INVALID before the
+    # normalizer is reached, so no delivery is recorded.
+    bad = await tool.fn(
+        headers={"X-Hub-Signature-256": "sha256=" + "0" * 64}, body=encoded
+    )
+    assert bad["code"] == "SCM_SIGNATURE_INVALID"
+    assert len(deliveries) == 1
+
+    # An unsupported event type reaches the normalizer, which refuses with
+    # SCM_EVENT_UNSUPPORTED; no event results.
+    unknown_raw = b'{"action": "release_published"}'
+    unknown_sig = (
+        "sha256=" + hmac_module.new(b"s3cret", unknown_raw, hashlib.sha256).hexdigest()
+    )
+    unknown = await tool.fn(
+        headers={"X-Hub-Signature-256": unknown_sig},
+        body=base64.b64encode(unknown_raw).decode(),
+    )
+    assert unknown == {
+        "refused": True,
+        "code": "SCM_EVENT_UNSUPPORTED",
+        "reason": "webhook event type is unsupported",
+    }
+    assert deliveries[-1] == ({"X-Hub-Signature-256": unknown_sig}, unknown_raw)
+    assert "event_id" not in unknown

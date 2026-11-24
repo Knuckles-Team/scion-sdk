@@ -29,6 +29,7 @@ from typing import Any
 
 from scion_sdk.config import setting
 from scion_sdk.config.instances import ConnectorInstances
+from scion_sdk.connector_identity import operation_prefix
 from scion_sdk.mcp._tool_surface_actions import _operation_methods, _settle_action_tools
 from scion_sdk.mcp._tool_surface_base import (
     ACTION_DISPATCH_TAG,
@@ -122,25 +123,6 @@ def _register_condensed(mcp: Any, entries: list[CondensedEntry]) -> list[str]:
     setattr(mcp, _TOGGLES_ATTRIBUTE, toggles)
     setattr(mcp, GATED_TOOLS_ATTRIBUTE, gated)
     return registered_tags
-
-
-_SERVICE_SUFFIXES = ("-mcp", "-agent", "-api", "-server")
-
-
-def operation_prefix(service: str, tool_prefix: str | None = None) -> str:
-    """The operation-tool name prefix: ``tool_prefix``, else the service name.
-
-    The service name drops a trailing ``-mcp``/``-agent``/``-api``/``-server``
-    and becomes snake_case, so ``home-assistant-agent`` -> ``home_assistant``.
-    """
-    if tool_prefix:
-        return tool_prefix
-    name = service
-    for suffix in _SERVICE_SUFFIXES:
-        if name.endswith(suffix) and len(name) > len(suffix):
-            name = name[: -len(suffix)]
-            break
-    return re.sub(r"\W+", "_", name).strip("_").lower()
 
 
 def _register_operations(
