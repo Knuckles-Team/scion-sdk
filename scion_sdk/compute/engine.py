@@ -4,7 +4,9 @@
 :meth:`EngineCompute.select_algorithms` reads, by SPARQL over the connector's
 imported ontology pack, which algorithms apply to an analysis and which served
 method runs each one. :meth:`EngineCompute.run` calls that method. Any method
-the client or server does not serve raises :class:`MethodNotServedError`.
+the client or server does not serve raises :class:`MethodNotServedError`. An
+engine refusal that carries a stable ``KERNEL_*`` code (the served numeric
+kernel evaluation) surfaces as :class:`ComputeRefusal` with that code.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from scion_sdk.ingest.engine import EngineSettings
 __all__ = [
     "COMPUTE_SCOPES",
     "AlgorithmBinding",
+    "ComputeRefusal",
     "ComputeUnavailableError",
     "EngineCompute",
     "MethodNotServedError",
@@ -52,6 +55,43 @@ class MethodNotServedError(LookupError):
         self.handoff = handoff
         detail = f" (handoff: {handoff})" if handoff else ""
         super().__init__(f"medulla does not serve {method}{detail}")
+
+
+#: A stable numeric kernel refusal code (medulla's ``KernelRefusal``), at the
+#: start of an error or after one status separator.
+_KERNEL_CODE = re.compile(r"(?:^|: )(KERNEL_[A-Z0-9_]+)")
+
+
+class ComputeRefusal(RuntimeError):
+    """An engine refusal of a compute call carrying a stable kernel code.
+
+    The engine renders a kernel refusal as ``INVALID_ARGUMENT`` with the
+    stable ``KERNEL_*`` code first in the detail. Callers branch on
+    :attr:`code`; :attr:`detail` is diagnostic text only.
+
+    Attributes:
+        code: The stable refusal code (for example ``KERNEL_INPUT_SHORT``).
+        detail: The engine's diagnostic detail, for logging only.
+    """
+
+    def __init__(self, code: str, detail: str = "") -> None:
+        self.code = code
+        self.detail = detail
+        super().__init__(f"{code}: {detail}" if detail else code)
+
+
+def _kernel_refusal(exc: BaseException) -> ComputeRefusal | None:
+    """The stable kernel refusal an engine error carries, if it sent one."""
+    detail = getattr(exc, "detail", None)
+    if isinstance(detail, str):
+        match = _KERNEL_CODE.match(detail)
+        if match is not None:
+            return ComputeRefusal(match.group(1), detail[match.end() :].lstrip(": "))
+    text = str(exc)
+    match = _KERNEL_CODE.search(text)
+    if match is None:
+        return None
+    return ComputeRefusal(match.group(1), text[match.end() :].lstrip(": "))
 
 
 @dataclass(frozen=True)
@@ -95,6 +135,8 @@ class EngineCompute:
 
         Raises:
             MethodNotServedError: the client or the server does not serve it.
+            ComputeRefusal: the engine refuses the call with a stable kernel
+                code.
         """
         target = self._bound(method)
         try:
@@ -102,6 +144,9 @@ class EngineCompute:
         except Exception as exc:
             if _is_not_served(exc):
                 raise MethodNotServedError(method) from exc
+            refusal = _kernel_refusal(exc)
+            if refusal is not None:
+                raise refusal from exc
             raise
 
     def select_algorithms(
