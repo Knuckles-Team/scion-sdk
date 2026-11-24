@@ -34,12 +34,36 @@ _INSTANCE_DESCRIPTION = (
     "instance when omitted."
 )
 
+#: Owner-approval argument of every owner-approved operation tool
+#: (SCION-SCM-R003.3).
+_APPROVAL_PARAMETER = "approval_ref"
+_APPROVAL_DESCRIPTION = (
+    "Owner approval receipt for this operation; required by every owner-approved tool."
+)
+
 
 def _fallback(value: Any) -> Any:
     status = getattr(value, "status_code", None)
     if isinstance(status, int):
         return {"status_code": status}
     return str(value)
+
+
+def _approval_refusal(method_name: str) -> dict[str, Any]:
+    """Refusal for an owner-approved call made without ``approval_ref``.
+
+    The flagged tool makes no client call (SCION-SCM-R003.3); the payload
+    carries the code ``approval_required`` so the caller can retry with the
+    owner approval receipt.
+    """
+    return {
+        "cancelled": True,
+        "operation": method_name,
+        "code": "approval_required",
+        "reason": (
+            "owner approval required: repeat the call with the approval_ref argument"
+        ),
+    }
 
 
 def jsonable_result(result: Any) -> Any:
@@ -81,7 +105,14 @@ async def _invoke(
     confirm: bool = False,
     instance: str | None = None,
     instances: Any = None,
+    approval_ref: str | None = None,
+    approval_required: bool = False,
 ) -> Any:
+    if approval_required:
+        if approval_ref is None:
+            approval_ref = kwargs.pop(_APPROVAL_PARAMETER, None)
+        if not isinstance(approval_ref, str) or not approval_ref:
+            return _approval_refusal(method_name)
     if destructive:
         confirmation = await ctx_confirm_destructive(
             ctx,
@@ -114,6 +145,7 @@ def _typed_tool(
     coercer: Callable[[Any], Any],
     returns: Any = Any,
     instances: Any = None,
+    approval_required: bool = False,
 ) -> Callable[..., Any]:
     """A tool whose signature mirrors the operation's typed parameters."""
     params = shape.params
@@ -121,11 +153,15 @@ def _typed_tool(
     inst_name = _instance_name(params) if instances is not None else None
     declared = {p.name for p in params}
     with_confirm = destructive and _CONFIRM_PARAMETER not in declared
+    with_approval = approval_required and _APPROVAL_PARAMETER not in declared
 
     async def _tool(**arguments: Any) -> Any:
         ctx = arguments.pop(ctx_name, None)
         confirm = (
             bool(arguments.pop(_CONFIRM_PARAMETER, False)) if with_confirm else False
+        )
+        approval_ref = (
+            arguments.pop(_APPROVAL_PARAMETER, None) if with_approval else None
         )
         instance = arguments.pop(inst_name, None) if inst_name else None
         extra = parse_json_object(arguments.pop("params_json", None))
@@ -145,6 +181,8 @@ def _typed_tool(
             confirm=confirm,
             instance=instance,
             instances=instances,
+            approval_ref=approval_ref,
+            approval_required=approval_required,
         )
 
     ordered = [p for p in params if p.default is inspect.Parameter.empty] + [
@@ -166,6 +204,17 @@ def _typed_tool(
                 inspect.Parameter.KEYWORD_ONLY,
                 default=False,
                 annotation=Annotated[bool, Field(description=_CONFIRM_DESCRIPTION)],
+            )
+        )
+    if with_approval:
+        ordered.append(
+            inspect.Parameter(
+                _APPROVAL_PARAMETER,
+                inspect.Parameter.KEYWORD_ONLY,
+                default=None,
+                annotation=Annotated[
+                    str | None, Field(description=_APPROVAL_DESCRIPTION)
+                ],
             )
         )
     if inst_name:
@@ -203,6 +252,7 @@ def _untyped_tool(
     destructive: bool,
     coercer: Callable[[Any], Any],
     instances: Any = None,
+    approval_required: bool = False,
 ) -> Callable[..., Any]:
     """A ``params_json`` tool for an operation with no typed surface."""
 
@@ -211,6 +261,9 @@ def _untyped_tool(
             default="{}", description="JSON object of arguments for this operation."
         ),
         confirm: bool = Field(default=False, description=_CONFIRM_DESCRIPTION),
+        approval_ref: Annotated[
+            str | None, Field(description=_APPROVAL_DESCRIPTION)
+        ] = None,
         ctx: Context | None = None,
         instance: Annotated[
             str | None, Field(description=_INSTANCE_DESCRIPTION)
@@ -228,6 +281,8 @@ def _untyped_tool(
             confirm=destructive and confirm is True,
             instance=instance if instances is not None else None,
             instances=instances,
+            approval_ref=approval_ref if approval_required else None,
+            approval_required=approval_required,
         )
 
     signature = inspect.signature(_tool)
@@ -236,6 +291,15 @@ def _untyped_tool(
             parameters=[p for p in signature.parameters.values() if p.name != "confirm"]
         )
         _tool.__annotations__.pop("confirm", None)
+    if not approval_required:
+        signature = signature.replace(
+            parameters=[
+                p
+                for p in signature.parameters.values()
+                if p.name != _APPROVAL_PARAMETER
+            ]
+        )
+        _tool.__annotations__.pop(_APPROVAL_PARAMETER, None)
     if instances is None:
         signature = signature.replace(
             parameters=[

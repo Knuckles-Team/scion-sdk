@@ -87,10 +87,18 @@ def operation_annotations(
     *,
     title: str | None = None,
     declared_destructive: bool = False,
+    approval_required: bool = False,
 ) -> ToolAnnotations:
-    """MCP tool annotations for one operation, from its HTTP verb or name tokens."""
+    """MCP tool annotations for one operation, from its HTTP verb or name tokens.
+
+    An owner-approved tool is annotated destructive even without a
+    destructive verb or name tokens (SCION-SCM-R003.3).
+    """
     destructive = (
-        declared_destructive or verb == "DELETE" or is_destructive_action(name)
+        declared_destructive
+        or verb == "DELETE"
+        or is_destructive_action(name)
+        or approval_required
     )
     if verb is None:
         read_only = name.split("_", 1)[0] in _READ_TOKENS and not destructive
@@ -105,6 +113,22 @@ def operation_annotations(
         idempotent_hint=idempotent,
         open_world_hint=True,
     )
+
+
+def _needs_owner_approval(name: str, verb: str | None) -> bool:
+    """Whether a merge or arm-merge method must carry ``owner_approval_required``.
+
+    A method whose name holds the ``merge`` token must be flagged, unless it
+    is a read (a read verb, or a read name token) or starts with ``cancel_``
+    or ``disable_`` (SCION-SCM-R003.3).
+    """
+    if name.startswith(("cancel_", "disable_")):
+        return False
+    if verb in ("GET", "HEAD"):
+        return False
+    if "merge" not in name.casefold().split("_"):
+        return False
+    return name.split("_", 1)[0] not in _READ_TOKENS
 
 
 def _description(method: Callable[..., Any], operation: Mapping[str, Any]) -> str:
@@ -124,6 +148,7 @@ def _build_tool(
     coercer: Callable[[Any], Any],
     returns: Any,
     instances: Any = None,
+    approval_required: bool = False,
 ) -> tuple[Callable[[], Callable[..., Any]] | None, Callable[..., Any]]:
     """``(typed-tool factory or None, untyped fallback)`` for one operation."""
     params = _manifest_parameters(operation)
@@ -134,6 +159,7 @@ def _build_tool(
         destructive=destructive,
         coercer=coercer,
         instances=instances,
+        approval_required=approval_required,
     )
     if shape is None:
         return None, untyped
@@ -146,6 +172,7 @@ def _build_tool(
         coercer=coercer,
         returns=returns,
         instances=instances,
+        approval_required=approval_required,
     )
     return typed, untyped
 
@@ -188,14 +215,27 @@ def _register_operation(
 ) -> bool:
     verb = operation_verb(method, operation)
     declared = is_declared_destructive(method)
+    approval_required = bool(operation.get("owner_approval_required"))
+    effective_name = str(operation.get("name") or method_name)
+    if _needs_owner_approval(effective_name, verb) and not approval_required:
+        raise ValueError(
+            f"operation tool {tool_name!r}: TOOL_APPROVAL_FLAG_MISSING — merge or "
+            "arm-merge methods must set owner_approval_required on their "
+            "manifest entry"
+        )
     options = {
         "name": tool_name,
         "description": _description(method, operation),
         "tags": {domain, OPERATION_TAG, GRANULAR_TAG, GATED_TAG},
         "annotations": operation_annotations(
-            method_name, verb, declared_destructive=declared
+            method_name,
+            verb,
+            declared_destructive=declared,
+            approval_required=approval_required,
         ),
     }
+    if approval_required:
+        options["meta"] = {"owner_approval_required": True}
     tools = _build_tool(
         method_name=method_name,
         method=method,
@@ -207,6 +247,7 @@ def _register_operation(
         coercer=coercer,
         returns=_json_return(method) if typed_returns else Any,
         instances=instances,
+        approval_required=approval_required,
     )
     return _register_tool(mcp, options, tools)
 
@@ -245,8 +286,10 @@ def register_method_tools(
         The registered tool names, in method-iteration order.
 
     Raises:
-        ValueError: a manifest entry is malformed or a tool name collides with
-            one already registered on ``mcp``.
+        ValueError: a manifest entry is malformed, a tool name collides with
+            one already registered on ``mcp``, or a merge or arm-merge method
+            lacks the ``owner_approval_required`` flag
+            (``TOOL_APPROVAL_FLAG_MISSING``, SCION-SCM-R003.3).
     """
     coercer = result_coercer or jsonable_result
     operations = _manifest_index(manifest)

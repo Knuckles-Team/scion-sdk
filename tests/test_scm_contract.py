@@ -11,8 +11,11 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 
 import pytest
+from fastmcp import FastMCP
 from pydantic import ValidationError
 
+from scion_sdk.mcp.method_tools import register_method_tools
+from scion_sdk.mcp.tool_surface import registered_tools
 from scion_sdk.scm import (
     ChangeProposalRef,
     CheckRunRecord,
@@ -221,3 +224,72 @@ def test_verifier_refuses_bad_signatures_in_constant_time_and_unknown_events(
     assert failure.value.code == "SCM_EVENT_UNSUPPORTED"
 
     assert SCM_SCHEMES == ("hmac_sha256", "shared_token")
+
+
+@pytest.mark.spec("SCION-SCM-R003.3")
+async def test_merge_tools_need_the_flag_and_refuse_without_approval_ref() -> None:
+    """Registration refuses a merge method without the flag; a flagged tool
+    carries the flag in its metadata and refuses a call without
+    approval_ref before it calls the client."""
+    calls: list[tuple[str, int]] = []
+
+    class MergeApi:
+        def merge_pull_request(self, number: int = 1) -> str:
+            """Merge the pull request."""
+            calls.append(("merge_pull_request", number))
+            return f"merged {number}"
+
+    # A merge method without the flag refuses registration.
+    mcp = FastMCP("demo")
+    with pytest.raises(ValueError, match="TOOL_APPROVAL_FLAG_MISSING"):
+        register_method_tools(mcp, MergeApi, lambda: MergeApi(), prefix="demo")
+
+    # Reads and cancel_/disable_ names are exempt from the rule.
+    class ExemptApi:
+        def list_merged_pull_requests(self) -> list[str]:
+            """List the merged pull requests."""
+            return []
+
+        def cancel_merge_queue(self) -> str:
+            """Cancel the merge queue."""
+            return "cancelled"
+
+        def disable_merge_bot(self) -> str:
+            """Disable the merge bot."""
+            return "disabled"
+
+    mcp_exempt = FastMCP("exempt")
+    names = register_method_tools(
+        mcp_exempt, ExemptApi, lambda: ExemptApi(), prefix="demo"
+    )
+    assert set(names) == {
+        "demo_list_merged_pull_requests",
+        "demo_cancel_merge_queue",
+        "demo_disable_merge_bot",
+    }
+
+    # Flagged, the merge tool carries the flag in its metadata.
+    manifest = [
+        {
+            "method": "merge_pull_request",
+            "http": "POST /merge",
+            "owner_approval_required": True,
+        }
+    ]
+    mcp_flagged = FastMCP("flagged")
+    register_method_tools(
+        mcp_flagged, MergeApi, lambda: MergeApi(), prefix="demo", manifest=manifest
+    )
+    tool = registered_tools(mcp_flagged)["demo_merge_pull_request"]
+    assert tool.meta == {"owner_approval_required": True}
+
+    # Without approval_ref the call is refused; the client is never called.
+    refused = await tool.fn(number=7, ctx=None)
+    assert refused["cancelled"] is True
+    assert refused["operation"] == "merge_pull_request"
+    assert refused["code"] == "approval_required"
+    assert calls == []
+
+    # With approval_ref the client is called.
+    assert await tool.fn(number=7, approval_ref="approval-42", ctx=None) == "merged 7"
+    assert calls == [("merge_pull_request", 7)]
