@@ -5,6 +5,7 @@ from scion_sdk.scm.events import (
     SCM_SCHEMES,
     ScmEventNormalizer,
     ScmWebhookRefused,
+    register_scm_normalizer,
     verify_webhook,
 )
 from scion_sdk.scm.records import (
@@ -24,5 +25,6 @@ __all__ = [
     "ScmEventNormalizer",
     "ScmFeedbackEvent",
     "ScmWebhookRefused",
+    "register_scm_normalizer",
     "verify_webhook",
 ]
