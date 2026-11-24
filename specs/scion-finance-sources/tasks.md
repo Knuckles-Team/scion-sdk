@@ -43,5 +43,5 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T036 [US1] SCION-FINANCE-SOURCES-R001.9 Calendar page identity and time.
 - [ ] T037 [US1] SCION-FINANCE-SOURCES-R901 Probabilistic series forecast provider contract.
 - [ ] T038 [US1] SCION-FINANCE-SOURCES-R902 Compute adapter binds quant analyses to NumericEvaluate.
-- [ ] T039 [US1] SCION-FINANCE-SOURCES-R903 Strategy research record sink.
+- [x] T039 [US1] SCION-FINANCE-SOURCES-R903 Strategy research record sink.
 - [x] T040 [US1] SCION-FINANCE-SOURCES-R904 Typed finance compute facade.

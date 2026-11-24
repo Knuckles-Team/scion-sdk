@@ -364,6 +364,7 @@ public_modules = [
     "scion_sdk.finance.stock_source",
     "scion_sdk.finance.stock_image",
     "scion_sdk.finance.records",
+    "scion_sdk.finance.research_records",
     "scion_sdk.finance.strategy_export",
     "scion_sdk.http.bodies",
     "scion_sdk.http.client",
