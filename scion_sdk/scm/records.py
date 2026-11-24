@@ -38,7 +38,7 @@ FeedbackKind = Literal[
     "proposal_reopened",
     "head_pushed",
 ]
-SCM_FEEDBACK_KINDS: tuple[str, ...] = (
+SCM_FEEDBACK_KINDS: tuple[FeedbackKind, ...] = (
     "check_changed",
     "review_submitted",
     "review_comment",
