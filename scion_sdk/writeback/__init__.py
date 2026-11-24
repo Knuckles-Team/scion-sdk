@@ -14,6 +14,13 @@ from scion_sdk.writeback.trajectory import (
     TrajectoryStep,
     TrajectoryWriteUncertainError,
 )
+from scion_sdk.writeback.wallet_gate import EnvelopeProofGate
+from scion_sdk.writeback.wallet_intent import (
+    WalletBusinessIntent,
+    WalletConfirmation,
+    WalletExecutionEnvelope,
+    wallet_plan_digest,
+)
 from scion_sdk.writeback.wallet_proof import (
     WalletKeyResolver,
     WalletKeyTrust,
@@ -25,6 +32,7 @@ from scion_sdk.writeback.wallet_proof import (
 )
 
 __all__ = [
+    "EnvelopeProofGate",
     "RecordedApprovalResolver",
     "RepositorySourceEffectIntent",
     "RepositorySourceEffectReceipt",
@@ -32,6 +40,9 @@ __all__ = [
     "TrajectoryRecorder",
     "TrajectoryStep",
     "TrajectoryWriteUncertainError",
+    "WalletBusinessIntent",
+    "WalletConfirmation",
+    "WalletExecutionEnvelope",
     "WalletKeyResolver",
     "WalletKeyTrust",
     "WalletProofBinding",
@@ -39,5 +50,6 @@ __all__ = [
     "WalletProofRequest",
     "WalletProofResult",
     "WalletSignatureVerifier",
+    "wallet_plan_digest",
     "write_back_approval_target",
 ]

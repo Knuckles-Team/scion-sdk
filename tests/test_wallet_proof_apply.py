@@ -6,16 +6,27 @@ from dataclasses import replace
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from medulla.generated.write_back import (
+    WriteBackAttempt,
+    WriteBackAttemptKind,
+    WriteBackEffectStatus,
+    WriteBackOutcome,
+)
 from pydantic import ValidationError
 
 from scion_sdk.testing.writeback import make_writeback_fixture
 from scion_sdk.testing.writeback_audit import InMemoryAuditReservation
 from scion_sdk.writeback import (
+    EnvelopeProofGate,
+    WalletBusinessIntent,
+    WalletConfirmation,
+    WalletExecutionEnvelope,
     WalletKeyTrust,
     WalletProofBinding,
     WalletProofRequest,
     WalletProofResult,
     WalletSignatureVerifier,
+    wallet_plan_digest,
 )
 from scion_sdk.writeback.authorization import (
     DeterministicAuthorizationVerifier,
@@ -49,7 +60,7 @@ class _Gate:
         )
 
 
-def _binding(change_set):
+def _binding(change_set, plan_digest="a" * 64):
     return WalletProofBinding(
         tenant_id=change_set.tenant_id,
         actor_id="actor",
@@ -59,15 +70,15 @@ def _binding(change_set):
         wallet_id="wallet",
         network_id="network",
         key_id="key",
-        plan_digest="a" * 64,
+        plan_digest=plan_digest,
         change_set_digest=change_set.change_set_digest,
         change_set_id=change_set.change_set_id,
         idempotency_key=change_set.idempotency_key,
     )
 
 
-def _signed(change_set):
-    binding = _binding(change_set)
+def _signed(change_set, plan_digest="a" * 64):
+    binding = _binding(change_set, plan_digest)
     key = Ed25519PrivateKey.generate()
     public = key.public_key().public_bytes(
         serialization.Encoding.Raw, serialization.PublicFormat.Raw
@@ -101,12 +112,24 @@ def _signed(change_set):
     return proof, trust
 
 
-def _port(fixture, gate, *, authorized=True):
-    verifier = DeterministicAuthorizationVerifier()
+def _TrustResolver(trust):
+    class _Resolver:
+        async def resolve(_, wanted):
+            return trust
+
+    return _Resolver()
+
+
+def _port(fixture, gate, *, authorized=True, clock_ms=None, verifier=None):
+    verifier = verifier or DeterministicAuthorizationVerifier()
     if authorized:
         verifier.grant(fixture.change_set)
     return GovernedWriteBack(
-        fixture.transport, verifier, InMemoryAuditReservation(), proof_gate=gate
+        fixture.transport,
+        verifier,
+        InMemoryAuditReservation(),
+        proof_gate=gate,
+        clock_ms=clock_ms,
     )
 
 
@@ -146,6 +169,104 @@ async def test_verified_proof_precedes_one_effect_but_does_not_replace_approval(
     assert await _status(unapproved) == "new"
 
 
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.2")
+async def test_gate_binds_envelope_and_replay_returns_prior_effect_without_fresh_proof():
+    fixture = make_writeback_fixture()
+    change_set = fixture.change_set
+    clock = {"ms": 1_050_000}
+
+    intent = WalletBusinessIntent(
+        operation_id="pay",
+        account_id="account",
+        wallet_id="wallet",
+        network_id="network",
+        key_id="key",
+        params={"amount": 100},
+    )
+    plan = wallet_plan_digest(intent)
+    proof, trust = _signed(change_set, plan)
+    envelope = WalletExecutionEnvelope(
+        intent=intent,
+        confirmation=WalletConfirmation(
+            confirmed_by="actor", confirmed_at_ms=1_050_000, plan_digest=plan
+        ),
+        proof=proof,
+    )
+    gate = EnvelopeProofGate(
+        envelope,
+        tenant_id=change_set.tenant_id,
+        actor_id="actor",
+        resolver=_TrustResolver(trust),
+        clock_ms=lambda: clock["ms"],
+    )
+
+    class _CountingProofGate:
+        fresh = 0
+
+        async def verify(self, change_set):
+            type(self).fresh += 1
+            return await gate.verify(change_set)
+
+    verifier = DeterministicAuthorizationVerifier()
+    verifier.grant(change_set)
+    checks = {"n": 0}
+
+    class _Rechecking:
+        async def verify(self, change_set):
+            checks["n"] += 1
+            return await verifier.verify(change_set)
+
+    service = _port(
+        fixture,
+        _CountingProofGate(),
+        authorized=False,
+        clock_ms=lambda: clock["ms"],
+        verifier=_Rechecking(),
+    )
+    first = await service.apply(change_set)
+    assert first.effect_status is WriteBackEffectStatus.APPLIED
+    assert _CountingProofGate.fresh == 1
+    assert await _status(fixture) == "approved"
+
+    # Past the proof's expiry: a fresh proof would now be refused, but the
+    # recorded effect returns the prior receipt without one, with
+    # authorization still re-verified and no second effect.
+    clock["ms"] = 1_200_000
+    authorizations_before = checks["n"]
+    second = await service.apply(change_set)
+    assert second == first
+    assert _CountingProofGate.fresh == 1
+    assert checks["n"] > authorizations_before
+    assert fixture.transport.attempts == 1
+
+    # The gate refuses a confirmation of a different plan and a missing
+    # proof before the verifier runs.
+    wrong_plan = envelope.model_copy(
+        update={
+            "confirmation": WalletConfirmation(
+                confirmed_by="actor", confirmed_at_ms=1_050_000, plan_digest="b" * 64
+            )
+        }
+    )
+    result = await EnvelopeProofGate(
+        wrong_plan,
+        tenant_id=change_set.tenant_id,
+        actor_id="actor",
+        resolver=_TrustResolver(trust),
+        clock_ms=lambda: clock["ms"],
+    ).verify(change_set)
+    assert result.reason == "scope_mismatch"
+    bare = envelope.model_copy(update={"proof": None})
+    result = await EnvelopeProofGate(
+        bare,
+        tenant_id=change_set.tenant_id,
+        actor_id="actor",
+        resolver=_TrustResolver(trust),
+        clock_ms=lambda: clock["ms"],
+    ).verify(change_set)
+    assert result.reason == "missing_signature"
+
+
 def _expired(proof, trust):
     return _Gate(proof, lambda _: trust, now=1100)
 
@@ -183,9 +304,30 @@ def _unavailable(proof, trust):
     return _Gate(proof, boom)
 
 
+class _RefusedGate:
+    """Returns a fixed refusal fact without running the verifier."""
+
+    def __init__(self, reason):
+        self.reason = reason
+
+    async def verify(self, change_set):
+        return WalletProofResult(outcome="refused", reason=self.reason)
+
+
+def _missing(proof, trust):
+    return _RefusedGate("missing_signature")
+
+
+def _invalid_payload(proof, trust):
+    return _Gate(proof.model_copy(update={"plan_digest": "Z" * 64}), lambda _: trust)
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.4")
 @pytest.mark.parametrize(
     "make_gate,reason",
     [
+        (_missing, "missing_signature"),
+        (_invalid_payload, "invalid_payload"),
         (_expired, "expired"),
         (_revoked, "revoked_key"),
         (_untrusted, "untrusted_key"),
@@ -230,3 +372,34 @@ async def test_a_failing_gate_and_a_non_result_refuse_before_effect():
             await _port(fixture, gate).apply(fixture.change_set)
         assert error.value.reason == reason
     assert await _status(fixture) == "new"
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.4")
+async def test_replay_conflict_maps_idempotency_conflict():
+    fixture = make_writeback_fixture()
+    change_set = fixture.change_set
+    # The durable connector reports the idempotency key as already bound
+    # to a different effect.
+    conflicting = WriteBackAttempt(
+        tenant_id=change_set.tenant_id,
+        change_set_id=change_set.change_set_id,
+        change_set_digest="f" * 64,
+        idempotency_key=change_set.idempotency_key,
+        kind=WriteBackAttemptKind.APPLY,
+        input_digest="3" * 64,
+        output_digest="4" * 64,
+        pre_source_version="v1",
+        post_source_version="v2",
+        applied_field_digest=change_set.patch_digest(),
+        outcome=WriteBackOutcome.APPLIED,
+        effect_status=WriteBackEffectStatus.APPLIED,
+        connector_observation_digest="0" * 64,
+        provenance_digest="0" * 64,
+    )
+    fixture.transport.effects[change_set.idempotency_key] = conflicting
+    proof, trust = _signed(change_set)
+    with pytest.raises(WalletProofRefusedError) as error:
+        await _port(fixture, _Gate(proof, lambda _: trust)).apply(change_set)
+    assert error.value.reason == "replay_conflict"
+    assert await _status(fixture) == "new"
+    assert fixture.transport.attempts == 0

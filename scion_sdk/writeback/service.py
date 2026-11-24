@@ -35,6 +35,7 @@ from scion_sdk.writeback.errors import (
     AuditReservationUnavailableError,
     ChangeSetExpiredError,
     ChangeSetValidationError,
+    IdempotencyConflictError,
     OutcomeUncertainError,
     ReconciliationRequiredError,
     WalletProofRefusedError,
@@ -109,14 +110,25 @@ class GovernedWriteBack:
         self._validate(change_set)
         self._require_reconciled(change_set)
         await self._authorize(change_set)
-        await self._require_wallet_proof(change_set)
-        if isinstance(self._transport, ReservableWriteBackTransport):
-            await self._transport.prepare_writeback(change_set)
-        prior = await self._transport.prior_effect(change_set)
+        try:
+            prior = await self._transport.prior_effect(change_set)
+        except IdempotencyConflictError as exc:
+            if self._proof_gate is None:
+                raise
+            # With wallet proof in play, a key already bound to a different
+            # effect is the proof refusal code, raised before any mutating
+            # transport call.
+            raise WalletProofRefusedError("replay_conflict") from exc
+        # A recorded effect returns the prior receipt without a fresh
+        # proof; authorization is re-verified, and a replay conflict is a
+        # proof refusal, before any mutating transport call.
         if prior is not None:
             await self._authorize(change_set)
             require_effect(change_set, prior)
             return prior
+        await self._require_wallet_proof(change_set)
+        if isinstance(self._transport, ReservableWriteBackTransport):
+            await self._transport.prepare_writeback(change_set)
         current = await self._transport.read_current(change_set)
         require_base(change_set, current)
         decision = await self._verifier.verify(change_set)
@@ -156,7 +168,7 @@ class GovernedWriteBack:
         return result
 
     async def _require_wallet_proof(self, change_set: SourceChangeSet) -> None:
-        """Refuse before any transport call unless the wallet proof verified."""
+        """Refuse before any mutating transport call unless the proof verified."""
         if self._proof_gate is None:
             return
         try:
