@@ -12,6 +12,11 @@ revision and the file still matches the expected digest and mode. A
 provider that cannot offer this condition is not admitted:
 ``supports_conditional_update`` must be true at registration. There is
 no force option and no unconditional fallback.
+
+The port also offers ``read_file`` (SCION-GOVERNED-WRITEBACK-R004.10):
+an independent read of one file at an exact revision, used only as
+readback after a commit — never as the mutation response body and never
+from an ingestion cache.
 """
 
 from __future__ import annotations
@@ -25,6 +30,7 @@ __all__ = [
     "FileStateMismatch",
     "RepositoryBusinessRuleRejected",
     "RepositoryCommitReceipt",
+    "RepositoryFileRead",
     "RepositoryProviderPort",
     "RepositoryTreeKind",
 ]
@@ -91,6 +97,14 @@ class ConditionalCommit:
 
 
 @dataclass(frozen=True, slots=True)
+class RepositoryFileRead:
+    """One independent file read at an exact revision."""
+
+    data: bytes
+    executable: bool
+
+
+@dataclass(frozen=True, slots=True)
 class RepositoryCommitReceipt:
     """The provider's acknowledgement of one applied commit.
 
@@ -117,4 +131,10 @@ class RepositoryProviderPort(Protocol):
         self, operation: str, commit: ConditionalCommit
     ) -> RepositoryCommitReceipt:
         """Apply one file commit atomically through the provider's business API."""
+        ...
+
+    async def read_file(
+        self, repository_id: str, revision: str, relative_path: str
+    ) -> RepositoryFileRead | None:
+        """Read one file independently at an exact revision, or None if absent."""
         ...
