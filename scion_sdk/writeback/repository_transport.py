@@ -1,6 +1,6 @@
 """The shared repository-effect transport over the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4 through R004.8. ``RepositoryEffectTransport``
+SCION-GOVERNED-WRITEBACK-R004.4 through R004.10. ``RepositoryEffectTransport``
 implements ``WriteBackTransport`` over the ``RepositoryProviderPort``: the
 pinned adapter profile must be complete and bound by the intent's
 ``adapter_contract_digest`` before any provider call, and the write path is
@@ -9,7 +9,11 @@ time and again at effect time. A provider business-rule rejection is final
 for the request; no other path is tried. The effect is audit-bound and the
 commit itself is conditional: a provider that cannot offer the atomic
 condition is not admitted, and there is no force option or unconditional
-fallback.
+fallback. Success needs the provider effect, the independent readback at
+the actual effect revision and the durable attempt receipt joined by one
+transaction: the receipt binds the canonical request, the approval, the
+audit reservation and the provider effect revision, and a failed receipt
+persistence establishes no success.
 """
 
 from __future__ import annotations
@@ -33,6 +37,7 @@ from scion_sdk.ports.repository_provider import (
     ConditionalCommit,
     FileStateMismatch,
     RepositoryBusinessRuleRejected,
+    RepositoryCommitReceipt,
     RepositoryProviderPort,
     RepositoryTreeKind,
 )
@@ -58,6 +63,8 @@ from scion_sdk.writeback.errors import (
 )
 from scion_sdk.writeback.repository_effect import (
     RepositorySourceEffectIntent,
+    RepositorySourceEffectReceipt,
+    RepositorySourceEffectRequest,
     _check_repository_path,
 )
 
@@ -74,6 +81,8 @@ __all__ = [
     "ProviderLacksConditionalUpdateError",
     "ReadbackMismatchError",
     "ReadbackUnavailableError",
+    "ReceiptPersistenceFailedError",
+    "ReceiptUnboundError",
     "RepositoryAdapterProfile",
     "RepositoryEffectRefused",
     "RepositoryEffectTransport",
@@ -152,6 +161,18 @@ class ReadbackUnavailableError(RepositoryEffectRefused, OutcomeUncertainError):
     """
 
     code = "READBACK_UNAVAILABLE"
+
+
+class ReceiptUnboundError(RepositoryEffectRefused):
+    """The effect receipt is not bound to the approved canonical request."""
+
+    code = "RECEIPT_UNBOUND"
+
+
+class ReceiptPersistenceFailedError(RepositoryEffectRefused):
+    """The durable attempt receipt could not be persisted."""
+
+    code = "RECEIPT_PERSISTENCE_FAILED"
 
 
 class PathEscapesError(RepositoryEffectRefused):
@@ -474,7 +495,7 @@ class RepositoryEffectTransport:
             raise ApprovalBindingMismatchError(
                 "audit reservation is not bound to this approved effect"
             )
-        return await self._commit(change_set, intent, expected_version)
+        return await self._commit(change_set, intent, reservation)
 
     async def reconcile(self, change_set: SourceChangeSet) -> ReconciliationObservation:
         """Report the recorded effect, or no effect, at the bound base state."""
@@ -494,9 +515,14 @@ class RepositoryEffectTransport:
         self,
         change_set: SourceChangeSet,
         intent: RepositorySourceEffectIntent,
-        expected_version: str,
+        reservation: AuditReservation,
     ) -> WriteBackAttempt:
-        """Profile and scope checks, then the single conditional provider call."""
+        """Profile and scope checks, then the single conditional provider call.
+
+        The conditional commit is followed by the independent readback at
+        the actual effect revision; together they establish the evidence
+        the durable attempt receipt is bound to.
+        """
         if not self._provider.supports_conditional_update:
             raise ProviderLacksConditionalUpdateError(
                 "provider is not admitted: it cannot offer the atomic commit condition"
@@ -529,17 +555,67 @@ class RepositoryEffectTransport:
                 "provider acknowledged a different business operation"
             )
         await self._readback(intent, receipt.effect_revision)
+        return await self._attempt(change_set, intent, reservation, receipt)
+
+    async def _attempt(
+        self,
+        change_set: SourceChangeSet,
+        intent: RepositorySourceEffectIntent,
+        reservation: AuditReservation,
+        provider_receipt: RepositoryCommitReceipt,
+    ) -> WriteBackAttempt:
+        """Bind the effect receipt, map it onto the attempt, persist it.
+
+        The provider effect, the independent readback and the durable
+        ``WriteBackAttempt`` are one transaction: any step that fails
+        establishes no success. The only evidence of the effect is the
+        provider's immutable ``effect_revision``, proven by the readback
+        at that revision: an echoed request key, an applied flag, a
+        mutable branch name or an invented revision never does.
+        """
+        request = RepositorySourceEffectRequest(
+            schema_version=1, change_set=change_set, intent=intent
+        )
+        receipt = RepositorySourceEffectReceipt(
+            schema_version=1,
+            tenant_id=change_set.tenant_id,
+            actor=change_set.actor,
+            connector_id=change_set.connector_id,
+            source_instance_id=change_set.source_instance_id,
+            repository_id=intent.repository_id,
+            target_ref=intent.target_ref,
+            relative_path=intent.relative_path,
+            base_revision=intent.base_revision,
+            change_set_id=change_set.change_set_id,
+            change_set_digest=change_set.change_set_digest,
+            idempotency_key=change_set.idempotency_key,
+            approval_ref=change_set.authorization.authorization_ref,
+            approval_decision_digest=change_set.authorization.decision_digest,
+            audit_reservation_id=reservation.reservation_id,
+            adapter_contract_digest=intent.adapter_contract_digest,
+            effect_revision=provider_receipt.effect_revision,
+            readback_sha256=intent.payload_sha256,
+            readback_size=intent.payload_size,
+            executable=intent.executable,
+        )
+        try:
+            receipt.require_binding(request, reservation)
+        except ValueError as exc:
+            raise ReceiptUnboundError(
+                "the effect receipt is not bound to the approved request"
+            ) from exc
         attempt = applied_attempt(
             change_set,
-            pre_version=expected_version,
+            pre_version=receipt.base_revision,
             post_version=receipt.effect_revision,
-            observation_digest=digest(
-                {
-                    "business_api_operation": receipt.business_api_operation,
-                    "effect_revision": receipt.effect_revision,
-                }
-            ),
+            observation_digest=receipt.receipt_digest(),
         )
+        try:
+            await self._ledger.record_attempt(attempt)
+        except Exception as exc:
+            raise ReceiptPersistenceFailedError(
+                "the durable attempt receipt could not be persisted"
+            ) from exc
         self._effects[change_set.idempotency_key] = attempt
         return attempt
 

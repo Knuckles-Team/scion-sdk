@@ -1,15 +1,17 @@
 """The repository effect served through the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7, R004.8 and R004.10: the
-adapter profile must be complete and bound by the intent's contract
-digest, the provider's business-rule rejection is final for the request,
-the write path resolves against the trusted scope and the immutable base
-tree at preview and effect time with no normalization, the audit-bound
-effect matches the exact preview, the recorded approval, the contract
-pin, the source version and the audit reservation before the provider is
-called, the commit itself is conditional — no force option, no
-unconditional fallback — and success needs an independent readback at
-the actual effect revision.
+SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7, R004.8, R004.9 and
+R004.10: the adapter profile must be complete and bound by the intent's
+contract digest, the provider's business-rule rejection is final for the
+request, the write path resolves against the trusted scope and the
+immutable base tree at preview and effect time with no normalization, the
+audit-bound effect matches the exact preview, the recorded approval, the
+contract pin, the source version and the audit reservation before the
+provider is called, the commit itself is conditional — no force option,
+no unconditional fallback — success needs an independent readback at the
+actual effect revision, and the durable attempt receipt binds the
+canonical request, approval, reservation and provider effect revision,
+with a failed persistence establishing no success.
 """
 
 from __future__ import annotations
@@ -19,7 +21,19 @@ import hashlib
 from typing import Any
 
 import pytest
-from medulla.generated.write_back import SourceChangeSet, WriteBackEffectStatus
+from medulla.generated.write_back import (
+    ReconciliationObservation,
+    ReconciliationReceipt,
+    SourceChangeSet,
+    WriteBackAttempt,
+    WriteBackEffectStatus,
+    WriteBackOutcome,
+    WriteBackReceipt,
+    WriteBackReceiptPage,
+    WriteBackReceiptRecord,
+    WriteBackReceiptRecordAttempt,
+    WriteBackReceiptRecordReconciliation,
+)
 
 from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.ports.repository_provider import (
@@ -34,9 +48,10 @@ from scion_sdk.ports.repository_provider import (
 )
 from scion_sdk.ports.writeback_ledger import WriteBackLedger
 from scion_sdk.testing.writeback import make_writeback_fixture
-from scion_sdk.writeback.errors import OutcomeUncertainError
+from scion_sdk.writeback.errors import OutcomeUncertainError, WriteBackPersistenceError
 from scion_sdk.writeback.repository_effect import (
     RepositorySourceEffectIntent,
+    RepositorySourceEffectReceipt,
     RepositorySourceEffectRequest,
 )
 from scion_sdk.writeback.repository_transport import (
@@ -52,6 +67,8 @@ from scion_sdk.writeback.repository_transport import (
     ProviderLacksConditionalUpdateError,
     ReadbackMismatchError,
     ReadbackUnavailableError,
+    ReceiptPersistenceFailedError,
+    ReceiptUnboundError,
     RepositoryAdapterProfile,
     RepositoryEffectRefused,
     RepositoryEffectTransport,
@@ -199,22 +216,100 @@ def _request(
     )
 
 
-class _Ledger:
-    """The durable change-set store the recorded approval lives in."""
+class _LedgerStore:
+    """The durable change-set and receipt store behind the ledger clients."""
 
     def __init__(self) -> None:
         self.change_sets: dict[tuple[str, str], SourceChangeSet] = {}
+        self.receipts: list[WriteBackReceiptRecord] = []
+
+
+class _Ledger:
+    """A durable change-set and attempt-receipt ledger for the transport."""
+
+    def __init__(self, store: _LedgerStore | None = None) -> None:
+        self.store = store if store is not None else _LedgerStore()
+        self.fail_record_attempt = False
 
     async def create(self, change_set: SourceChangeSet) -> SourceChangeSet:
         key = (change_set.tenant_id, change_set.change_set_id)
-        existing = self.change_sets.get(key)
+        existing = self.store.change_sets.get(key)
         if existing is not None and existing != change_set:
-            raise ValueError("change-set identity conflict")
-        self.change_sets[key] = change_set
+            raise WriteBackPersistenceError("change-set identity conflict")
+        self.store.change_sets[key] = change_set
         return change_set
 
     async def get(self, tenant_id: str, change_set_id: str) -> SourceChangeSet | None:
-        return self.change_sets.get((tenant_id, change_set_id))
+        return self.store.change_sets.get((tenant_id, change_set_id))
+
+    async def record_attempt(self, attempt: WriteBackAttempt) -> WriteBackReceipt:
+        change_set = self._existing_change_set(attempt.tenant_id, attempt.change_set_id)
+        if self.fail_record_attempt:
+            raise WriteBackPersistenceError("the durable receipt store is unavailable")
+        receipt = WriteBackReceipt(
+            **attempt.model_dump(),
+            actor=change_set.actor,
+            authorization=change_set.authorization,
+            policy_digest=change_set.policy_digest,
+            receipt_id=f"attempt:{len(self.store.receipts) + 1}",
+            recorded_at_ms=0,
+            schema_version=change_set.schema_version,
+            sequence=len(self.store.receipts) + 1,
+        )
+        self.store.receipts.append(
+            WriteBackReceiptRecordAttempt(receipt_kind="attempt", receipt=receipt)
+        )
+        return receipt
+
+    async def record_reconciliation(
+        self, observation: ReconciliationObservation
+    ) -> ReconciliationReceipt:
+        change_set = self._existing_change_set(
+            observation.tenant_id, observation.change_set_id
+        )
+        receipt = ReconciliationReceipt(
+            **observation.model_dump(),
+            actor=change_set.actor,
+            authorization=change_set.authorization,
+            policy_digest=change_set.policy_digest,
+            receipt_id=f"reconciliation:{len(self.store.receipts) + 1}",
+            recorded_at_ms=0,
+            schema_version=change_set.schema_version,
+            sequence=len(self.store.receipts) + 1,
+        )
+        self.store.receipts.append(
+            WriteBackReceiptRecordReconciliation(
+                receipt_kind="reconciliation", receipt=receipt
+            )
+        )
+        return receipt
+
+    async def receipts(
+        self,
+        tenant_id: str,
+        change_set_id: str,
+        *,
+        after_sequence: int | None = None,
+        limit: int = 256,
+    ) -> WriteBackReceiptPage:
+        self._existing_change_set(tenant_id, change_set_id)
+        after = after_sequence or 0
+        remaining = [
+            record for record in self.store.receipts if record.receipt.sequence > after
+        ]
+        selected = remaining[:limit]
+        next_sequence = (
+            selected[-1].receipt.sequence if len(remaining) > limit else None
+        )
+        return WriteBackReceiptPage(receipts=selected, next_sequence=next_sequence)
+
+    def _existing_change_set(
+        self, tenant_id: str, change_set_id: str
+    ) -> SourceChangeSet:
+        change_set = self.store.change_sets.get((tenant_id, change_set_id))
+        if change_set is None:
+            raise WriteBackPersistenceError("no durable change set is registered")
+        return change_set
 
 
 def _reservation(change_set: SourceChangeSet) -> AuditReservation:
@@ -685,3 +780,100 @@ async def test_independent_readback() -> None:
     assert isinstance(raised.value, OutcomeUncertainError)
     assert len(provider.writes) == 1
     assert await transport.prior_effect(change) is None
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.9")
+async def test_effect_receipt() -> None:
+    profile = RepositoryAdapterProfile(
+        business_api_operation="repository.commit_file", max_payload_size=4096
+    )
+    request = _request(profile, path="nested/file.bin", action="update")
+    change = request.change_set
+    reservation = _reservation(change)
+    store = _LedgerStore()
+    ledger = _Ledger(store)
+    await ledger.create(change)
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+
+    # The applied effect is durably recorded as one attempt receipt.
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, reservation
+    )
+    assert attempt.effect_status is WriteBackEffectStatus.APPLIED
+
+    # A fresh ledger client over the same durable store reads the attempt.
+    fresh = _Ledger(store)
+    page = await fresh.receipts(change.tenant_id, change.change_set_id)
+    assert len(page.receipts) == 1
+    durable = page.receipts[0].receipt
+    # The attempt maps to the existing fields: the provider effect revision
+    # is post, the approved base is pre, and the observation digest is the
+    # full receipt projection.
+    assert durable.pre_source_version == change.base_source_version
+    assert durable.post_source_version == provider.last_receipt.effect_revision
+    assert durable.change_set_digest == change.change_set_digest
+    assert durable.idempotency_key == change.idempotency_key
+    assert durable.applied_field_digest == change.patch_digest()
+    assert durable.outcome is WriteBackOutcome.APPLIED
+    assert durable.actor == change.actor
+    assert durable.authorization == change.authorization
+    assert durable.policy_digest == change.policy_digest
+
+    receipt = RepositorySourceEffectReceipt(
+        schema_version=1,
+        tenant_id=change.tenant_id,
+        actor=change.actor,
+        connector_id=change.connector_id,
+        source_instance_id=change.source_instance_id,
+        repository_id=_REPOSITORY_ID,
+        target_ref=_TARGET_REF,
+        relative_path="nested/file.bin",
+        base_revision=change.base_source_version,
+        change_set_id=change.change_set_id,
+        change_set_digest=change.change_set_digest,
+        idempotency_key=change.idempotency_key,
+        approval_ref=change.authorization.authorization_ref,
+        approval_decision_digest=change.authorization.decision_digest,
+        audit_reservation_id=reservation.reservation_id,
+        adapter_contract_digest=request.intent.adapter_contract_digest,
+        effect_revision=provider.last_receipt.effect_revision,
+        readback_sha256=request.intent.payload_sha256,
+        readback_size=request.intent.payload_size,
+        executable=request.intent.executable,
+    )
+    assert durable.connector_observation_digest == receipt.receipt_digest()
+
+    # Four things never establish success: an echoed request key, an
+    # applied flag, a mutable branch name or an invented revision. Only
+    # the provider effect revision, proven by the readback, does.
+    assert durable.post_source_version == "e" * 40
+    assert durable.post_source_version not in (
+        change.idempotency_key,
+        request.intent.target_ref,
+        request.intent.base_revision,
+    )
+
+    # A receipt not bound to the approved request is refused before it
+    # could ever be persisted; the transport surfaces that as
+    # RECEIPT_UNBOUND.
+    unbound = receipt.model_copy(update={"readback_sha256": "0" * 64})
+    with pytest.raises(ValueError, match="receipt binding mismatch"):
+        unbound.require_binding(request, reservation)
+    assert ReceiptUnboundError.code == "RECEIPT_UNBOUND"
+
+    # A failed receipt persistence establishes no success and no reapply.
+    store = _LedgerStore()
+    ledger = _Ledger(store)
+    await ledger.create(change)
+    ledger.fail_record_attempt = True
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(ReceiptPersistenceFailedError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "RECEIPT_PERSISTENCE_FAILED"
+    assert await transport.prior_effect(change) is None
+    assert len(provider.calls) == 1
+    assert len(provider.writes) == 1
+    page = await _Ledger(store).receipts(change.tenant_id, change.change_set_id)
+    assert page.receipts == []
