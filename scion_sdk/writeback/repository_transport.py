@@ -32,6 +32,7 @@ from medulla.generated.write_back import (
     ReconciliationObservation,
     SourceChangeSet,
     WriteBackAttempt,
+    WriteBackAttemptKind,
     WriteBackEffectStatus,
 )
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError
@@ -736,6 +737,8 @@ class RepositoryEffectTransport:
         )
         for record in page.receipts:
             if record.receipt_kind != "attempt":
+                continue
+            if record.receipt.kind is not WriteBackAttemptKind.APPLY:
                 continue
             if (
                 record.receipt.idempotency_key != change_set.idempotency_key

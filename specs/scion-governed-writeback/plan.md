@@ -36,6 +36,14 @@ No unknowns; the design below records the findings per row.
 
 The design sections below are the architecture, data flow and failure modes for each row group.
 
+- **Owner:** This spec family: every row names the modules that implement it (`scion_sdk/writeback/*`, `scion_sdk/ports/writeback_ledger.py`, `scion_sdk/ports/audit_reservation.py`, `scion_sdk/testing/*`); no row hands its rule to another spec.
+- **Cohesion:** One governed write-back path: the approved, audit-bound change set passes preview, conditional apply, durable receipt recording and restart reconciliation over the ledger's receipt stream, with no local effect state.
+- **Dependency direction:** `scion_sdk/writeback/*` depends on `scion_sdk/ports/*` and the generated `medulla.generated.write_back` types; ports never import `scion_sdk.writeback`; tests reach the rule only through public entry points and `scion_sdk.testing` doubles.
+- **Interface depth:** Shallow: rows point at public entry points (`GovernedWriteBack`, `DurableWritableConnector`, `RepositoryEffectTransport`, `WriteBackLedger`) with no private reach-through; the receipt-stream replay helper stays private to `scion_sdk/writeback/recovery.py`.
+- **Special cases:** The provider's business-rule rejection is final with no storage bypass; an uncertain effect admits no retry before a retryable no-effect reconciliation; the in-flight claim is not a cross-process fence; the durable dry-run receipt must be the stream's first receipt and proves no effect.
+- **State:** The state of the external record is read from the ledger's receipt stream; the SDK stores nothing, restart reconstructs the recovery state from durable receipts, and replaying the stream never changes a settled state.
+- **Environment:** The module carries no credentials or host data; live-engine journey proofs run against the test environment (`tests/live_engine.py`) under the `connector:write-back` and `connector:write-back-read` scopes only.
+
 
 1. Preserve generated graph types and the current `WriteBackPort`, `GovernedWriteBack`, `DurableWritableConnector`, transport and `WriteBackLedger` composition.
 2. Bind audit reservation and deterministic approval to the exact canonical digest and source version before mutation. Keep proposal evaluation separate.
@@ -262,6 +270,23 @@ One connector instance claims a tenant and idempotency key before lookup.
 Concurrent apply or reconcile calls for that key refuse until it releases
 the claim. The claim spans durable receipt recording. It is not a fence
 across instances or processes and does not replace durable recovery.
+
+### Amendment 2026-11-25: durable dry-run receipts are preview evidence (R004.18)
+
+The served journey of R004.12 against the real engine exposed the durable
+state machine the engine enforces on the write-back receipt stream: an
+apply attempt is admitted only after a dry-run attempt receipt (or a
+retryable no-effect reconciliation), and a dry-run receipt must be the
+stream's first receipt. The SDK's receipt-stream replay therefore admits a
+`dry_run` attempt receipt with the engine's outcome/effect combinations
+(`dry_run_ready`, `conflict`, `rejected` — always `no_effect`) as preview
+evidence: its identity, authorization and policy binding must match the
+change set, replaying it leaves the recovery state unchanged, and it never
+establishes an effect. The restart's durable attempt lookup returns only
+the apply attempt receipt. The connector's durable preview records that
+dry-run receipt through the graph ledger before the first apply. R004.2
+retains its cross-process replay proof; R004.9 and R004.11 retain their
+receipt and restart proofs, now over streams that may carry the preview.
 
 ## Phase 2: Task approach
 
