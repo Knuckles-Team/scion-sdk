@@ -5,17 +5,26 @@ The port is the provider's business API and nothing else: it offers
 request for a business reason raises :class:`RepositoryBusinessRuleRejected`;
 the SDK transport maps that refusal to the stable code
 ``BUSINESS_RULE_REJECTED`` and tries no other path.
+
+A commit is conditional (SCION-GOVERNED-WRITEBACK-R004.8): the provider
+applies it atomically only while the target ref still points at the base
+revision and the file still matches the expected digest and mode. A
+provider that cannot offer this condition is not admitted:
+``supports_conditional_update`` must be true at registration. There is
+no force option and no unconditional fallback.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Protocol, runtime_checkable
+from typing import ClassVar, Literal, Protocol, runtime_checkable
 
 __all__ = [
+    "BaseStale",
+    "ConditionalCommit",
+    "FileStateMismatch",
     "RepositoryBusinessRuleRejected",
     "RepositoryCommitReceipt",
-    "RepositoryCommitRequest",
     "RepositoryProviderPort",
     "RepositoryTreeKind",
 ]
@@ -36,9 +45,39 @@ class RepositoryBusinessRuleRejected(RuntimeError):
         super().__init__(detail or "business rule rejected")
 
 
+class ConditionalCommitRefused(RuntimeError):
+    """A refused atomic condition of one conditional commit."""
+
+    code: ClassVar[str]
+
+
+class BaseStale(ConditionalCommitRefused):
+    """The target ref no longer points at the commit's base revision."""
+
+    code = "BASE_STALE"
+
+    def __init__(self, detail: str = "") -> None:
+        super().__init__(detail or "target ref moved off the base revision")
+
+
+class FileStateMismatch(ConditionalCommitRefused):
+    """The file no longer matches the expected digest or mode."""
+
+    code = "FILE_STATE_MISMATCH"
+
+    def __init__(self, detail: str = "") -> None:
+        super().__init__(
+            detail or "file state no longer matches the expected digest or mode"
+        )
+
+
 @dataclass(frozen=True, slots=True)
-class RepositoryCommitRequest:
-    """One business-API commit addressed by the provider's own operation name."""
+class ConditionalCommit:
+    """One conditional business-API commit addressed by the provider's operation.
+
+    The idempotency key travels as the commit trailer ``Effect-Key`` so a
+    restarted process can find the commit in the target ref history.
+    """
 
     repository_id: str
     target_ref: str
@@ -68,11 +107,14 @@ class RepositoryProviderPort(Protocol):
     """One provider's business API for repository file effects.
 
     The port offers ``commit_file`` and nothing else: there is no storage
-    method and no unconditional fallback.
+    method and no unconditional fallback. A provider that cannot offer the
+    atomic commit condition is not admitted.
     """
 
+    supports_conditional_update: bool
+
     async def commit_file(
-        self, operation: str, commit: RepositoryCommitRequest
+        self, operation: str, commit: ConditionalCommit
     ) -> RepositoryCommitReceipt:
-        """Apply one file commit through the provider's business API."""
+        """Apply one file commit atomically through the provider's business API."""
         ...
