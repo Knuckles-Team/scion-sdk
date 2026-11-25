@@ -1,12 +1,15 @@
 """The shared repository-effect transport over the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4 and R004.6. ``RepositoryEffectTransport``
+SCION-GOVERNED-WRITEBACK-R004.4 through R004.8. ``RepositoryEffectTransport``
 implements ``WriteBackTransport`` over the ``RepositoryProviderPort``: the
 pinned adapter profile must be complete and bound by the intent's
 ``adapter_contract_digest`` before any provider call, and the write path is
 resolved against the trusted scope and the immutable base tree at preview
 time and again at effect time. A provider business-rule rejection is final
-for the request; no other path is tried.
+for the request; no other path is tried. The effect is audit-bound and the
+commit itself is conditional: a provider that cannot offer the atomic
+condition is not admitted, and there is no force option or unconditional
+fallback.
 """
 
 from __future__ import annotations
@@ -26,8 +29,10 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError
 
 from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.ports.repository_provider import (
+    BaseStale,
+    ConditionalCommit,
+    FileStateMismatch,
     RepositoryBusinessRuleRejected,
-    RepositoryCommitRequest,
     RepositoryProviderPort,
     RepositoryTreeKind,
 )
@@ -59,10 +64,13 @@ __all__ = [
     "REPOSITORY_WRITE_SCOPES",
     "AdapterProfileIncompleteError",
     "ApprovalBindingMismatchError",
+    "BaseStaleError",
     "BusinessRuleRejectedError",
+    "FileStateMismatchError",
     "PathEscapesError",
     "PathOutOfScopeError",
     "PathUnsupportedKindError",
+    "ProviderLacksConditionalUpdateError",
     "RepositoryAdapterProfile",
     "RepositoryEffectRefused",
     "RepositoryEffectTransport",
@@ -105,6 +113,24 @@ class BusinessRuleRejectedError(RepositoryEffectRefused):
     """The provider's business API rejected the effect for a business reason."""
 
     code = "BUSINESS_RULE_REJECTED"
+
+
+class BaseStaleError(RepositoryEffectRefused):
+    """The target ref moved off the approved base revision before the commit."""
+
+    code = "BASE_STALE"
+
+
+class FileStateMismatchError(RepositoryEffectRefused):
+    """The file no longer matches the expected digest or mode before the commit."""
+
+    code = "FILE_STATE_MISMATCH"
+
+
+class ProviderLacksConditionalUpdateError(RepositoryEffectRefused):
+    """The provider cannot offer the atomic commit condition and is not admitted."""
+
+    code = "PROVIDER_LACKS_CONDITIONAL_UPDATE"
 
 
 class PathEscapesError(RepositoryEffectRefused):
@@ -449,10 +475,14 @@ class RepositoryEffectTransport:
         intent: RepositorySourceEffectIntent,
         expected_version: str,
     ) -> WriteBackAttempt:
-        """Profile and scope checks, then the single provider business call."""
+        """Profile and scope checks, then the single conditional provider call."""
+        if not self._provider.supports_conditional_update:
+            raise ProviderLacksConditionalUpdateError(
+                "provider is not admitted: it cannot offer the atomic commit condition"
+            )
         self._require_profile(intent)
         self._resolve(intent)
-        commit = RepositoryCommitRequest(
+        commit = ConditionalCommit(
             repository_id=intent.repository_id,
             target_ref=intent.target_ref,
             relative_path=intent.relative_path,
@@ -469,6 +499,10 @@ class RepositoryEffectTransport:
             )
         except RepositoryBusinessRuleRejected as exc:
             raise BusinessRuleRejectedError(exc.detail) from exc
+        except BaseStale as exc:
+            raise BaseStaleError(str(exc)) from exc
+        except FileStateMismatch as exc:
+            raise FileStateMismatchError(str(exc)) from exc
         if receipt.business_api_operation != self._profile.business_api_operation:
             raise AdapterProfileIncompleteError(
                 "provider acknowledged a different business operation"

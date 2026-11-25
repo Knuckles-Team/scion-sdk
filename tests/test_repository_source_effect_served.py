@@ -1,12 +1,14 @@
 """The repository effect served through the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4, R004.6 and R004.7: the adapter profile
-must be complete and bound by the intent's contract digest, the provider's
-business-rule rejection is final for the request, the write path resolves
-against the trusted scope and the immutable base tree at preview and
-effect time with no normalization, and the audit-bound effect matches the
-exact preview, the recorded approval, the contract pin, the source version
-and the audit reservation before the provider is called.
+SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7 and R004.8: the adapter
+profile must be complete and bound by the intent's contract digest, the
+provider's business-rule rejection is final for the request, the write
+path resolves against the trusted scope and the immutable base tree at
+preview and effect time with no normalization, the audit-bound effect
+matches the exact preview, the recorded approval, the contract pin, the
+source version and the audit reservation before the provider is called,
+and the commit itself is conditional — no force option, no unconditional
+fallback.
 """
 
 from __future__ import annotations
@@ -20,9 +22,11 @@ from medulla.generated.write_back import SourceChangeSet, WriteBackEffectStatus
 
 from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.ports.repository_provider import (
+    BaseStale,
+    ConditionalCommit,
+    FileStateMismatch,
     RepositoryBusinessRuleRejected,
     RepositoryCommitReceipt,
-    RepositoryCommitRequest,
     RepositoryProviderPort,
     RepositoryTreeKind,
 )
@@ -36,10 +40,13 @@ from scion_sdk.writeback.repository_transport import (
     REPOSITORY_WRITE_SCOPES,
     AdapterProfileIncompleteError,
     ApprovalBindingMismatchError,
+    BaseStaleError,
     BusinessRuleRejectedError,
+    FileStateMismatchError,
     PathEscapesError,
     PathOutOfScopeError,
     PathUnsupportedKindError,
+    ProviderLacksConditionalUpdateError,
     RepositoryAdapterProfile,
     RepositoryEffectRefused,
     RepositoryEffectTransport,
@@ -75,21 +82,36 @@ class _FakeProvider:
     """A business-API provider whose every call is recorded."""
 
     def __init__(
-        self, *, reject: bool = False, operation: str = "repository.commit_file"
+        self,
+        *,
+        reject: bool = False,
+        base_stale: bool = False,
+        file_mismatch: bool = False,
+        conditional: bool = True,
+        operation: str = "repository.commit_file",
     ) -> None:
-        self.calls: list[RepositoryCommitRequest] = []
+        self.calls: list[ConditionalCommit] = []
+        self.writes: list[ConditionalCommit] = []
         self.storage_calls: list[str] = []
         self.last_receipt: RepositoryCommitReceipt | None = None
+        self.supports_conditional_update = conditional
         self._reject = reject
+        self._base_stale = base_stale
+        self._file_mismatch = file_mismatch
         self._operation = operation
 
     async def commit_file(
-        self, operation: str, commit: RepositoryCommitRequest
+        self, operation: str, commit: ConditionalCommit
     ) -> RepositoryCommitReceipt:
         del operation
         self.calls.append(commit)
+        if self._base_stale:
+            raise BaseStale("target ref moved off the base revision")
+        if self._file_mismatch:
+            raise FileStateMismatch("file state no longer matches the expected digest")
         if self._reject:
             raise RepositoryBusinessRuleRejected("vendor rule R-7 blocks this commit")
+        self.writes.append(commit)
         self.last_receipt = RepositoryCommitReceipt(
             business_api_operation=self._operation, effect_revision="e" * 40
         )
@@ -515,3 +537,60 @@ async def test_approved_effect() -> None:
                 change, change.base_source_version, reservation
             )
         assert len(provider.calls) == 1
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.8")
+async def test_conditional_effect() -> None:
+    profile = RepositoryAdapterProfile(
+        business_api_operation="repository.commit_file", max_payload_size=4096
+    )
+    request = _request(profile, path="nested/file.bin", action="update")
+    change = request.change_set
+    reservation = _reservation(change)
+
+    # A competing commit lands after preflight: the approved write refuses
+    # with BASE_STALE and does not overwrite it.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider(base_stale=True)
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(BaseStaleError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "BASE_STALE"
+    assert provider.writes == []
+    assert await transport.prior_effect(change) is None
+
+    # The file state no longer matches the expected digest or mode.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider(file_mismatch=True)
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(FileStateMismatchError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "FILE_STATE_MISMATCH"
+    assert provider.writes == []
+    assert await transport.prior_effect(change) is None
+
+    # A provider that cannot offer the condition is not admitted: no call.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider(conditional=False)
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(ProviderLacksConditionalUpdateError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "PROVIDER_LACKS_CONDITIONAL_UPDATE"
+    assert provider.calls == []
+
+    # An unchanged base produces one revision through one provider commit.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, reservation
+    )
+    assert attempt.effect_status is WriteBackEffectStatus.APPLIED
+    assert attempt.pre_source_version == change.base_source_version
+    assert attempt.post_source_version == "e" * 40
+    assert len(provider.calls) == 1
+    assert len(provider.writes) == 1
