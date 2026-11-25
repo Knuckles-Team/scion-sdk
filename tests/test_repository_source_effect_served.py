@@ -1,10 +1,12 @@
 """The repository effect served through the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4 and R004.6: the adapter profile must be
-complete and bound by the intent's contract digest, the provider's
-business-rule rejection is final for the request, and the write path
-resolves against the trusted scope and the immutable base tree at preview
-and effect time with no normalization.
+SCION-GOVERNED-WRITEBACK-R004.4, R004.6 and R004.7: the adapter profile
+must be complete and bound by the intent's contract digest, the provider's
+business-rule rejection is final for the request, the write path resolves
+against the trusted scope and the immutable base tree at preview and
+effect time with no normalization, and the audit-bound effect matches the
+exact preview, the recorded approval, the contract pin, the source version
+and the audit reservation before the provider is called.
 """
 
 from __future__ import annotations
@@ -14,8 +16,9 @@ import hashlib
 from typing import Any
 
 import pytest
-from medulla.generated.write_back import WriteBackEffectStatus
+from medulla.generated.write_back import SourceChangeSet, WriteBackEffectStatus
 
+from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.ports.repository_provider import (
     RepositoryBusinessRuleRejected,
     RepositoryCommitReceipt,
@@ -23,6 +26,7 @@ from scion_sdk.ports.repository_provider import (
     RepositoryProviderPort,
     RepositoryTreeKind,
 )
+from scion_sdk.ports.writeback_ledger import WriteBackLedger
 from scion_sdk.testing.writeback import make_writeback_fixture
 from scion_sdk.writeback.repository_effect import (
     RepositorySourceEffectIntent,
@@ -31,6 +35,7 @@ from scion_sdk.writeback.repository_effect import (
 from scion_sdk.writeback.repository_transport import (
     REPOSITORY_WRITE_SCOPES,
     AdapterProfileIncompleteError,
+    ApprovalBindingMismatchError,
     BusinessRuleRejectedError,
     PathEscapesError,
     PathOutOfScopeError,
@@ -142,9 +147,37 @@ def _request(
     )
 
 
+class _Ledger:
+    """The durable change-set store the recorded approval lives in."""
+
+    def __init__(self) -> None:
+        self.change_sets: dict[tuple[str, str], SourceChangeSet] = {}
+
+    async def create(self, change_set: SourceChangeSet) -> SourceChangeSet:
+        key = (change_set.tenant_id, change_set.change_set_id)
+        existing = self.change_sets.get(key)
+        if existing is not None and existing != change_set:
+            raise ValueError("change-set identity conflict")
+        self.change_sets[key] = change_set
+        return change_set
+
+    async def get(self, tenant_id: str, change_set_id: str) -> SourceChangeSet | None:
+        return self.change_sets.get((tenant_id, change_set_id))
+
+
+def _reservation(change_set: SourceChangeSet) -> AuditReservation:
+    return AuditReservation(
+        reservation_id="reservation:1",
+        effect_key=change_set.idempotency_key,
+        change_set_digest=change_set.change_set_digest,
+    )
+
+
 def _transport(
     provider: _FakeProvider,
     profile: RepositoryAdapterProfile,
+    *,
+    ledger: WriteBackLedger | None = None,
     base_revision: str = _BASE_REVISION,
 ) -> RepositoryEffectTransport:
     return RepositoryEffectTransport(
@@ -154,6 +187,7 @@ def _transport(
         repository_id=_REPOSITORY_ID,
         base_revision=base_revision,
         base_tree=BASE_TREE,
+        ledger=ledger or _Ledger(),
     )
 
 
@@ -166,10 +200,15 @@ async def test_business_api() -> None:
     change = request.change_set
     provider = _FakeProvider()
     assert isinstance(provider, RepositoryProviderPort)
-    transport = _transport(provider, profile)
+    ledger = _Ledger()
+    await ledger.create(change)
+    transport = _transport(provider, profile, ledger=ledger)
+    reservation = _reservation(change)
 
     # An accepted mutation: one business-API call, receipt names the operation.
-    attempt = await transport.apply(change, change.base_source_version)
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, reservation
+    )
     assert attempt.effect_status is WriteBackEffectStatus.APPLIED
     assert attempt.change_set_digest == change.change_set_digest
     assert attempt.post_source_version == "e" * 40
@@ -189,9 +228,13 @@ async def test_business_api() -> None:
     # A business-rule rejection is final: the request never reaches any
     # other provider method, and no effect is recorded.
     provider = _FakeProvider(reject=True)
-    transport = _transport(provider, profile)
+    ledger = _Ledger()
+    await ledger.create(change)
+    transport = _transport(provider, profile, ledger=ledger)
     with pytest.raises(BusinessRuleRejectedError) as raised:
-        await transport.apply(change, change.base_source_version)
+        await transport.apply_reserved(
+            change, change.base_source_version, _reservation(change)
+        )
     refusal = raised.value
     assert isinstance(refusal, RepositoryEffectRefused)
     assert refusal.code == "BUSINESS_RULE_REJECTED"
@@ -202,32 +245,46 @@ async def test_business_api() -> None:
 
     # A blank operation refuses before any provider call.
     provider = _FakeProvider()
+    ledger = _Ledger()
+    await ledger.create(change)
     transport = _transport(
         provider,
         RepositoryAdapterProfile(business_api_operation="  ", max_payload_size=4096),
+        ledger=ledger,
     )
     with pytest.raises(AdapterProfileIncompleteError) as raised:
-        await transport.apply(change, change.base_source_version)
+        await transport.apply_reserved(
+            change, change.base_source_version, _reservation(change)
+        )
     assert raised.value.code == "ADAPTER_PROFILE_INCOMPLETE"
     assert provider.calls == []
 
     # A profile the intent does not pin refuses before any provider call.
     provider = _FakeProvider()
+    ledger = _Ledger()
+    await ledger.create(change)
     transport = _transport(
         provider,
         RepositoryAdapterProfile(
             business_api_operation="repository.commit_file", max_payload_size=1024
         ),
+        ledger=ledger,
     )
     with pytest.raises(AdapterProfileIncompleteError):
-        await transport.apply(change, change.base_source_version)
+        await transport.apply_reserved(
+            change, change.base_source_version, _reservation(change)
+        )
     assert provider.calls == []
 
     # The provider cannot acknowledge a different operation.
     provider = _FakeProvider(operation="repository.other")
-    transport = _transport(provider, profile)
+    ledger = _Ledger()
+    await ledger.create(change)
+    transport = _transport(provider, profile, ledger=ledger)
     with pytest.raises(AdapterProfileIncompleteError):
-        await transport.apply(change, change.base_source_version)
+        await transport.apply_reserved(
+            change, change.base_source_version, _reservation(change)
+        )
     assert await transport.prior_effect(change) is None
 
 
@@ -339,19 +396,122 @@ async def test_path_scope() -> None:
     )
     allowed = _request(profile, path="nested/file.bin", action="update")
     provider = _FakeProvider()
-    transport = _transport(provider, profile)
-    await transport.apply(allowed.change_set, allowed.change_set.base_source_version)
+    ledger = _Ledger()
+    await ledger.create(allowed.change_set)
+    transport = _transport(provider, profile, ledger=ledger)
+    await transport.apply_reserved(
+        allowed.change_set,
+        allowed.change_set.base_source_version,
+        _reservation(allowed.change_set),
+    )
     assert [commit.relative_path for commit in provider.calls] == ["nested/file.bin"]
 
     refused = _request(profile, path="top/file.bin", action="update")
     provider = _FakeProvider()
-    transport = _transport(provider, profile)
+    ledger = _Ledger()
+    await ledger.create(refused.change_set)
+    transport = _transport(provider, profile, ledger=ledger)
     current = await transport.read_current(refused.change_set)
     with pytest.raises(PathOutOfScopeError):
         await transport.preview(refused.change_set, current)
     with pytest.raises(PathOutOfScopeError):
-        await transport.apply(
-            refused.change_set, refused.change_set.base_source_version
+        await transport.apply_reserved(
+            refused.change_set,
+            refused.change_set.base_source_version,
+            _reservation(refused.change_set),
         )
     assert provider.calls == []
     assert provider.storage_calls == []
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.7")
+async def test_approved_effect() -> None:
+    profile = RepositoryAdapterProfile(
+        business_api_operation="repository.commit_file", max_payload_size=4096
+    )
+    request = _request(profile, path="nested/file.bin", action="update")
+    change = request.change_set
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+
+    # The repository effect is audit-bound: no reservation, no provider call.
+    with pytest.raises(ApprovalBindingMismatchError) as raised:
+        await transport.apply(change, change.base_source_version)
+    assert raised.value.code == "APPROVAL_BINDING_MISMATCH"
+    assert provider.calls == []
+
+    # The unchanged approved effect reaches the provider exactly once.
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, _reservation(change)
+    )
+    assert attempt.effect_status is WriteBackEffectStatus.APPLIED
+    assert len(provider.calls) == 1
+
+    # A substituted actor, connector, target, path, base, bytes, digest,
+    # policy or approval refuses with zero provider calls.
+    intent = dict(change.desired_patch["repository_effect"])
+    substitutions = [
+        ("actor", "principal:other"),
+        ("connector_id", "other-connector"),
+        ("tenant_id", "tenant-2"),
+        ("policy_digest", "f" * 64),
+        ("base_source_version", "b" * 40),
+        (
+            "authorization",
+            change.authorization.model_copy(update={"decision_digest": "d" * 64}),
+        ),
+        (
+            "desired_patch",
+            {
+                "repository_effect": {
+                    **intent,
+                    "relative_path": "nested/other.bin",
+                }
+            },
+        ),
+        (
+            "desired_patch",
+            {"repository_effect": {**intent, "target_ref": "refs/heads/dev"}},
+        ),
+        (
+            "desired_patch",
+            {
+                "repository_effect": {
+                    **intent,
+                    "payload_base64": base64.b64encode(b"other bytes\n").decode(),
+                    "payload_sha256": hashlib.sha256(b"other bytes\n").hexdigest(),
+                    "payload_size": len(b"other bytes\n"),
+                }
+            },
+        ),
+        ("change_set_digest", "9" * 64),
+    ]
+    for field, value in substitutions:
+        altered = change.model_copy(update={field: value})
+        with pytest.raises(ApprovalBindingMismatchError) as raised:
+            await transport.apply_reserved(
+                altered, altered.base_source_version, _reservation(altered)
+            )
+        assert raised.value.code == "APPROVAL_BINDING_MISMATCH"
+        assert len(provider.calls) == 1
+
+    # A reservation that is not bound to the approved effect refuses.
+    for reservation in (
+        AuditReservation(
+            reservation_id="reservation:2",
+            effect_key=change.idempotency_key,
+            change_set_digest="0" * 64,
+        ),
+        AuditReservation(
+            reservation_id="  ",
+            effect_key=change.idempotency_key,
+            change_set_digest=change.change_set_digest,
+        ),
+    ):
+        with pytest.raises(ApprovalBindingMismatchError):
+            await transport.apply_reserved(
+                change, change.base_source_version, reservation
+            )
+        assert len(provider.calls) == 1
