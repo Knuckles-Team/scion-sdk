@@ -9,9 +9,11 @@ audit-bound effect matches the exact preview, the recorded approval, the
 contract pin, the source version and the audit reservation before the
 provider is called, the commit itself is conditional — no force option,
 no unconditional fallback — success needs an independent readback at the
-actual effect revision, and the durable attempt receipt binds the
-canonical request, approval, reservation and provider effect revision,
-with a failed persistence establishing no success.
+actual effect revision, the durable attempt receipt binds the canonical
+request, approval, reservation and provider effect revision, and after
+a restart only a complete effect-key lookup whose commit is parented at
+the bound base admits the prior effect — incomplete, ambiguous or
+unproven lookups block reapply and stay uncertain.
 """
 
 from __future__ import annotations
@@ -39,6 +41,8 @@ from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.ports.repository_provider import (
     BaseStale,
     ConditionalCommit,
+    EffectKeyCommit,
+    EffectKeyLookup,
     FileStateMismatch,
     RepositoryBusinessRuleRejected,
     RepositoryCommitReceipt,
@@ -67,6 +71,7 @@ from scion_sdk.writeback.repository_transport import (
     ProviderLacksConditionalUpdateError,
     ReadbackMismatchError,
     ReadbackUnavailableError,
+    ReapplyBlockedError,
     ReceiptPersistenceFailedError,
     ReceiptUnboundError,
     RepositoryAdapterProfile,
@@ -117,10 +122,12 @@ class _FakeProvider:
         operation: str = "repository.commit_file",
         readback: object = _READBACK_DEFAULT,
         readback_executable: bool | None = None,
+        effect_key_lookup: EffectKeyLookup | None = None,
     ) -> None:
         self.calls: list[ConditionalCommit] = []
         self.writes: list[ConditionalCommit] = []
         self.reads: list[tuple[str, str, str]] = []
+        self.effect_key_lookups: list[tuple[str, str, str]] = []
         self.storage_calls: list[str] = []
         self.last_receipt: RepositoryCommitReceipt | None = None
         self.supports_conditional_update = conditional
@@ -130,6 +137,7 @@ class _FakeProvider:
         self._operation = operation
         self._readback = readback
         self._readback_executable = readback_executable
+        self._effect_key_lookup = effect_key_lookup
 
     async def read_file(
         self, repository_id: str, revision: str, relative_path: str
@@ -163,6 +171,19 @@ class _FakeProvider:
             business_api_operation=self._operation, effect_revision="e" * 40
         )
         return self.last_receipt
+
+    async def find_commit_by_effect_key(
+        self, repository_id: str, target_ref: str, key: str
+    ) -> EffectKeyLookup:
+        self.effect_key_lookups.append((repository_id, target_ref, key))
+        if self._effect_key_lookup is not None:
+            return self._effect_key_lookup
+        matching = tuple(
+            EffectKeyCommit(revision="e" * 40, parent_revision=commit.base_revision)
+            for commit in self.writes
+            if commit.idempotency_key == key
+        )
+        return EffectKeyLookup(complete=True, commits=matching)
 
     async def store_file(self, relative_path: str, payload: bytes) -> None:
         self.storage_calls.append(relative_path)
@@ -877,3 +898,126 @@ async def test_effect_receipt() -> None:
     assert len(provider.writes) == 1
     page = await _Ledger(store).receipts(change.tenant_id, change.change_set_id)
     assert page.receipts == []
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.11")
+async def test_restart_reconcile() -> None:
+    profile = RepositoryAdapterProfile(
+        business_api_operation="repository.commit_file", max_payload_size=4096
+    )
+    request = _request(profile, path="nested/file.bin", action="update")
+    change = request.change_set
+    reservation = _reservation(change)
+
+    def _restart(
+        provider: _FakeProvider, store: _LedgerStore
+    ) -> RepositoryEffectTransport:
+        """A fresh transport after the crash: same history, same durable store."""
+        return _transport(provider, profile, ledger=_Ledger(store))
+
+    # Crash before the effect: nothing landed. Restart proves no effect,
+    # and the fresh conditional attempt is admitted.
+    store = _LedgerStore()
+    await _Ledger(store).create(change)
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=_Ledger(store))
+    assert await transport.prior_effect(change) is None
+    observation = await transport.reconcile(change)
+    assert observation.effect_status is WriteBackEffectStatus.NO_EFFECT
+    assert observation.retry_allowed is True
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, reservation
+    )
+    assert attempt.effect_status is WriteBackEffectStatus.APPLIED
+    assert len(provider.writes) == 1
+
+    # Crash after the durable receipt: restart resolves the identical
+    # durable effect and blocks the duplicate commit.
+    restarted = _restart(provider, store)
+    assert await restarted.prior_effect(change) == attempt
+    observation = await restarted.reconcile(change)
+    assert observation.effect_status is WriteBackEffectStatus.APPLIED
+    assert observation.retry_allowed is False
+    with pytest.raises(ReapplyBlockedError) as raised:
+        await restarted.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "REAPPLY_BLOCKED"
+    assert len(provider.calls) == 1
+    assert len(provider.writes) == 1
+
+    # Crash after the provider commit (likewise after readback): the
+    # commit whose parent is the bound base proves the effect, but the
+    # durable receipt never recorded.
+    store = _LedgerStore()
+    await _Ledger(store).create(change)
+    ledger = _Ledger(store)
+    ledger.fail_record_attempt = True
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(ReceiptPersistenceFailedError):
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert len(provider.writes) == 1
+
+    # Restart: there is no receipt to return, reapply is blocked, and
+    # the reconciliation proves the applied effect.
+    restarted = _restart(provider, store)
+    assert await restarted.prior_effect(change) is None
+    observation = await restarted.reconcile(change)
+    assert observation.effect_status is WriteBackEffectStatus.APPLIED
+    assert observation.retry_allowed is False
+    with pytest.raises(ReapplyBlockedError) as raised:
+        await restarted.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "REAPPLY_BLOCKED"
+    assert len(provider.calls) == 1
+    assert len(provider.writes) == 1
+
+    # An incomplete lookup (timeout, lost response) blocks reapply and
+    # the reconciliation stays uncertain.
+    store = _LedgerStore()
+    await _Ledger(store).create(change)
+    provider = _FakeProvider(
+        effect_key_lookup=EffectKeyLookup(complete=False, commits=())
+    )
+    transport = _transport(provider, profile, ledger=_Ledger(store))
+    with pytest.raises(ReapplyBlockedError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "REAPPLY_BLOCKED"
+    assert provider.calls == []
+    observation = await transport.reconcile(change)
+    assert observation.effect_status is WriteBackEffectStatus.OUTCOME_UNCERTAIN
+    assert observation.retry_allowed is False
+
+    # An ambiguous lookup (two commits for the key) is uncertain too.
+    provider = _FakeProvider(
+        effect_key_lookup=EffectKeyLookup(
+            complete=True,
+            commits=(
+                EffectKeyCommit(
+                    revision="e" * 40, parent_revision=change.base_source_version
+                ),
+                EffectKeyCommit(
+                    revision="f" * 40, parent_revision=change.base_source_version
+                ),
+            ),
+        )
+    )
+    transport = _transport(provider, profile, ledger=_Ledger(store))
+    with pytest.raises(ReapplyBlockedError):
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert provider.calls == []
+    observation = await transport.reconcile(change)
+    assert observation.effect_status is WriteBackEffectStatus.OUTCOME_UNCERTAIN
+
+    # A commit whose parent is not the bound base proves nothing:
+    # matching bytes alone never prove causality.
+    provider = _FakeProvider(
+        effect_key_lookup=EffectKeyLookup(
+            complete=True,
+            commits=(EffectKeyCommit(revision="f" * 40, parent_revision="c" * 40),),
+        )
+    )
+    transport = _transport(provider, profile, ledger=_Ledger(store))
+    with pytest.raises(ReapplyBlockedError):
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert provider.calls == []
+    observation = await transport.reconcile(change)
+    assert observation.effect_status is WriteBackEffectStatus.OUTCOME_UNCERTAIN

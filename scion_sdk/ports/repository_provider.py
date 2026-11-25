@@ -17,6 +17,12 @@ The port also offers ``read_file`` (SCION-GOVERNED-WRITEBACK-R004.10):
 an independent read of one file at an exact revision, used only as
 readback after a commit — never as the mutation response body and never
 from an ingestion cache.
+
+The port also offers ``find_commit_by_effect_key``
+(SCION-GOVERNED-WRITEBACK-R004.11): a search of the target ref history
+for the ``Effect-Key`` trailer of one idempotency key. A commit found
+there whose parent is the approved base revision proves the prior
+effect; matching bytes alone never prove causality.
 """
 
 from __future__ import annotations
@@ -27,6 +33,8 @@ from typing import ClassVar, Literal, Protocol, runtime_checkable
 __all__ = [
     "BaseStale",
     "ConditionalCommit",
+    "EffectKeyCommit",
+    "EffectKeyLookup",
     "FileStateMismatch",
     "RepositoryBusinessRuleRejected",
     "RepositoryCommitReceipt",
@@ -105,6 +113,27 @@ class RepositoryFileRead:
 
 
 @dataclass(frozen=True, slots=True)
+class EffectKeyCommit:
+    """One target-ref-history commit that records the searched Effect-Key trailer."""
+
+    revision: str
+    parent_revision: str
+
+
+@dataclass(frozen=True, slots=True)
+class EffectKeyLookup:
+    """One complete or incomplete search for an Effect-Key trailer.
+
+    ``complete`` is false when the search could not be established (a
+    timeout or lost response); ``commits`` lists every target-ref-history
+    commit whose message records the searched key.
+    """
+
+    complete: bool
+    commits: tuple[EffectKeyCommit, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class RepositoryCommitReceipt:
     """The provider's acknowledgement of one applied commit.
 
@@ -137,4 +166,10 @@ class RepositoryProviderPort(Protocol):
         self, repository_id: str, revision: str, relative_path: str
     ) -> RepositoryFileRead | None:
         """Read one file independently at an exact revision, or None if absent."""
+        ...
+
+    async def find_commit_by_effect_key(
+        self, repository_id: str, target_ref: str, key: str
+    ) -> EffectKeyLookup:
+        """Search the target ref history for the commits of one Effect-Key trailer."""
         ...

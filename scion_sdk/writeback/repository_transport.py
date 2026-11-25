@@ -13,7 +13,12 @@ fallback. Success needs the provider effect, the independent readback at
 the actual effect revision and the durable attempt receipt joined by one
 transaction: the receipt binds the canonical request, the approval, the
 audit reservation and the provider effect revision, and a failed receipt
-persistence establishes no success.
+persistence establishes no success. After a restart the effect is
+recovered from the target ref history: a commit with the original
+``Effect-Key`` trailer whose parent is the bound base revision proves the
+prior effect, and only a complete empty lookup admits a fresh conditional
+attempt — an incomplete, ambiguous or unproven lookup blocks reapply and
+leaves the reconciliation uncertain.
 """
 
 from __future__ import annotations
@@ -81,6 +86,7 @@ __all__ = [
     "ProviderLacksConditionalUpdateError",
     "ReadbackMismatchError",
     "ReadbackUnavailableError",
+    "ReapplyBlockedError",
     "ReceiptPersistenceFailedError",
     "ReceiptUnboundError",
     "RepositoryAdapterProfile",
@@ -143,6 +149,12 @@ class ProviderLacksConditionalUpdateError(RepositoryEffectRefused):
     """The provider cannot offer the atomic commit condition and is not admitted."""
 
     code = "PROVIDER_LACKS_CONDITIONAL_UPDATE"
+
+
+class ReapplyBlockedError(RepositoryEffectRefused):
+    """A proven prior effect, or an uncertain effect-key lookup, blocks reapply."""
+
+    code = "REAPPLY_BLOCKED"
 
 
 class ReadbackMismatchError(RepositoryEffectRefused, OutcomeUncertainError):
@@ -420,11 +432,33 @@ class RepositoryEffectTransport:
     async def prior_effect(
         self, change_set: SourceChangeSet
     ) -> WriteBackAttempt | None:
-        """Return an exactly matching prior effect or reject key reuse."""
+        """Return an exactly matching prior effect or reject key reuse.
+
+        The in-memory effect is returned as recorded. After a restart the
+        prior effect is recovered from the durable ledger, but only while
+        the target ref history proves it: a complete lookup whose single
+        commit has the bound base revision as parent. A proven effect
+        without a durable receipt returns nothing — reapply is blocked by
+        the fresh-attempt gate and reconciliation proves the effect — and
+        an incomplete, ambiguous or unproven lookup proves nothing.
+        """
         effect = self._effects.get(change_set.idempotency_key)
-        if effect is None:
+        if effect is not None:
+            return check_prior_effect(effect, change_set)
+        intent = self._intent(change_set)
+        lookup = await self._provider.find_commit_by_effect_key(
+            intent.repository_id, intent.target_ref, change_set.idempotency_key
+        )
+        if not lookup.complete or len(lookup.commits) > 1:
             return None
-        return check_prior_effect(effect, change_set)
+        if not lookup.commits:
+            return None
+        if lookup.commits[0].parent_revision != intent.base_revision:
+            return None
+        durable = await self._durable_attempt(change_set)
+        if durable is None:
+            return None
+        return check_prior_effect(durable, change_set)
 
     async def apply(
         self, change_set: SourceChangeSet, expected_version: str
@@ -495,16 +529,23 @@ class RepositoryEffectTransport:
             raise ApprovalBindingMismatchError(
                 "audit reservation is not bound to this approved effect"
             )
+        await self._ensure_fresh_attempt(change_set, intent)
         return await self._commit(change_set, intent, reservation)
 
     async def reconcile(self, change_set: SourceChangeSet) -> ReconciliationObservation:
-        """Report the recorded effect, or no effect, at the bound base state."""
+        """Report the recorded effect, or no effect, at the bound base state.
+
+        After a restart the decision comes from the target ref history: a
+        commit with the original ``Effect-Key`` trailer whose parent is
+        the bound base revision proves the applied effect, a complete
+        empty lookup proves no effect, and every other outcome stays
+        uncertain.
+        """
         self._require_base(change_set)
-        status = (
-            WriteBackEffectStatus.APPLIED
-            if change_set.idempotency_key in self._effects
-            else WriteBackEffectStatus.NO_EFFECT
-        )
+        if change_set.idempotency_key in self._effects:
+            status = WriteBackEffectStatus.APPLIED
+        else:
+            status = await self._reconcile_status(change_set)
         return reconciliation_observation(
             change_set,
             SourceSnapshot(source_version=self._base_revision, fields={}),
@@ -639,6 +680,75 @@ class RepositoryEffectTransport:
             intent.require_readback(read.data, read.executable)
         except ValueError as exc:
             raise ReadbackMismatchError(str(exc)) from exc
+
+    async def _ensure_fresh_attempt(
+        self, change_set: SourceChangeSet, intent: RepositorySourceEffectIntent
+    ) -> None:
+        """Only a complete empty effect-key lookup admits a fresh attempt.
+
+        A target-ref-history commit with the original ``Effect-Key``
+        trailer proves that a prior effect already landed (when its
+        parent is the bound base revision) or that the key history is
+        ambiguous; an incomplete lookup proves nothing. Every non-empty
+        or incomplete lookup blocks the fresh conditional attempt.
+        """
+        lookup = await self._provider.find_commit_by_effect_key(
+            intent.repository_id, intent.target_ref, change_set.idempotency_key
+        )
+        if not lookup.complete:
+            raise ReapplyBlockedError("incomplete effect-key lookup blocks reapply")
+        if len(lookup.commits) > 1:
+            raise ReapplyBlockedError("ambiguous effect-key lookup blocks reapply")
+        if lookup.commits:
+            if lookup.commits[0].parent_revision == intent.base_revision:
+                raise ReapplyBlockedError(
+                    "a proven prior effect already landed for this key"
+                )
+            raise ReapplyBlockedError(
+                "an effect-key commit is not proven for the bound base revision"
+            )
+
+    async def _reconcile_status(
+        self, change_set: SourceChangeSet
+    ) -> WriteBackEffectStatus:
+        """Restart reconciliation from the target ref history."""
+        intent = self._intent(change_set)
+        lookup = await self._provider.find_commit_by_effect_key(
+            intent.repository_id, intent.target_ref, change_set.idempotency_key
+        )
+        if not lookup.complete or len(lookup.commits) > 1:
+            return WriteBackEffectStatus.OUTCOME_UNCERTAIN
+        if not lookup.commits:
+            return WriteBackEffectStatus.NO_EFFECT
+        proven = lookup.commits[0].parent_revision == intent.base_revision
+        return (
+            WriteBackEffectStatus.APPLIED
+            if proven
+            else WriteBackEffectStatus.OUTCOME_UNCERTAIN
+        )
+
+    async def _durable_attempt(
+        self, change_set: SourceChangeSet
+    ) -> WriteBackAttempt | None:
+        """The durable attempt receipt bound to this change set, if recorded."""
+        page = await self._ledger.receipts(
+            change_set.tenant_id, change_set.change_set_id
+        )
+        for record in page.receipts:
+            if record.receipt_kind != "attempt":
+                continue
+            if (
+                record.receipt.idempotency_key != change_set.idempotency_key
+                or record.receipt.change_set_digest != change_set.change_set_digest
+            ):
+                continue
+            return WriteBackAttempt(
+                **{
+                    name: getattr(record.receipt, name)
+                    for name in WriteBackAttempt.model_fields
+                }
+            )
+        return None
 
     def _require_base(self, change_set: SourceChangeSet) -> None:
         if change_set.base_source_version != self._base_revision:
