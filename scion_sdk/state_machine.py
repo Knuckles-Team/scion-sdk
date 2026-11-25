@@ -21,7 +21,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from scion_sdk.surface_contracts import CORE_NS
+from scion_sdk.ontology_namespaces import CORE_NAMESPACE
 from scion_sdk.transition_refused import MachineTransitionRefused
 
 __all__ = [
@@ -200,7 +200,7 @@ def render_state_machine_turtle(descriptor: StateMachineDescriptor) -> str:
     lines = [
         f"# State machine {name} (SCION-GOVERNED-WRITEBACK-R007.4).",
         f"@prefix m:    <{MACHINE_NS}{name}#> .",
-        f"@prefix kg:   <{CORE_NS}> .",
+        f"@prefix kg:   <{CORE_NAMESPACE}> .",
         "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
         "@prefix owl:  <http://www.w3.org/2002/07/owl#> .",
         "",

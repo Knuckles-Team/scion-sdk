@@ -23,9 +23,16 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
+
+from scion_sdk.state_machine import (
+    StateMachineDescriptor,
+    next_state,
+)
+from scion_sdk.transition_refused import MachineTransitionRefused
 
 from ._env import run_sync_isolated, runtime_dir
 from ._governed_common import PATCH_FIELD
@@ -51,6 +58,7 @@ __all__ = [
     "GovernedOutcome",
     "SinkGrant",
     "SinkWriteBackTransport",
+    "StaleRecordRefused",
     "build_change_set",
     "execute_governed",
     "ledger_root",
@@ -76,6 +84,34 @@ class GovernedOutcome:
             "authorization_mode": self.change_set.authorization.mode.value,
             "effect_status": effect,
         }
+
+
+class StaleRecordRefused(MachineTransitionRefused):
+    """The proposal's read of the external record is stale.
+
+    Carries ``record_version`` (the version the proposal read the state
+    from) and ``expected_version`` (the change set's base version). Its
+    code is ``STATE_STALE``.
+    """
+
+    code: ClassVar[str] = "STATE_STALE"
+
+    def __init__(
+        self,
+        machine: str,
+        state: str,
+        event: str,
+        record_version: str,
+        expected_version: str,
+    ) -> None:
+        self.record_version = record_version
+        self.expected_version = expected_version
+        super().__init__(
+            state,
+            event,
+            f"record version {record_version} does not match {expected_version}",
+            machine=machine,
+        )
 
 
 def ledger_root() -> Path:
@@ -120,6 +156,46 @@ def _preview(transport: SinkWriteBackTransport, change_set: SourceChangeSet) -> 
         )
 
 
+def _require_state_machine(ops: dict[str, Any], change_set: SourceChangeSet) -> None:
+    """Refuse a stale or illegal record transition before any sink call.
+
+    A proposal without a descriptor passes unchanged. With one,
+    ``ops["_state_machine"]`` carries the declared
+    :class:`~scion_sdk.state_machine.StateMachineDescriptor`, the
+    proposal's read of the external record (state, event and guard
+    facts) and the record version that read was taken from. A record
+    version that does not match the change set's base version is
+    stale; an event the machine does not declare, or whose guard does
+    not hold, is refused by ``next_state`` itself.
+    """
+    machine = ops.get("_state_machine")
+    if machine is None:
+        return
+    descriptor = machine.get("descriptor")
+    state = machine.get("state")
+    event = machine.get("event")
+    record_version = machine.get("record_version")
+    facts = machine.get("facts") or {}
+    if (
+        not isinstance(descriptor, StateMachineDescriptor)
+        or not isinstance(state, str)
+        or not isinstance(event, str)
+        or not isinstance(record_version, str)
+        or not record_version
+        or not isinstance(facts, Mapping)
+    ):
+        raise ValueError("state-machine payload is incomplete")
+    if record_version != change_set.base_source_version:
+        raise StaleRecordRefused(
+            descriptor.name,
+            state,
+            event,
+            record_version,
+            change_set.base_source_version,
+        )
+    next_state(descriptor, state, event, facts)
+
+
 def execute_governed(
     sink: WritebackSink,
     ctx: WritebackContext,
@@ -132,12 +208,17 @@ def execute_governed(
 ) -> GovernedOutcome:
     """Run one sink invocation through the SDK governed write-back contract.
 
+    A proposal carrying a state-machine descriptor is checked against the
+    machine first: a stale record version refuses with ``STATE_STALE`` and
+    an illegal transition with ``STATE_TRANSITION_REFUSED``. A proposal
+    without a descriptor passes unchanged.
+
     Raises the sink's own error after the SDK records an uncertain outcome.
-    SDK refusals (expiry, scope, version, authorization, audit) raise
-    :class:`~scion_sdk.writeback.errors.WriteBackError` before any
-    live sink call.
+    SDK refusals (expiry, scope, version, authorization, audit, stale or
+    illegal record transition) raise before any live sink call.
     """
     change_set = build_change_set(grant, ops)
+    _require_state_machine(ops, change_set)
     transport = SinkWriteBackTransport(sink, ctx, ops)
     if dry_run:
         _preview(transport, change_set)

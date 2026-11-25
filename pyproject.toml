@@ -664,6 +664,7 @@ units = [
     "source_connectors",
     "streaming",
     "taxonomy",
+    "state_machine",
     "transports",
     "vendor_extractors",
     "writeback",
@@ -678,7 +679,6 @@ units = [
     "connector",
     "mcp",
     "sinks",
-    "state_machine",
     "surface_contracts",
 ]
 
