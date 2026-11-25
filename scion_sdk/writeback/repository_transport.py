@@ -52,6 +52,7 @@ from scion_sdk.writeback.dry_run_binding import (
 )
 from scion_sdk.writeback.errors import (
     ChangeSetValidationError,
+    OutcomeUncertainError,
     SourceVersionConflictError,
     WriteBackError,
 )
@@ -71,6 +72,8 @@ __all__ = [
     "PathOutOfScopeError",
     "PathUnsupportedKindError",
     "ProviderLacksConditionalUpdateError",
+    "ReadbackMismatchError",
+    "ReadbackUnavailableError",
     "RepositoryAdapterProfile",
     "RepositoryEffectRefused",
     "RepositoryEffectTransport",
@@ -131,6 +134,24 @@ class ProviderLacksConditionalUpdateError(RepositoryEffectRefused):
     """The provider cannot offer the atomic commit condition and is not admitted."""
 
     code = "PROVIDER_LACKS_CONDITIONAL_UPDATE"
+
+
+class ReadbackMismatchError(RepositoryEffectRefused, OutcomeUncertainError):
+    """The independent readback does not match the approved bytes or mode.
+
+    The commit may have landed; the outcome is uncertain, not successful.
+    """
+
+    code = "READBACK_MISMATCH"
+
+
+class ReadbackUnavailableError(RepositoryEffectRefused, OutcomeUncertainError):
+    """No independent read is available at the actual effect revision.
+
+    The commit may have landed; the outcome is uncertain, not successful.
+    """
+
+    code = "READBACK_UNAVAILABLE"
 
 
 class PathEscapesError(RepositoryEffectRefused):
@@ -507,6 +528,7 @@ class RepositoryEffectTransport:
             raise AdapterProfileIncompleteError(
                 "provider acknowledged a different business operation"
             )
+        await self._readback(intent, receipt.effect_revision)
         attempt = applied_attempt(
             change_set,
             pre_version=expected_version,
@@ -520,6 +542,27 @@ class RepositoryEffectTransport:
         )
         self._effects[change_set.idempotency_key] = attempt
         return attempt
+
+    async def _readback(
+        self, intent: RepositorySourceEffectIntent, effect_revision: str
+    ) -> None:
+        """Read the file independently at the actual effect revision.
+
+        The only readback source is the provider's ``read_file``: the
+        mutation response body and any ingestion cache are never used. A
+        mismatched or unavailable read refuses the effect as uncertain.
+        """
+        read = await self._provider.read_file(
+            intent.repository_id, effect_revision, intent.relative_path
+        )
+        if read is None:
+            raise ReadbackUnavailableError(
+                f"no independent read of {intent.relative_path!r} at {effect_revision}"
+            )
+        try:
+            intent.require_readback(read.data, read.executable)
+        except ValueError as exc:
+            raise ReadbackMismatchError(str(exc)) from exc
 
     def _require_base(self, change_set: SourceChangeSet) -> None:
         if change_set.base_source_version != self._base_revision:

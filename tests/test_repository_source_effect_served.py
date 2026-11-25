@@ -1,14 +1,15 @@
 """The repository effect served through the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7 and R004.8: the adapter
-profile must be complete and bound by the intent's contract digest, the
-provider's business-rule rejection is final for the request, the write
-path resolves against the trusted scope and the immutable base tree at
-preview and effect time with no normalization, the audit-bound effect
-matches the exact preview, the recorded approval, the contract pin, the
-source version and the audit reservation before the provider is called,
-and the commit itself is conditional — no force option, no unconditional
-fallback.
+SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7, R004.8 and R004.10: the
+adapter profile must be complete and bound by the intent's contract
+digest, the provider's business-rule rejection is final for the request,
+the write path resolves against the trusted scope and the immutable base
+tree at preview and effect time with no normalization, the audit-bound
+effect matches the exact preview, the recorded approval, the contract
+pin, the source version and the audit reservation before the provider is
+called, the commit itself is conditional — no force option, no
+unconditional fallback — and success needs an independent readback at
+the actual effect revision.
 """
 
 from __future__ import annotations
@@ -27,11 +28,13 @@ from scion_sdk.ports.repository_provider import (
     FileStateMismatch,
     RepositoryBusinessRuleRejected,
     RepositoryCommitReceipt,
+    RepositoryFileRead,
     RepositoryProviderPort,
     RepositoryTreeKind,
 )
 from scion_sdk.ports.writeback_ledger import WriteBackLedger
 from scion_sdk.testing.writeback import make_writeback_fixture
+from scion_sdk.writeback.errors import OutcomeUncertainError
 from scion_sdk.writeback.repository_effect import (
     RepositorySourceEffectIntent,
     RepositorySourceEffectRequest,
@@ -47,6 +50,8 @@ from scion_sdk.writeback.repository_transport import (
     PathOutOfScopeError,
     PathUnsupportedKindError,
     ProviderLacksConditionalUpdateError,
+    ReadbackMismatchError,
+    ReadbackUnavailableError,
     RepositoryAdapterProfile,
     RepositoryEffectRefused,
     RepositoryEffectTransport,
@@ -78,6 +83,10 @@ SCOPE_CONFIG = {
 }
 
 
+#: The independent read serves the committed bytes and mode.
+_READBACK_DEFAULT = object()
+
+
 class _FakeProvider:
     """A business-API provider whose every call is recorded."""
 
@@ -89,9 +98,12 @@ class _FakeProvider:
         file_mismatch: bool = False,
         conditional: bool = True,
         operation: str = "repository.commit_file",
+        readback: object = _READBACK_DEFAULT,
+        readback_executable: bool | None = None,
     ) -> None:
         self.calls: list[ConditionalCommit] = []
         self.writes: list[ConditionalCommit] = []
+        self.reads: list[tuple[str, str, str]] = []
         self.storage_calls: list[str] = []
         self.last_receipt: RepositoryCommitReceipt | None = None
         self.supports_conditional_update = conditional
@@ -99,6 +111,24 @@ class _FakeProvider:
         self._base_stale = base_stale
         self._file_mismatch = file_mismatch
         self._operation = operation
+        self._readback = readback
+        self._readback_executable = readback_executable
+
+    async def read_file(
+        self, repository_id: str, revision: str, relative_path: str
+    ) -> RepositoryFileRead | None:
+        self.reads.append((repository_id, revision, relative_path))
+        if self._readback is None:
+            return None
+        if self._readback is not _READBACK_DEFAULT:
+            return RepositoryFileRead(data=self._readback, executable=False)
+        commit = self.writes[-1]
+        executable = (
+            self._readback_executable
+            if self._readback_executable is not None
+            else commit.executable
+        )
+        return RepositoryFileRead(data=commit.payload, executable=executable)
 
     async def commit_file(
         self, operation: str, commit: ConditionalCommit
@@ -594,3 +624,64 @@ async def test_conditional_effect() -> None:
     assert attempt.post_source_version == "e" * 40
     assert len(provider.calls) == 1
     assert len(provider.writes) == 1
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.10")
+async def test_independent_readback() -> None:
+    profile = RepositoryAdapterProfile(
+        business_api_operation="repository.commit_file", max_payload_size=4096
+    )
+    request = _request(profile, path="nested/file.bin", action="update")
+    change = request.change_set
+    reservation = _reservation(change)
+
+    # A separate provider read at the actual effect revision with matching
+    # bytes establishes the applied effect.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, reservation
+    )
+    assert attempt.effect_status is WriteBackEffectStatus.APPLIED
+    assert provider.reads == [(_REPOSITORY_ID, "e" * 40, "nested/file.bin")]
+    assert await transport.prior_effect(change) == attempt
+    assert len(provider.writes) == 1
+
+    # Corrupted readback: the mutation happened, but no success receipt and
+    # no second mutation.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider(readback=b"corrupted bytes\n")
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(ReadbackMismatchError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "READBACK_MISMATCH"
+    assert isinstance(raised.value, OutcomeUncertainError)
+    assert provider.reads == [(_REPOSITORY_ID, "e" * 40, "nested/file.bin")]
+    assert len(provider.writes) == 1
+    assert len(provider.calls) == 1
+    assert await transport.prior_effect(change) is None
+
+    # A mode that no longer matches the approved intent is a mismatch too.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider(readback_executable=True)
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(ReadbackMismatchError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "READBACK_MISMATCH"
+    assert await transport.prior_effect(change) is None
+
+    # An unavailable read is never a success.
+    ledger = _Ledger()
+    await ledger.create(change)
+    provider = _FakeProvider(readback=None)
+    transport = _transport(provider, profile, ledger=ledger)
+    with pytest.raises(ReadbackUnavailableError) as raised:
+        await transport.apply_reserved(change, change.base_source_version, reservation)
+    assert raised.value.code == "READBACK_UNAVAILABLE"
+    assert isinstance(raised.value, OutcomeUncertainError)
+    assert len(provider.writes) == 1
+    assert await transport.prior_effect(change) is None
