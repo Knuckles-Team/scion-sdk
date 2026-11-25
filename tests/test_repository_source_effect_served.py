@@ -1,33 +1,52 @@
 """The repository effect served through the provider's business API.
 
-SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7, R004.8, R004.9 and
-R004.10: the adapter profile must be complete and bound by the intent's
-contract digest, the provider's business-rule rejection is final for the
-request, the write path resolves against the trusted scope and the
+SCION-GOVERNED-WRITEBACK-R004.4, R004.6, R004.7, R004.8, R004.9, R004.10,
+R004.11 and R004.18: the adapter profile must be complete and bound by the
+intent's contract digest, the provider's business-rule rejection is final
+for the request, the write path resolves against the trusted scope and the
 immutable base tree at preview and effect time with no normalization, the
 audit-bound effect matches the exact preview, the recorded approval, the
 contract pin, the source version and the audit reservation before the
 provider is called, the commit itself is conditional — no force option,
 no unconditional fallback — success needs an independent readback at the
 actual effect revision, the durable attempt receipt binds the canonical
-request, approval, reservation and provider effect revision, and after
-a restart only a complete effect-key lookup whose commit is parented at
-the bound base admits the prior effect — incomplete, ambiguous or
-unproven lookups block reapply and stay uncertain.
+request, approval, reservation and provider effect revision, after a
+restart only a complete effect-key lookup whose commit is parented at the
+bound base admits the prior effect — incomplete, ambiguous or unproven
+lookups block reapply and stay uncertain — and a durable dry-run receipt
+is preview evidence: it never establishes an effect and the restart's
+durable attempt lookup returns only the apply attempt. R004.12 traces the
+whole served journey through the connector entrypoint over the live
+engine and a disposable provider: missing composition, provider
+capability, durable authority or trusted configuration leaves the
+operation unavailable with OPERATION_UNAVAILABLE.
 """
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
+import json
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 import pytest
+from fastmcp import Client, FastMCP
+from live_engine import (  # noqa: F401
+    GRAPH,
+    PRINCIPAL,
+    TENANT,
+    live_ingest,
+    scoped_client,
+)
 from medulla.generated.write_back import (
     ReconciliationObservation,
     ReconciliationReceipt,
     SourceChangeSet,
     WriteBackAttempt,
+    WriteBackAttemptKind,
     WriteBackEffectStatus,
     WriteBackOutcome,
     WriteBackReceipt,
@@ -51,8 +70,12 @@ from scion_sdk.ports.repository_provider import (
     RepositoryTreeKind,
 )
 from scion_sdk.ports.writeback_ledger import WriteBackLedger
+from scion_sdk.ports.writeback_models import DryRunObservation
 from scion_sdk.testing.writeback import make_writeback_fixture
+from scion_sdk.testing.writeback_audit import InMemoryAuditReservation
+from scion_sdk.writeback.connector import DurableWritableConnector
 from scion_sdk.writeback.errors import OutcomeUncertainError, WriteBackPersistenceError
+from scion_sdk.writeback.medulla import MedullaWriteBackLedger
 from scion_sdk.writeback.repository_effect import (
     RepositorySourceEffectIntent,
     RepositorySourceEffectReceipt,
@@ -357,6 +380,153 @@ def _transport(
         base_tree=BASE_TREE,
         ledger=ledger or _Ledger(),
     )
+
+
+#: The engine's hashed actor identity for the live principal.
+_LIVE_ACTOR = "principal:sha256:" + hashlib.sha256(PRINCIPAL.encode()).hexdigest()
+_WRITE_BACK_SCOPES = ["connector:write-back", "connector:write-back-read"]
+
+
+@dataclass(frozen=True)
+class _ServedEnvironment:
+    """The seams the connector composes at its served write-back entrypoint.
+
+    A missing provider leaves the composition unavailable; a missing
+    graph ledger leaves the durable authority unavailable. The
+    provider's conditional capability and the trusted write scopes are
+    rechecked on every call, before any provider invocation.
+    """
+
+    provider: _FakeProvider | None
+    ledger: MedullaWriteBackLedger | None
+    scope_config: Mapping[str, Any]
+    profile: RepositoryAdapterProfile
+    connector_id: str
+    audit: InMemoryAuditReservation
+
+    @property
+    def transport(self) -> RepositoryEffectTransport | None:
+        if self.provider is None or self.ledger is None:
+            return None
+        return RepositoryEffectTransport(
+            self.provider,
+            self.profile,
+            scopes_from_trusted_config(self.scope_config),
+            repository_id=_REPOSITORY_ID,
+            base_revision=_BASE_REVISION,
+            base_tree=BASE_TREE,
+            ledger=self.ledger,
+        )
+
+    @property
+    def connector(self) -> DurableWritableConnector | None:
+        if self.transport is None:
+            return None
+        return DurableWritableConnector(
+            self.connector_id, self.transport, self.ledger, audit=self.audit
+        )
+
+
+def _unavailable_reason(
+    env: _ServedEnvironment, intent: RepositorySourceEffectIntent
+) -> str | None:
+    """The first missing seam at the served entrypoint, if any."""
+    if env.provider is None:
+        return "missing composition"
+    if env.ledger is None:
+        return "missing durable authority"
+    if not env.provider.supports_conditional_update:
+        return "missing provider capability"
+    scopes = scopes_from_trusted_config(env.scope_config)
+    if not any(
+        scope.repository_id == intent.repository_id
+        and intent.target_ref in scope.target_refs
+        for scope in scopes
+    ):
+        return "missing trusted configuration"
+    return None
+
+
+def _dry_run_attempt(
+    change_set: SourceChangeSet, observation: DryRunObservation
+) -> WriteBackAttempt:
+    """The durable preview receipt the composition appends after a preview."""
+    return WriteBackAttempt(
+        tenant_id=change_set.tenant_id,
+        change_set_id=change_set.change_set_id,
+        change_set_digest=change_set.change_set_digest,
+        idempotency_key=change_set.idempotency_key,
+        kind=WriteBackAttemptKind.DRY_RUN,
+        input_digest=change_set.authorization.input_digest,
+        output_digest=change_set.authorization.output_digest,
+        pre_source_version=observation.source_version,
+        post_source_version=observation.source_version,
+        applied_field_digest=change_set.patch_digest(),
+        outcome=WriteBackOutcome.DRY_RUN_READY,
+        effect_status=WriteBackEffectStatus.NO_EFFECT,
+        connector_observation_digest=hashlib.sha256(
+            json.dumps(observation.model_dump(mode="json"), sort_keys=True).encode()
+        ).hexdigest(),
+        provenance_digest=hashlib.sha256(
+            json.dumps(
+                change_set.field_provenance, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest(),
+    )
+
+
+def _register_writeback_tool(server: FastMCP, env: _ServedEnvironment) -> None:
+    """The connector's governed write-back tool, as served over tools/call."""
+
+    @server.tool()
+    async def repository_writeback(
+        action: str, change_set: SourceChangeSet
+    ) -> dict[str, Any]:
+        """Register, preview, apply or reconcile one governed repository effect."""
+        intent = RepositorySourceEffectIntent.model_validate(
+            change_set.desired_patch["repository_effect"]
+        )
+        reason = _unavailable_reason(env, intent)
+        if reason is not None:
+            return {
+                "status": "unavailable",
+                "code": "OPERATION_UNAVAILABLE",
+                "reason": reason,
+            }
+        connector = env.connector
+        ledger = env.ledger
+        assert connector is not None and ledger is not None
+        try:
+            if action == "register":
+                created = await connector.register(change_set)
+                return {
+                    "status": "registered",
+                    "change_set_id": created.change_set_id,
+                    "change_set_digest": created.change_set_digest,
+                }
+            if action == "preview":
+                observation = await connector.dry_run(change_set)
+                receipt = await ledger.record_attempt(
+                    _dry_run_attempt(change_set, observation)
+                )
+                return {
+                    "status": "previewed",
+                    "receipt_id": receipt.receipt_id,
+                    "observation": observation.model_dump(mode="json"),
+                }
+            if action == "apply":
+                attempt = await connector.apply(change_set)
+                return {"status": "applied", "attempt": attempt.model_dump(mode="json")}
+            if action == "reconcile":
+                result = await connector.reconcile(change_set)
+                return {
+                    "status": "reconciled",
+                    "effect_status": result.effect_status.value,
+                    "retry_allowed": result.retry_allowed,
+                }
+        except RepositoryEffectRefused as exc:
+            return {"status": "refused", "code": exc.code}
+        return {"status": "refused", "code": "UNKNOWN_ACTION"}
 
 
 @pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.4")
@@ -1021,3 +1191,309 @@ async def test_restart_reconcile() -> None:
     assert provider.calls == []
     observation = await transport.reconcile(change)
     assert observation.effect_status is WriteBackEffectStatus.OUTCOME_UNCERTAIN
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.18")
+async def test_durable_attempt_skips_preview_receipts() -> None:
+    """The restart's durable attempt lookup returns only the apply attempt."""
+    profile = RepositoryAdapterProfile(
+        business_api_operation="repository.commit_file", max_payload_size=4096
+    )
+    request = _request(profile, path="nested/file.bin", action="update")
+    change = request.change_set
+
+    def dry_run_attempt() -> WriteBackAttempt:
+        return WriteBackAttempt(
+            tenant_id=change.tenant_id,
+            change_set_id=change.change_set_id,
+            change_set_digest=change.change_set_digest,
+            idempotency_key=change.idempotency_key,
+            kind=WriteBackAttemptKind.DRY_RUN,
+            input_digest=change.authorization.input_digest,
+            output_digest=change.authorization.output_digest,
+            pre_source_version=change.base_source_version,
+            post_source_version=change.base_source_version,
+            applied_field_digest=change.patch_digest(),
+            outcome=WriteBackOutcome.DRY_RUN_READY,
+            effect_status=WriteBackEffectStatus.NO_EFFECT,
+            connector_observation_digest="5" * 64,
+            provenance_digest="6" * 64,
+        )
+
+    # The recorded preview precedes the effect in the durable stream.
+    store = _LedgerStore()
+    ledger = _Ledger(store)
+    await ledger.create(change)
+    await ledger.record_attempt(dry_run_attempt())
+    provider = _FakeProvider()
+    transport = _transport(provider, profile, ledger=ledger)
+    attempt = await transport.apply_reserved(
+        change, change.base_source_version, _reservation(change)
+    )
+    assert attempt.effect_status is WriteBackEffectStatus.APPLIED
+
+    # Restart over the same store: the preview-first stream still yields
+    # only the apply attempt as the durable effect.
+    restarted = _transport(provider, profile, ledger=_Ledger(store))
+    assert await restarted.prior_effect(change) == attempt
+
+    # A preview without any effect proves nothing: even a lookup that
+    # proves a commit returns no durable attempt.
+    store = _LedgerStore()
+    await _Ledger(store).create(change)
+    await _Ledger(store).record_attempt(dry_run_attempt())
+    provider = _FakeProvider(
+        effect_key_lookup=EffectKeyLookup(
+            complete=True,
+            commits=(
+                EffectKeyCommit(
+                    revision="e" * 40, parent_revision=change.base_source_version
+                ),
+            ),
+        )
+    )
+    transport = _transport(provider, profile, ledger=_Ledger(store))
+    assert await transport.prior_effect(change) is None
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.12")
+def test_served_journey(live_ingest) -> None:  # noqa: F811
+    """The served repository effect journey over the live engine."""
+    summary = asyncio.run_coroutine_threadsafe(
+        _served_journey(), live_ingest._loop
+    ).result(120)
+    assert summary["writes"] == 1
+    assert summary["reads"] == 1
+    assert summary["denied"] == {"status": "refused", "code": "BUSINESS_RULE_REJECTED"}
+    assert summary["unavailable"] == ["OPERATION_UNAVAILABLE"] * 4
+    assert summary["restart_identical"] is True
+    assert summary["receipt_projection"] is True
+
+
+async def _served_journey() -> dict[str, Any]:
+    """Register, preview, apply, replay, restart — through the served tool."""
+    engine = await scoped_client(_WRITE_BACK_SCOPES)
+    try:
+        profile = RepositoryAdapterProfile(
+            business_api_operation="repository.commit_file", max_payload_size=4096
+        )
+        request = _request(profile, path="nested/file.bin", action="update")
+        change = request.change_set.model_copy(
+            update={"tenant_id": TENANT, "actor": _LIVE_ACTOR}
+        )
+        change = change.model_copy(
+            update={"change_set_digest": change.canonical_digest()}
+        )
+        change_json = change.model_dump(mode="json")
+
+        provider = _FakeProvider()
+        env = _ServedEnvironment(
+            provider=provider,
+            ledger=MedullaWriteBackLedger(engine, graph=GRAPH),
+            scope_config=SCOPE_CONFIG,
+            profile=profile,
+            connector_id=change.connector_id,
+            audit=InMemoryAuditReservation(),
+        )
+        server = FastMCP("repository")
+        _register_writeback_tool(server, env)
+        async with Client(server) as client:
+
+            async def call(action: str) -> dict[str, Any]:
+                result = await client.call_tool(
+                    "repository_writeback",
+                    {"action": action, "change_set": change_json},
+                )
+                return result.structured_content
+
+            # Recorded approval: the durable change set carries the
+            # approved authorization decision.
+            registered = await call("register")
+            assert registered["status"] == "registered"
+            assert registered["change_set_digest"] == change.change_set_digest
+
+            # Preview without mutation: the durable preview receipt is the
+            # stream's first receipt; the provider is not called.
+            previewed = await call("preview")
+            assert previewed["status"] == "previewed"
+            assert previewed["observation"]["changed_fields"] == ["repository_effect"]
+            assert provider.calls == []
+
+            # Apply once: one conditional commit and one independent
+            # readback at the effect revision.
+            applied = await call("apply")
+            assert applied["status"] == "applied"
+            assert applied["attempt"]["effect_status"] == "applied"
+            assert applied["attempt"]["post_source_version"] == "e" * 40
+            assert len(provider.writes) == 1
+            assert len(provider.reads) == 1
+
+            # Replay through the same entrypoint: the identical durable
+            # result, zero new mutations.
+            replay = await call("apply")
+            assert replay["attempt"] == applied["attempt"]
+            assert len(provider.writes) == 1
+            assert len(provider.calls) == 1
+
+        # Restart: a fresh composition over the same provider and a fresh
+        # engine client reads the identical durable result.
+        engine2 = await scoped_client(_WRITE_BACK_SCOPES)
+        try:
+            restarted_env = _ServedEnvironment(
+                provider=provider,
+                ledger=MedullaWriteBackLedger(engine2, graph=GRAPH),
+                scope_config=SCOPE_CONFIG,
+                profile=profile,
+                connector_id=change.connector_id,
+                audit=InMemoryAuditReservation(),
+            )
+            restarted_server = FastMCP("repository-restart")
+            _register_writeback_tool(restarted_server, restarted_env)
+            async with Client(restarted_server) as restart_client:
+                result = await restart_client.call_tool(
+                    "repository_writeback",
+                    {"action": "apply", "change_set": change_json},
+                )
+                restarted = result.structured_content
+            assert restarted["status"] == "applied"
+            assert restarted["attempt"] == applied["attempt"]
+            assert len(provider.writes) == 1
+            assert len(provider.calls) == 1
+
+            # A separate client fetches the graph attempt: the identical
+            # durable receipt projection.
+            engine3 = await scoped_client(_WRITE_BACK_SCOPES)
+            try:
+                page = await MedullaWriteBackLedger(engine3, graph=GRAPH).receipts(
+                    change.tenant_id, change.change_set_id
+                )
+            finally:
+                await engine3.close()
+            attempts = [
+                record.receipt
+                for record in page.receipts
+                if record.receipt_kind == "attempt"
+                and record.receipt.kind is WriteBackAttemptKind.APPLY
+            ]
+            assert len(attempts) == 1
+            projection = WriteBackAttempt(
+                **{
+                    name: getattr(attempts[0], name)
+                    for name in WriteBackAttempt.model_fields
+                }
+            ).model_dump(mode="json")
+        finally:
+            await engine2.close()
+
+        # Zero-effect negative at the provider boundary: the vendor
+        # business rule is final; no effect and no apply receipt.
+        negative = change.model_copy(
+            update={
+                "change_set_id": "change-negative",
+                "idempotency_key": "write:negative",
+            }
+        )
+        negative = negative.model_copy(
+            update={"change_set_digest": negative.canonical_digest()}
+        )
+        negative_json = negative.model_dump(mode="json")
+        rejected_provider = _FakeProvider(reject=True)
+        rejected_env = _ServedEnvironment(
+            provider=rejected_provider,
+            ledger=MedullaWriteBackLedger(engine, graph=GRAPH),
+            scope_config=SCOPE_CONFIG,
+            profile=profile,
+            connector_id=change.connector_id,
+            audit=InMemoryAuditReservation(),
+        )
+        rejected_server = FastMCP("repository-rejected")
+        _register_writeback_tool(rejected_server, rejected_env)
+        async with Client(rejected_server) as rejected_client:
+            for action in ("register", "preview", "apply"):
+                result = await rejected_client.call_tool(
+                    "repository_writeback",
+                    {"action": action, "change_set": negative_json},
+                )
+                denied = result.structured_content
+        assert denied == {"status": "refused", "code": "BUSINESS_RULE_REJECTED"}
+        assert len(rejected_provider.writes) == 0
+        assert len(rejected_provider.calls) == 1
+        page = await MedullaWriteBackLedger(engine, graph=GRAPH).receipts(
+            negative.tenant_id, negative.change_set_id
+        )
+        assert [record.receipt_kind for record in page.receipts] == ["attempt"]
+        assert page.receipts[0].receipt.kind is WriteBackAttemptKind.DRY_RUN
+
+        # Missing composition, provider capability, durable authority or
+        # trusted configuration: the operation is unavailable, nothing
+        # reaches the provider.
+        unavailable_envs = (
+            (
+                _ServedEnvironment(
+                    provider=None,
+                    ledger=None,
+                    scope_config=SCOPE_CONFIG,
+                    profile=profile,
+                    connector_id=change.connector_id,
+                    audit=InMemoryAuditReservation(),
+                ),
+                "missing composition",
+            ),
+            (
+                _ServedEnvironment(
+                    provider=_FakeProvider(),
+                    ledger=None,
+                    scope_config=SCOPE_CONFIG,
+                    profile=profile,
+                    connector_id=change.connector_id,
+                    audit=InMemoryAuditReservation(),
+                ),
+                "missing durable authority",
+            ),
+            (
+                _ServedEnvironment(
+                    provider=_FakeProvider(conditional=False),
+                    ledger=MedullaWriteBackLedger(engine, graph=GRAPH),
+                    scope_config=SCOPE_CONFIG,
+                    profile=profile,
+                    connector_id=change.connector_id,
+                    audit=InMemoryAuditReservation(),
+                ),
+                "missing provider capability",
+            ),
+            (
+                _ServedEnvironment(
+                    provider=_FakeProvider(),
+                    ledger=MedullaWriteBackLedger(engine, graph=GRAPH),
+                    scope_config={},
+                    profile=profile,
+                    connector_id=change.connector_id,
+                    audit=InMemoryAuditReservation(),
+                ),
+                "missing trusted configuration",
+            ),
+        )
+        unavailable = []
+        for index, (env, reason) in enumerate(unavailable_envs):
+            server = FastMCP(f"repository-unavailable-{index}")
+            _register_writeback_tool(server, env)
+            async with Client(server) as client:
+                result = await client.call_tool(
+                    "repository_writeback",
+                    {"action": "apply", "change_set": change_json},
+                )
+                body = result.structured_content
+            assert body["status"] == "unavailable"
+            assert body["reason"] == reason
+            unavailable.append(body["code"])
+
+        return {
+            "writes": len(provider.writes),
+            "reads": len(provider.reads),
+            "denied": denied,
+            "unavailable": unavailable,
+            "restart_identical": restarted["attempt"] == applied["attempt"],
+            "receipt_projection": projection == applied["attempt"],
+        }
+    finally:
+        await engine.close()

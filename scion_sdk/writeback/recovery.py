@@ -40,6 +40,11 @@ _ATTEMPT_STATES = {
         WriteBackEffectStatus.OUTCOME_UNCERTAIN,
     ): _ReceiptRecoveryState.UNCERTAIN,
 }
+_DRY_RUN_OUTCOMES = (
+    WriteBackOutcome.DRY_RUN_READY,
+    WriteBackOutcome.CONFLICT,
+    WriteBackOutcome.REJECTED,
+)
 _RECONCILIATION_STATES = {
     WriteBackEffectStatus.NO_EFFECT: _ReceiptRecoveryState.RETRYABLE,
     WriteBackEffectStatus.APPLIED: _ReceiptRecoveryState.APPLIED,
@@ -84,7 +89,7 @@ def _consume_page(
                 "EG receipt sequence is not strictly increasing"
             )
         last_sequence = record.receipt.sequence
-        next_state = _record_state(change_set, record)
+        next_state = _record_state(change_set, record, state=state)
         if state is _ReceiptRecoveryState.APPLIED and next_state is not state:
             raise WriteBackPersistenceError(
                 "durable applied receipt cannot be reversed"
@@ -94,14 +99,23 @@ def _consume_page(
 
 
 def _record_state(
-    change_set: SourceChangeSet, record: WriteBackReceiptRecord
+    change_set: SourceChangeSet,
+    record: WriteBackReceiptRecord,
+    *,
+    state: _ReceiptRecoveryState,
 ) -> _ReceiptRecoveryState:
     if isinstance(record, WriteBackReceiptRecordAttempt):
-        _require_attempt_receipt(change_set, record.receipt)
-        return _ATTEMPT_STATES[(record.receipt.outcome, record.receipt.effect_status)]
-    receipt = record.receipt
-    _require_reconciliation_receipt(change_set, receipt)
-    return _RECONCILIATION_STATES[receipt.effect_status]
+        attempt_receipt = record.receipt
+        _require_attempt_receipt(change_set, attempt_receipt)
+        if attempt_receipt.kind is WriteBackAttemptKind.DRY_RUN:
+            # A dry-run receipt is durably recorded preview evidence: it
+            # binds the approved preview but establishes no source effect,
+            # so the recovery state it is replayed under is unchanged.
+            return state
+        return _ATTEMPT_STATES[(attempt_receipt.outcome, attempt_receipt.effect_status)]
+    reconciliation_receipt = record.receipt
+    _require_reconciliation_receipt(change_set, reconciliation_receipt)
+    return _RECONCILIATION_STATES[reconciliation_receipt.effect_status]
 
 
 def _require_attempt_receipt(
@@ -122,16 +136,17 @@ def _require_attempt_receipt(
         and receipt.input_digest == change_set.authorization.input_digest
         and receipt.output_digest == change_set.authorization.output_digest
         and receipt.applied_field_digest == change_set.patch_digest()
-        and receipt.kind is WriteBackAttemptKind.APPLY
     )
-    if (
-        not binding_matches
-        or (
-            receipt.outcome,
-            receipt.effect_status,
+    if receipt.kind is WriteBackAttemptKind.DRY_RUN:
+        # The engine's durable state machine admits a dry-run receipt only
+        # with these outcome/effect combinations; a dry-run receipt that
+        # reports an effect is a binding mismatch.
+        valid = receipt.effect_status is WriteBackEffectStatus.NO_EFFECT and (
+            receipt.outcome in _DRY_RUN_OUTCOMES
         )
-        not in _ATTEMPT_STATES
-    ):
+    else:
+        valid = (receipt.outcome, receipt.effect_status) in _ATTEMPT_STATES
+    if not binding_matches or not valid:
         raise WriteBackPersistenceError("durable attempt receipt binding mismatch")
 
 

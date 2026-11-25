@@ -11,7 +11,9 @@ from medulla.generated.write_back import (
     ReconciliationReceipt,
     SourceChangeSet,
     WriteBackAttempt,
+    WriteBackAttemptKind,
     WriteBackEffectStatus,
+    WriteBackOutcome,
     WriteBackReceipt,
     WriteBackReceiptPage,
     WriteBackReceiptRecord,
@@ -206,6 +208,94 @@ async def _registered_with_uncertainty(
         fixture.change_set.idempotency_key, uncertainty
     )
     return _RestartableApply(fixture, ledger, audit, connector)
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R004.18")
+async def test_dry_run_receipt_is_preview_evidence() -> None:
+    """A durable dry-run receipt binds the preview without establishing an effect."""
+    fixture = make_writeback_fixture()
+    change_set = fixture.change_set
+
+    def dry_run_attempt(cs: SourceChangeSet, **changes: Any) -> WriteBackAttempt:
+        attempt = WriteBackAttempt(
+            tenant_id=cs.tenant_id,
+            change_set_id=cs.change_set_id,
+            change_set_digest=cs.change_set_digest,
+            idempotency_key=cs.idempotency_key,
+            kind=WriteBackAttemptKind.DRY_RUN,
+            input_digest=cs.authorization.input_digest,
+            output_digest=cs.authorization.output_digest,
+            pre_source_version=cs.base_source_version,
+            post_source_version=cs.base_source_version,
+            applied_field_digest=cs.patch_digest(),
+            outcome=WriteBackOutcome.DRY_RUN_READY,
+            effect_status=WriteBackEffectStatus.NO_EFFECT,
+            connector_observation_digest="5" * 64,
+            provenance_digest="6" * 64,
+        )
+        return attempt.model_copy(update=changes)
+
+    # The recorded preview alone establishes no effect: a fresh apply is
+    # admitted over it, and restart reads the applied durable result.
+    ledger = MemoryLedger()
+    await ledger.create(change_set)
+    await ledger.record_attempt(dry_run_attempt(change_set))
+    connector = _reference_connector(fixture, ledger, InMemoryAuditReservation())
+    applied = await connector.apply(change_set)
+    assert applied.effect_status is WriteBackEffectStatus.APPLIED
+    assert fixture.transport.attempts == 1
+    restarted = _reference_connector(fixture, ledger, InMemoryAuditReservation())
+    assert await restarted.apply(change_set) == applied
+    assert fixture.transport.attempts == 1
+
+    # A dry-run receipt that reports an effect is a durable mismatch.
+    fixture = make_writeback_fixture()
+    ledger = MemoryLedger()
+    await ledger.create(fixture.change_set)
+    await ledger.record_attempt(
+        dry_run_attempt(
+            fixture.change_set,
+            outcome=WriteBackOutcome.APPLIED,
+            effect_status=WriteBackEffectStatus.APPLIED,
+        )
+    )
+    connector = _reference_connector(fixture, ledger, InMemoryAuditReservation())
+    with pytest.raises(WriteBackPersistenceError, match="binding mismatch"):
+        await connector.apply(fixture.change_set)
+    assert fixture.transport.attempts == 0
+
+    # A dry-run receipt that breaks the authorization binding is one too.
+    fixture = make_writeback_fixture()
+    ledger = MemoryLedger()
+    await ledger.create(fixture.change_set)
+    await ledger.record_attempt(
+        dry_run_attempt(fixture.change_set, input_digest="9" * 64)
+    )
+    connector = _reference_connector(fixture, ledger, InMemoryAuditReservation())
+    with pytest.raises(WriteBackPersistenceError, match="binding mismatch"):
+        await connector.apply(fixture.change_set)
+    assert fixture.transport.attempts == 0
+
+    # The preview does not mask an uncertain apply: the restart state is
+    # still uncertain and must reconcile before any retry.
+    fixture = make_writeback_fixture()
+    ledger = MemoryLedger()
+    await ledger.create(fixture.change_set)
+    await ledger.record_attempt(dry_run_attempt(fixture.change_set))
+    connector = _reference_connector(fixture, ledger, InMemoryAuditReservation())
+    fixture.transport.inject_uncertainty(
+        fixture.change_set.idempotency_key, FixtureUncertainty.AFTER_EFFECT
+    )
+    uncertain = await connector.apply(fixture.change_set)
+    assert uncertain.effect_status is WriteBackEffectStatus.OUTCOME_UNCERTAIN
+    restarted = _reference_connector(fixture, ledger, InMemoryAuditReservation())
+    with pytest.raises(ReconciliationRequiredError):
+        await restarted.apply(fixture.change_set)
+    reconciled = await restarted.reconcile(fixture.change_set)
+    assert reconciled.effect_status is WriteBackEffectStatus.APPLIED
+    retried = await restarted.apply(fixture.change_set)
+    assert retried.effect_status is WriteBackEffectStatus.APPLIED
+    assert fixture.transport.attempts == 1
 
 
 @pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R005")
