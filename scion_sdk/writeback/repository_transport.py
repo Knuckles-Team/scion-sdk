@@ -24,12 +24,14 @@ from medulla.generated.write_back import (
 )
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError
 
+from scion_sdk.ports.audit_reservation import AuditReservation
 from scion_sdk.ports.repository_provider import (
     RepositoryBusinessRuleRejected,
     RepositoryCommitRequest,
     RepositoryProviderPort,
     RepositoryTreeKind,
 )
+from scion_sdk.ports.writeback_ledger import WriteBackLedger
 from scion_sdk.ports.writeback_models import DryRunObservation, SourceSnapshot
 from scion_sdk.writeback._contract_json import _decode_contract_json
 from scion_sdk.writeback._transport_common import (
@@ -38,6 +40,10 @@ from scion_sdk.writeback._transport_common import (
     digest,
     preview_observation,
     reconciliation_observation,
+)
+from scion_sdk.writeback.dry_run_binding import (
+    expected_preview,
+    require_preview_binding,
 )
 from scion_sdk.writeback.errors import (
     ChangeSetValidationError,
@@ -52,6 +58,7 @@ from scion_sdk.writeback.repository_effect import (
 __all__ = [
     "REPOSITORY_WRITE_SCOPES",
     "AdapterProfileIncompleteError",
+    "ApprovalBindingMismatchError",
     "BusinessRuleRejectedError",
     "PathEscapesError",
     "PathOutOfScopeError",
@@ -86,6 +93,12 @@ class AdapterProfileIncompleteError(RepositoryEffectRefused):
     """The adapter profile is blank or not bound by the intent's contract digest."""
 
     code = "ADAPTER_PROFILE_INCOMPLETE"
+
+
+class ApprovalBindingMismatchError(RepositoryEffectRefused):
+    """The pre-effect approval binding does not match the recorded approval."""
+
+    code = "APPROVAL_BINDING_MISMATCH"
 
 
 class BusinessRuleRejectedError(RepositoryEffectRefused):
@@ -295,8 +308,10 @@ class RepositoryEffectTransport:
 
     One transport binds one repository: the trusted write scopes, the pinned
     adapter profile and the immutable tree at the bound base revision.
-    Scope and profile refusals raise before any provider call; the provider
-    is invoked through ``commit_file`` and nothing else.
+    The effect is audit-bound: ``apply_reserved`` matches the exact preview,
+    the recorded approval, the contract pin, the source version and the
+    audit reservation before the provider is invoked, and every other path
+    refuses without a provider call.
     """
 
     def __init__(
@@ -308,6 +323,7 @@ class RepositoryEffectTransport:
         repository_id: str,
         base_revision: str,
         base_tree: Mapping[str, RepositoryTreeKind],
+        ledger: WriteBackLedger,
     ) -> None:
         if not repository_id or not base_revision:
             raise ValueError("repository_id and base_revision must not be empty")
@@ -317,6 +333,7 @@ class RepositoryEffectTransport:
         self._repository_id = repository_id
         self._base_revision = base_revision
         self._base_tree = base_tree
+        self._ledger = ledger
         self._effects: dict[str, WriteBackAttempt] = {}
 
     async def read_current(self, change_set: SourceChangeSet) -> SourceSnapshot:
@@ -344,13 +361,95 @@ class RepositoryEffectTransport:
     async def apply(
         self, change_set: SourceChangeSet, expected_version: str
     ) -> WriteBackAttempt:
-        """Resolve scope and profile, then commit through the business API."""
-        self._require_base(change_set)
-        if expected_version != self._base_revision:
-            raise SourceVersionConflictError(
-                "expected version does not match the bound base revision"
-            )
+        """Refuse: the repository effect is audit-bound and has no reservation."""
+        raise ApprovalBindingMismatchError(
+            "repository effects require the bound audit reservation before the provider call"
+        )
+
+    async def apply_reserved(
+        self,
+        change_set: SourceChangeSet,
+        expected_version: str,
+        reservation: AuditReservation,
+    ) -> WriteBackAttempt:
+        """Match the five pre-effect bindings, then commit through the API.
+
+        The transport matches, in order, the exact preview at the current
+        source state, the recorded approval (the durable change set
+        registered for this effect), the contract pin (the digest
+        recomputed over the in-flight copy), the source version and the
+        audit reservation. A substituted actor, connector, target, path,
+        base, bytes, digest, policy or approval refuses with
+        ``APPROVAL_BINDING_MISMATCH`` and no mutation.
+        """
         intent = self._intent(change_set)
+        current = SourceSnapshot(source_version=self._base_revision, fields={})
+        try:
+            require_preview_binding(
+                change_set,
+                current,
+                expected_preview(change_set, current),
+                preview_observation(change_set, current),
+            )
+        except ChangeSetValidationError as exc:
+            raise ApprovalBindingMismatchError(
+                "preview does not bind the exact approved effect"
+            ) from exc
+        durable = await self._ledger.get(change_set.tenant_id, change_set.change_set_id)
+        if durable is None:
+            raise ApprovalBindingMismatchError(
+                "no recorded approval exists for this effect"
+            )
+        if durable != change_set:
+            raise ApprovalBindingMismatchError(
+                "recorded approval does not bind this effect"
+            )
+        if durable.change_set_digest != durable.canonical_digest():
+            raise ApprovalBindingMismatchError(
+                "recorded approval is not canonically digested"
+            )
+        if change_set.change_set_digest != change_set.canonical_digest():
+            raise ApprovalBindingMismatchError(
+                "contract pin no longer covers the complete effect"
+            )
+        if (
+            expected_version != change_set.base_source_version
+            or change_set.base_source_version != self._base_revision
+        ):
+            raise ApprovalBindingMismatchError(
+                "source version does not match the approved base"
+            )
+        if (
+            not reservation.reservation_id.strip()
+            or reservation.change_set_digest != change_set.change_set_digest
+            or reservation.effect_key != change_set.idempotency_key
+        ):
+            raise ApprovalBindingMismatchError(
+                "audit reservation is not bound to this approved effect"
+            )
+        return await self._commit(change_set, intent, expected_version)
+
+    async def reconcile(self, change_set: SourceChangeSet) -> ReconciliationObservation:
+        """Report the recorded effect, or no effect, at the bound base state."""
+        self._require_base(change_set)
+        status = (
+            WriteBackEffectStatus.APPLIED
+            if change_set.idempotency_key in self._effects
+            else WriteBackEffectStatus.NO_EFFECT
+        )
+        return reconciliation_observation(
+            change_set,
+            SourceSnapshot(source_version=self._base_revision, fields={}),
+            status,
+        )
+
+    async def _commit(
+        self,
+        change_set: SourceChangeSet,
+        intent: RepositorySourceEffectIntent,
+        expected_version: str,
+    ) -> WriteBackAttempt:
+        """Profile and scope checks, then the single provider business call."""
         self._require_profile(intent)
         self._resolve(intent)
         commit = RepositoryCommitRequest(
@@ -376,7 +475,7 @@ class RepositoryEffectTransport:
             )
         attempt = applied_attempt(
             change_set,
-            pre_version=self._base_revision,
+            pre_version=expected_version,
             post_version=receipt.effect_revision,
             observation_digest=digest(
                 {
@@ -387,20 +486,6 @@ class RepositoryEffectTransport:
         )
         self._effects[change_set.idempotency_key] = attempt
         return attempt
-
-    async def reconcile(self, change_set: SourceChangeSet) -> ReconciliationObservation:
-        """Report the recorded effect, or no effect, at the bound base state."""
-        self._require_base(change_set)
-        status = (
-            WriteBackEffectStatus.APPLIED
-            if change_set.idempotency_key in self._effects
-            else WriteBackEffectStatus.NO_EFFECT
-        )
-        return reconciliation_observation(
-            change_set,
-            SourceSnapshot(source_version=self._base_revision, fields={}),
-            status,
-        )
 
     def _require_base(self, change_set: SourceChangeSet) -> None:
         if change_set.base_source_version != self._base_revision:
