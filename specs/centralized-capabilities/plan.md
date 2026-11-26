@@ -122,6 +122,9 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 | `SCION-CENTRALIZED-CAPABILITIES-R040` | Optional dependencies come from SDK extras | `SCION-CENTRALIZED-CAPABILITIES-R040` | `pyproject.toml` `[project.optional-dependencies]` | pipelines `sdk-conformance` (`PIPE-GATES-R013`): a direct pin of a package an SDK extra carries. Warns; `--strict` blocks. SDK test `test_every_extra_has_a_row`. |
 | `SCION-CENTRALIZED-CAPABILITIES-R042` | Object store and file-share backends | `SCION-CENTRALIZED-CAPABILITIES-R042` | `storage/base.py`, `storage/config.py`, `storage/factory.py`, `storage/s3.py`, `storage/gcs.py`, `storage/azure_blob.py`, `storage/filesystem.py`, `storage/webdav.py`, extras `storage-s3`, `storage-gcs`, `storage-azure` | Unit tests `tests/storage/`. No connector scan. |
 | `SCION-CENTRALIZED-CAPABILITIES-R043` | Artifact exchange for tools that produce files | `SCION-CENTRALIZED-CAPABILITIES-R043` | `exchange/config.py`, `exchange/staging.py`, `exchange/inputs.py`, `exchange/publish.py`, `exchange/results.py`, `exchange/lineage.py`, `exchange/run.py` | Unit and served tests `tests/exchange/`. No connector scan. |
+| `SCION-CENTRALIZED-CAPABILITIES-R052` | SPARQL endpoint client | `SCION-CENTRALIZED-CAPABILITIES-R052` | `transports/sparql.py`, `transports/_rdf_http.py` | Unit and loopback tests `tests/test_sparql_client.py`. No connector scan. |
+| `SCION-CENTRALIZED-CAPABILITIES-R054` | Entity reconciliation client | `SCION-CENTRALIZED-CAPABILITIES-R054` | `transports/reconciliation.py` | Unit and loopback tests `tests/test_reconciliation_client.py`. No connector scan. |
+| `SCION-CENTRALIZED-CAPABILITIES-R055` | Linked Data resource client | `SCION-CENTRALIZED-CAPABILITIES-R055` | `transports/linked_data.py` | Unit and loopback tests `tests/test_linked_data_client.py`. No connector scan. |
 
 ### Architecture
 

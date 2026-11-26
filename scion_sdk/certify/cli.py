@@ -36,6 +36,10 @@ from scion_sdk.certify.certification import (
     CertificationReport,
     certify_connector,
 )
+from scion_sdk.certify.evidence import (
+    EvidenceRefused,
+    EvidenceSubmitter,
+)
 from scion_sdk.certify.options import _oidc_auth, _positive_timeout
 from scion_sdk.credentials.references import SecretReferenceError
 from scion_sdk.credentials.resolution import resolve_secret_reference
@@ -201,8 +205,24 @@ async def _run_certification(args: argparse.Namespace) -> CertificationReport:
         )
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Run ``connector-certify``; returns the process exit code."""
+def _submit_evidence(report: CertificationReport, submit: EvidenceSubmitter) -> bool:
+    """Submit a passing report as engine evidence; ``False`` when refused."""
+    try:
+        anyio.run(submit, report)
+    except EvidenceRefused as refusal:
+        _logger.error("conformance evidence refused: %s", refusal.reason)
+        return False
+    return True
+
+
+def main(
+    argv: Sequence[str] | None = None, *, evidence: EvidenceSubmitter | None = None
+) -> int:
+    """Run ``connector-certify``; returns the process exit code.
+
+    ``evidence`` is the release job's engine-bound submitter. A passing report
+    is submitted through it; a refused submission exits ``2``.
+    """
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
     _configure_logging()
     try:
@@ -215,5 +235,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         document = json.dumps(report.document(), indent=2, sort_keys=True)
         args.report.write_text(document + "\n", encoding="utf-8")
     if not report.listed:
+        return 2
+    if (
+        report.passed
+        and evidence is not None
+        and not _submit_evidence(report, evidence)
+    ):
         return 2
     return 0 if report.passed else 1
