@@ -3,7 +3,7 @@
 A fixture connector serves the declared ``fixture_list_items`` tool in process.
 The runner calls it through a real MCP client session, submits to the real
 engine ``SourceIngest`` method, keeps its checkpoint in real shared-scope KV,
-and the engine's governed refusal of an unmapped record type is observed:
+and the refusal of a connector with no accepted contract is observed:
 no node is written and no record digest advances.
 """
 
@@ -16,6 +16,7 @@ from typing import Any
 
 import pytest
 from fastmcp import Client, FastMCP
+from ingest_fakes import CONTRACT
 from live_engine import live_ingest, scoped_client  # noqa: F401 - pytest fixture
 
 from scion_sdk.ingest.service import KnowledgeIngest
@@ -82,6 +83,7 @@ async def _run(ingest: KnowledgeIngest) -> tuple[Any, Any, list[dict[str, Any]],
             session=_ClientSession(client),
             ingest=ingest,
             checkpoints=KvSourceCheckpoints(engine),
+            contract=CONTRACT,
         )
         first = await runner.sync(SPEC, job_id="job-1")
         second = await runner.sync(SPEC, job_id="job-2")
@@ -101,11 +103,11 @@ def test_sync_runner_against_real_engine(
     first, second, rows, state = asyncio.run_coroutine_threadsafe(
         _run(live_ingest), loop
     ).result(120)
-    # The engine admits source records only under an imported connector pack
-    # mapping (connector:<connector>#mappings/<record type>). This
-    # fixture connector imported none, so the engine refuses the batch.
+    # Ingest runs only under a contract the engine accepted. This fixture
+    # connector imported no pack, so the SDK refuses before any write
+    # (contract_not_accepted carries no engine code).
     assert first.state == "failed" and first.reason == "ingest_refused", first
-    assert first.engine_code == "UNKNOWN_MAPPING_REFERENCE", first
+    assert first.engine_code is None, first
     assert first.submitted == 0 and first.records_seen == 3
     assert second.state == "failed" and second.unchanged == 0, second
     assert rows == [], rows

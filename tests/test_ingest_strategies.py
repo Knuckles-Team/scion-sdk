@@ -10,6 +10,7 @@ from typing import Any
 import anyio
 import pytest
 from fastmcp import Client, FastMCP
+from ingest_fakes import bind
 
 from scion_sdk.connector_hooks import RegistrationContext
 from scion_sdk.ingest import (
@@ -32,7 +33,7 @@ from scion_sdk.ingest import (
 )
 from scion_sdk.ingest.tools import INGEST_TOOL_TAGS
 
-BINDING = IngestBinding(connector="demo-mcp", stream="demo")
+BINDING = bind("demo-mcp", "demo")
 
 
 def _context(mcp: FastMCP) -> RegistrationContext:

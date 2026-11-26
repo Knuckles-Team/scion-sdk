@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from ingest_fakes import bind
 
 from scion_sdk.ingest import ChangeSet, Document, IngestBinding
 from scion_sdk.ingest.request import build_request
@@ -35,9 +36,9 @@ def _payload(binding: IngestBinding, source_uri: str) -> dict:
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.26")
 def test_citable_fields_keep_public_urls_and_nothing_else() -> None:
-    binding = IngestBinding(
-        connector="webarchiver-mcp",
-        stream="web_page",
+    binding = bind(
+        "webarchiver-mcp",
+        "web_page",
         citable_fields=frozenset({"source_uri", "canonical_url"}),
     )
     payload = _payload(binding, PAGE)
@@ -46,9 +47,7 @@ def test_citable_fields_keep_public_urls_and_nothing_else() -> None:
     # A location field the binding does not cite stays redacted.
     assert payload["endpoint_url"] == "[REDACTED_LOCATION]"
     # The default binding still redacts every location field.
-    default = _payload(
-        IngestBinding(connector="webarchiver-mcp", stream="web_page"), PAGE
-    )
+    default = _payload(bind("webarchiver-mcp", "web_page"), PAGE)
     assert default["source_uri"] == "[REDACTED_LOCATION]"
 
 

@@ -9,7 +9,7 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from ingest_fakes import SinkBackedEngine
+from ingest_fakes import CONTRACT_DIGEST, SinkBackedEngine, bind
 from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
@@ -18,11 +18,11 @@ from medulla.generated.source_ingestion import (
 )
 
 from scion_sdk.ingest import (
+    AcceptedContract,
     ChangeSet,
     Document,
     Entity,
     EntityRef,
-    IngestBinding,
     IngestConflictError,
     IngestError,
     IngestUnavailableError,
@@ -50,7 +50,7 @@ from scion_sdk.ingest.transport import (
 )
 from scion_sdk.testing.sinks import InMemorySink
 
-BINDING = IngestBinding(connector="demo-mcp", stream="demo")
+BINDING = bind("demo-mcp", "demo")
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.33")
@@ -139,8 +139,8 @@ def uninstalled() -> Iterator[None]:
 def test_change_set_maps_to_exact_declared_references() -> None:
     request = build_request(BINDING, _changes(), previous=None)
     assert [r.mapping_reference for r in request.records] == [
-        "connector:demo-mcp#mappings/Query",
-        "connector:demo-mcp#mappings/Document",
+        "contract:demo-mcp#Query",
+        "contract:demo-mcp#Document",
     ]
     assert request.records[0].payload == {"text": "q"}
     document = request.records[1].payload
@@ -178,7 +178,7 @@ def test_properties_are_sanitized_but_identities_are_not() -> None:
         "id": "10.0.0.9",
     }
     assert request.relationships[0].properties == {"note": "[REDACTED_EMAIL]"}
-    raw = IngestBinding(connector="demo-mcp", stream="demo", sanitize=False)
+    raw = bind("demo-mcp", "demo", sanitize=False)
     assert build_request(raw, changes, previous=None).records[0].payload["rdata"] == (
         "10.0.0.9"
     )
@@ -199,7 +199,7 @@ def test_relationship_source_type_is_never_guessed() -> None:
 
 
 def test_malformed_change_sets_fail_before_io() -> None:
-    raw = IngestBinding(connector="demo-mcp", stream="demo", sanitize=False)
+    raw = bind("demo-mcp", "demo", sanitize=False)
     with pytest.raises(IngestError, match="JSON"):
         build_request(
             raw,
@@ -213,7 +213,7 @@ def test_malformed_change_sets_fail_before_io() -> None:
     with pytest.raises(ValueError, match="live_ids"):
         ChangeSet(mode=SourceIngestionMode.RECONCILE)
     with pytest.raises(ValueError, match="stream"):
-        IngestBinding(connector="demo-mcp", stream=" ")
+        bind("demo-mcp", " ")
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004")
@@ -253,7 +253,7 @@ async def test_media_bytes_go_to_blob_storage_first() -> None:
     assert transport.blobs == {digest: b"\x89PNG"}
     (record,) = transport.requests[0].records
     assert record.record_id == f"blob:{digest}"
-    assert record.mapping_reference.endswith("#mappings/MediaAsset")
+    assert record.mapping_reference.endswith("#MediaAsset")
     assert record.payload == dict(media_entity(BINDING, asset, digest).properties)
     with pytest.raises(IngestError, match="no bytes"):
         await KnowledgeIngest(transport).submit(
@@ -401,8 +401,15 @@ class _GeneratedClient:
         return (await self.sink.submit(request)).model_dump(mode="json")
 
 
+class _AcceptingTransport(MedullaIngestTransport):
+    """The generated transport whose engine accepted the test contract."""
+
+    async def accepted_contract(self, connector: str) -> AcceptedContract | None:
+        return AcceptedContract(CONTRACT_DIGEST)
+
+
 async def test_medulla_transport_uses_the_generated_contract() -> None:
-    transport = MedullaIngestTransport(_GeneratedClient())
+    transport = _AcceptingTransport(_GeneratedClient())
     assert isinstance(transport, IngestTransport)
     receipt = await KnowledgeIngest(transport).submit(BINDING, _changes())
     assert receipt.affected_count == 2
@@ -422,7 +429,7 @@ async def test_medulla_transport_stores_media_via_the_client_blob_api() -> None:
     commits end to end through ``KnowledgeIngest``.
     """
     client = _GeneratedClient()
-    transport = MedullaIngestTransport(client)
+    transport = _AcceptingTransport(client)
     digest = await transport.store_blob(b"x")
     assert digest == hashlib.sha256(b"x").hexdigest()
     assert client.blob.stored == {digest: b"x"}
@@ -506,9 +513,7 @@ async def test_source_status_distinguishes_cursorless_checkpoint_from_empty() ->
     assert status.accepted_checkpoint is not None
     assert await KnowledgeIngest(Transport(present)).accepted_cursor(BINDING) is None
     with pytest.raises(IngestError):
-        await KnowledgeIngest(Transport(present)).source_status(
-            IngestBinding(connector="other", stream="demo")
-        )
+        await KnowledgeIngest(Transport(present)).source_status(bind("other", "demo"))
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.41")

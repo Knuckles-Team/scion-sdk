@@ -3,9 +3,14 @@
 A connector describes what it observed as a :class:`ChangeSet` and submits it
 with its :class:`IngestBinding`::
 
-    from scion_sdk.ingest import ChangeSet, Entity, IngestBinding, ingest_changes
+    from scion_sdk.ingest import (
+        ChangeSet,
+        ContractSource,
+        Entity,
+        ingest_changes,
+    )
 
-    BINDING = IngestBinding(connector="demo-mcp", stream="demo")
+    BINDING = ContractSource(digest=ACCEPTED_DIGEST).bind("demo-mcp", "demo")
     receipt = ingest_changes(BINDING, ChangeSet(entities=(Entity("demo:1", "Item"),)))
 
 The SDK maps the change set to one generated medulla ``SourceIngest``
@@ -59,6 +64,7 @@ from scion_sdk.ingest.mapping import (
 )
 from scion_sdk.ingest.model import (
     ChangeSet,
+    ContractSource,
     Document,
     Entity,
     EntityRef,
@@ -85,6 +91,7 @@ __all__ = [
     "ChangeSet",
     "ContractEvidence",
     "ContractNotAcceptedError",
+    "ContractSource",
     "CursorStrategy",
     "DeclarationError",
     "Document",

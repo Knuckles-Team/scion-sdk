@@ -50,6 +50,8 @@ from scion_sdk.mcp.upstreams.tagging import NamespaceTag
 if TYPE_CHECKING:
     from fastmcp import FastMCP
 
+    from scion_sdk.ingest.model import ContractSource
+
 __all__ = ["REGISTRY_SETTING_PREFIX", "attach_upstreams", "read_registry_settings"]
 
 REGISTRY_SETTING_PREFIX = "SCION_UPSTREAMS"
@@ -171,6 +173,8 @@ def _check_collisions(server: Any, declarations: Any) -> None:
 def attach_upstreams(
     server: FastMCP[Any],
     declarations: Sequence[UpstreamDecl],
+    *,
+    contract: ContractSource | None = None,
 ) -> UpstreamRegistry | None:
     """Mount the upstreams on ``server``; returns the registry, or ``None``.
 
@@ -201,7 +205,9 @@ def attach_upstreams(
         load_exchange_runtime,
     )
 
-    exchange = load_exchange_runtime(merged, getattr(server, "name", "") or "connector")
+    exchange = load_exchange_runtime(
+        merged, getattr(server, "name", "") or "connector", contract
+    )
     merged = tuple(bind_exchange_roots(decl, exchange) for decl in merged)
     knobs = read_registry_settings()
     registry = UpstreamRegistry(

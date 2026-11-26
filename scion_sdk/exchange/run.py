@@ -23,11 +23,16 @@ from scion_sdk.exchange.inputs import (
     is_input_reference,
     resolve_input,
 )
-from scion_sdk.exchange.lineage import StagedInput, record_lineage
+from scion_sdk.exchange.lineage import (
+    EXCHANGE_LINEAGE_FAILED,
+    StagedInput,
+    record_lineage,
+)
 from scion_sdk.exchange.publish import PublishContext, digest_file, publish_outputs
 from scion_sdk.exchange.results import attach_artifacts
 from scion_sdk.exchange.sinks import SinkBackends
 from scion_sdk.exchange.staging import RunStaging, run_id_from_meta
+from scion_sdk.ingest.model import ContractSource
 
 __all__ = ["ExchangeCall", "exchange_call", "prepare_arguments"]
 
@@ -39,6 +44,7 @@ class ExchangeCall:
     namespace: str
     tool: str
     connector: str
+    contract: ContractSource | None = None
     path_args: tuple[str, ...] = ("path", "dir", "out", "out_dir")
     caller: str = "anonymous"
 
@@ -146,8 +152,16 @@ async def exchange_call(
     )
     codes: list[str] = []
     if settings.lineage and report.artifacts:
-        code = await record_lineage(
-            report, stager.inputs, context, connector=spec.connector
+        code = (
+            EXCHANGE_LINEAGE_FAILED
+            if spec.contract is None
+            else await record_lineage(
+                report,
+                stager.inputs,
+                context,
+                connector=spec.connector,
+                contract=spec.contract,
+            )
         )
         if code:
             codes.append(code)

@@ -9,7 +9,7 @@ from typing import Any, Self
 
 from scion_sdk.ingest.errors import IngestError
 from scion_sdk.ingest.mapping import Mapper
-from scion_sdk.ingest.model import ChangeSet, IngestBinding
+from scion_sdk.ingest.model import ChangeSet, ContractSource, IngestBinding
 from scion_sdk.ingest.service import KnowledgeIngest
 
 _LOG = logging.getLogger(__name__)
@@ -47,6 +47,7 @@ class _StreamBase:
         cls,
         package: str,
         stream: str,
+        contract: ContractSource,
         mappers: Mapping[str, Mapper | Sequence[Mapper]] | None = None,
         *,
         documents_stream: str | None = None,
@@ -57,9 +58,11 @@ class _StreamBase:
 
         ``documents_stream`` names a second stream for documents.
         """
-        binding = IngestBinding.for_package(package, stream, **binding_fields)
+        binding = IngestBinding.for_package(package, stream, contract, **binding_fields)
         documents = (
-            IngestBinding.for_package(package, documents_stream, **binding_fields)
+            IngestBinding.for_package(
+                package, documents_stream, contract, **binding_fields
+            )
             if documents_stream
             else None
         )

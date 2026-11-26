@@ -6,12 +6,13 @@ import asyncio
 from typing import Any
 
 import pytest
-from live_engine import live_ingest, scoped_client  # noqa: F401
+from live_engine import TENANT, live_ingest, scoped_client  # noqa: F401
+from medulla.connector_pack import ConnectorPackClient
 from test_event_feeds import CONNECTOR
 from test_event_replay_checkpoint import _import_mapping
 
 from scion_sdk.ingest import (
-    IngestBinding,
+    ContractSource,
     KnowledgeIngest,
     RecordMap,
     SourceStream,
@@ -21,14 +22,19 @@ from scion_sdk.ingest.transport import MedullaIngestTransport
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.33")
 def test_empty_page_checkpoint_on_real_graph(live_ingest: Any) -> None:  # noqa: F811
-    binding = IngestBinding(connector=CONNECTOR, stream="empty-window")
-    stream = SourceStream(binding, {"item": RecordMap("Item", "demo:{_id}")})
-
     async def check() -> None:
         client = await scoped_client(["*"])
         try:
             await _import_mapping(client)
-            service = KnowledgeIngest(MedullaIngestTransport(client))
+            status = await ConnectorPackClient(client).status(
+                tenant_id=TENANT, connector=CONNECTOR
+            )
+            assert status.head is not None
+            binding = ContractSource(digest=str(status.head.pack_digest)).bind(
+                CONNECTOR, "empty-window"
+            )
+            stream = SourceStream(binding, {"item": RecordMap("Item", "demo:{_id}")})
+            service = KnowledgeIngest(MedullaIngestTransport(client, tenant_id=TENANT))
 
             async def fetch(
                 cursor: str | None,

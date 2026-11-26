@@ -14,6 +14,7 @@ from scion_sdk.ingest import (
     ChangeSet,
     ContractEvidence,
     ContractNotAcceptedError,
+    ContractSource,
     Entity,
     IngestBinding,
     IngestError,
@@ -155,5 +156,23 @@ async def test_transport_protocol_and_evidence_type() -> None:
     engine = _Engine(AcceptedContract(DIGEST, "3"))
     assert isinstance(engine, ContractTransport)
     await require_accepted(engine, _binding())
-    await require_accepted(object(), IngestBinding(connector="demo-mcp", stream="s"))
+    with pytest.raises(ContractNotAcceptedError):
+        await require_accepted(object(), _binding())
     assert ContractEvidence.__name__ == "ContractEvidence"
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R017.7")
+def test_binding_without_a_contract_is_refused() -> None:
+    for blank in ("", " "):
+        with pytest.raises(ValueError, match="contract_iri is required"):
+            _binding(contract_iri=blank)
+        with pytest.raises(ValueError, match="contract_digest is required"):
+            _binding(contract_digest=blank)
+        with pytest.raises(ValueError, match="needs its digest"):
+            ContractSource(digest=blank)
+    with pytest.raises(TypeError):
+        IngestBinding(connector="demo-mcp", stream="s")  # type: ignore[call-arg]
+    request = build_request(_binding(), _changes(), previous=None)
+    assert all(
+        record.mapping_reference.startswith(f"{IRI}#") for record in request.records
+    )

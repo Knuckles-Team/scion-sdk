@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 
 from scion_sdk.ingest import (
     ChangeSet,
+    ContractSource,
     Entity,
-    IngestBinding,
     Relationship,
     current_ingest,
 )
@@ -126,12 +126,13 @@ async def record_lineage(
     context: PublishContext,
     *,
     connector: str,
+    contract: ContractSource,
     ingest: KnowledgeIngest | None = None,
 ) -> str | None:
     """Submit the lineage change set; return a refusal code on failure, else ``None``."""
     try:
         service = ingest or current_ingest()
-        binding = IngestBinding(connector=connector, stream="artifacts")
+        binding = contract.bind(connector, "artifacts")
         await service.submit(binding, lineage_change_set(report, inputs, context))
     except Exception:  # lineage never fails the call; the code reports it
         _logger.warning(

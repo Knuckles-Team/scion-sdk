@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from ingest_fakes import AcceptingSink, bind
 from live_engine import live_ingest  # noqa: F401 - pytest fixture
 
 from scion_sdk.adapters.document_sources import (
@@ -30,7 +31,7 @@ from scion_sdk.adapters.document_sources import (
     ingest_documents,
 )
 from scion_sdk.contracts import CONNECTOR_UNCONFIGURED_MARKING, ExternalAccess
-from scion_sdk.ingest.model import Document, IngestBinding
+from scion_sdk.ingest.model import Document
 from scion_sdk.ingest.service import KnowledgeIngest
 from scion_sdk.testing.sinks import InMemorySink
 
@@ -75,7 +76,7 @@ def corpora(tmp_path: Path) -> Path:
 
 
 def _ingest() -> tuple[KnowledgeIngest, InMemorySink]:
-    sink = InMemorySink()
+    sink = AcceptingSink()
     return KnowledgeIngest(sink), sink  # type: ignore[arg-type]
 
 
@@ -109,7 +110,7 @@ def test_two_domain_packs_ingested_with_lineage(corpora: Path) -> None:
 
     async def run() -> None:
         for pack in (PILLARS, SKILLS):
-            binding = IngestBinding(connector="docs-mcp", stream=pack.name)
+            binding = bind("docs-mcp", pack.name)
             report = await ingest_documents(ingest, binding, _sources(corpora, pack))
             assert report.cursor_advanced and report.documents_failed == 0
 
@@ -143,7 +144,7 @@ def test_two_domain_packs_ingested_with_lineage(corpora: Path) -> None:
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.37")
 def test_incremental_change_updates_only_the_touched_file(corpora: Path) -> None:
     ingest, sink = _ingest()
-    binding = IngestBinding(connector="docs-mcp", stream="pillars")
+    binding = bind("docs-mcp", "pillars")
     source = _sources(corpora, PILLARS)
     sha1 = _git(corpora, "rev-parse", "HEAD")
     first = asyncio.run(ingest_documents(ingest, binding, source))
@@ -189,7 +190,7 @@ def test_filesystem_connector_ingestion_live_path(tmp_path: Path) -> None:
     outside.write_text("outside the root\n")
     (root / "link.md").symlink_to(outside)
     ingest, sink = _ingest()
-    binding = IngestBinding(connector="files-mcp", stream="files")
+    binding = bind("files-mcp", "files")
     source = FilesystemDocumentSource(
         root, access=ExternalAccess.public(), source_id="fs"
     )
@@ -220,7 +221,7 @@ def test_connector_ingestion_syncs_external_acl(tmp_path: Path) -> None:
         group_ids=["eng"], read_roles=["auditor"], markings=["pii"]
     )
     ingest, sink = _ingest()
-    binding = IngestBinding(connector="files-mcp", stream="acl")
+    binding = bind("files-mcp", "acl")
 
     asyncio.run(
         ingest_documents(
@@ -267,7 +268,7 @@ def test_governed_connector_applies_envelope_before_embedding() -> None:
     report = asyncio.run(
         ingest_documents(
             ingest,
-            IngestBinding(connector="gov-mcp", stream="docs"),
+            bind("gov-mcp", "docs"),
             _OneDocument(),
             governance=governance,
         )
@@ -299,7 +300,7 @@ def test_governed_connector_failure_blocks_document_and_checkpoint() -> None:
     report = asyncio.run(
         ingest_documents(
             ingest,
-            IngestBinding(connector="gov-mcp", stream="docs"),
+            bind("gov-mcp", "docs"),
             _OneDocument(),
             governance=_refuse,
         )
@@ -314,7 +315,7 @@ def test_governed_connector_failure_blocks_document_and_checkpoint() -> None:
 def test_governance_failure_leaves_real_engine_checkpoint(
     live_ingest: KnowledgeIngest,  # noqa: F811 - pytest fixture
 ) -> None:
-    binding = IngestBinding(connector="gov-mcp", stream="docs")
+    binding = bind("gov-mcp", "docs")
 
     async def run() -> tuple[Any, str | None]:
         report = await ingest_documents(

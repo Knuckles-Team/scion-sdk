@@ -18,6 +18,7 @@ from medulla.generated.source_ingestion import SourceIngestionMode
 
 __all__ = [
     "ChangeSet",
+    "ContractSource",
     "Document",
     "Entity",
     "EntityRef",
@@ -45,6 +46,46 @@ class NestedMapping:
 
 
 @dataclass(frozen=True)
+class ContractSource:
+    """The accepted ingest contract a connector's bindings run under.
+
+    The one place a connector names its contract: every binding built from it
+    carries ``contract:<connector>`` and the same digest, so a runner or a
+    lineage writer cannot submit without one.
+
+    Attributes:
+        digest: Digest of the local declaration the engine must have accepted.
+        revision: The accepted revision named in run evidence.
+        cursor_policy_iri: The declared cursor policy named in the checkpoint.
+        nested: ``"<node_type>.<field>"`` to its nested mapping.
+    """
+
+    digest: str
+    revision: str = ""
+    cursor_policy_iri: str = ""
+    nested: Mapping[str, NestedMapping] = field(
+        default_factory=dict, hash=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        if not self.digest.strip():
+            raise ValueError("a contract source needs its digest")
+
+    def bind(self, connector: str, stream: str, **fields: Any) -> IngestBinding:
+        """The binding of ``stream`` under this contract."""
+        return IngestBinding(
+            connector=connector,
+            stream=stream,
+            contract_iri=f"contract:{connector}",
+            contract_digest=self.digest,
+            contract_revision=self.revision,
+            cursor_policy_iri=self.cursor_policy_iri,
+            nested=fields.pop("nested", self.nested),
+            **fields,
+        )
+
+
+@dataclass(frozen=True)
 class IngestBinding:
     """Where a connector's change sets land: its manifest identity and stream.
 
@@ -65,15 +106,14 @@ class IngestBinding:
             URL the record cites, such as a public web page's ``source_uri``.
             The guard keeps such a value; any other value of the field, and
             every other location field, is still redacted.
-        contract_iri: The ingest contract the engine accepted, of the form
-            ``contract:<connector>``. When set, ingest runs only under it:
+        contract_iri: Required. The ingest contract the engine accepted, of
+            the form ``contract:<connector>``. Ingest runs only under it:
             records reference ``<contract_iri>#<object>`` and a submit is
             refused with ``contract_not_accepted`` unless the engine's accepted
-            digest equals ``contract_digest``. Empty keeps the legacy manifest
-            mapping references (no contract check).
+            digest equals ``contract_digest``.
+        contract_digest: Required. Digest of the local declaration, compared
+            with the engine's accepted digest before the first batch.
         contract_revision: The accepted revision named in run evidence.
-        contract_digest: Digest of the local declaration, compared with the
-            engine's accepted digest before the first batch.
         cursor_policy_iri: The declared cursor policy named in the checkpoint.
         nested: ``"<node_type>.<field>"`` to the mapping that turns a nested
             dictionary value into an entity and a relationship. A nested value
@@ -82,6 +122,8 @@ class IngestBinding:
 
     connector: str
     stream: str
+    contract_iri: str
+    contract_digest: str
     server: str = ""
     tool: str = "knowledge-ingest"
     document_type: str = "Document"
@@ -89,26 +131,31 @@ class IngestBinding:
     strict_schema: bool = False
     sanitize: bool = True
     citable_fields: frozenset[str] = frozenset()
-    contract_iri: str = ""
     contract_revision: str = ""
-    contract_digest: str = ""
     cursor_policy_iri: str = ""
     nested: Mapping[str, NestedMapping] = field(
         default_factory=dict, hash=False, compare=False
     )
 
     def __post_init__(self) -> None:
-        for name in ("connector", "stream", "tool", "document_type", "media_type"):
+        for name in (
+            "connector",
+            "stream",
+            "tool",
+            "document_type",
+            "media_type",
+            "contract_iri",
+            "contract_digest",
+        ):
             if not str(getattr(self, name)).strip():
                 raise ValueError(f"ingest binding {name} is required")
-        if self.contract_iri:
-            if self.contract_iri != f"contract:{self.connector}":
-                raise ValueError("contract_iri must be contract:<connector>")
-            if not self.contract_digest:
-                raise ValueError("a contract binding needs its contract_digest")
+        if self.contract_iri != f"contract:{self.connector}":
+            raise ValueError("contract_iri must be contract:<connector>")
 
     @classmethod
-    def for_package(cls, package: str, stream: str, **fields: Any) -> IngestBinding:
+    def for_package(
+        cls, package: str, stream: str, contract: ContractSource, **fields: Any
+    ) -> IngestBinding:
         """Bind ``package``'s change sets under its declared fleet name.
 
         The connector comes from
@@ -117,13 +164,11 @@ class IngestBinding:
         """
         from scion_sdk.connector_identity import connector_name
 
-        return cls(connector=connector_name(package), stream=stream, **fields)
+        return contract.bind(connector_name(package), stream, **fields)
 
     def mapping_reference(self, node_type: str) -> str:
         """The mapping reference a record of ``node_type`` carries."""
-        if self.contract_iri:
-            return f"{self.contract_iri}#{node_type}"
-        return f"connector:{self.connector}#mappings/{node_type}"
+        return f"{self.contract_iri}#{node_type}"
 
     @property
     def server_name(self) -> str:
