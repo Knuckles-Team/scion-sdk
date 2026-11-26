@@ -77,7 +77,7 @@ class CapabilityContract(_Frozen):
     output_schema: dict[str, object] = Field(default_factory=dict)
     read_model: str | None = None
 
-    def model_post_init(self, __context: object) -> None:
+    def model_post_init(self, _context: object, /) -> None:
         if self.kind not in ("tool", "skill_resource"):
             raise CapabilityContractError("CAPABILITY_KIND_UNKNOWN")
 
@@ -89,7 +89,7 @@ class FrontendContribution(_Frozen):
     capability_id: str = Field(min_length=1)
     read_model: str | None = None
 
-    def model_post_init(self, __context: object) -> None:
+    def model_post_init(self, _context: object, /) -> None:
         if not self.read_model:
             raise CapabilityContractError("CONTRIBUTION_READ_MODEL_MISSING")
 
