@@ -217,9 +217,13 @@ async def _boom() -> Readiness:
 @pytest.mark.parametrize(
     ("probe", "code", "body"),
     [
-        (_ready, 200, {"status": "ready", "backend": "reachable", "topics": 3}),
-        (_down, 503, {"status": "unavailable", "backend": "unreachable"}),
-        (_boom, 503, {"status": "unavailable", "error": "ConnectionError"}),
+        (
+            _ready,
+            200,
+            {"lifecycle_state": "Ready", "backend": "reachable", "topics": 3},
+        ),
+        (_down, 503, {"lifecycle_state": "Degraded", "backend": "unreachable"}),
+        (_boom, 503, {"lifecycle_state": "Backoff", "error": "ConnectionError"}),
     ],
 )
 def test_readiness_probe_is_served_at_ready(
@@ -404,4 +408,4 @@ def test_hook_helpers_serve_on_a_plain_server() -> None:
     assert {"x_status", "x_purge"} <= _tools(mcp)
     with TestClient(mcp.http_app()) as client:
         assert client.get("/version").text == "v"
-        assert client.get(READINESS_PATH).json()["status"] == "ready"
+        assert client.get(READINESS_PATH).json()["lifecycle_state"] == "Ready"

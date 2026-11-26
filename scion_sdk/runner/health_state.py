@@ -41,16 +41,41 @@ _SCHEDULER_COMPONENT = "scheduler_loop"
 _DEFAULT_SINK_TIMEOUT_SECONDS = 5.0
 _DISABLED_REASON = "disabled_by_operator"
 
-#: lifecycle state -> (configuration_status, health state) of the component record.
-_COMPONENT_MAP: dict[LifecycleState, tuple[str, str]] = {
-    LifecycleState.UNCONFIGURED: ("not_initialized", "not_configured"),
-    LifecycleState.CREDENTIALS_PENDING: ("initialized", "unavailable"),
-    LifecycleState.WARMING: ("initialized", "unavailable"),
-    LifecycleState.BACKOFF: ("initialized", "unavailable"),
-    LifecycleState.STOPPED: ("not_initialized", "not_configured"),
-    LifecycleState.DEGRADED: ("initialized", "degraded"),
-    LifecycleState.READY: ("initialized", "healthy"),
+#: lifecycle state -> configuration_status of the component record.
+_CONFIGURATION: dict[LifecycleState, str] = {
+    LifecycleState.UNCONFIGURED: "not_initialized",
+    LifecycleState.CREDENTIALS_PENDING: "initialized",
+    LifecycleState.WARMING: "initialized",
+    LifecycleState.BACKOFF: "initialized",
+    LifecycleState.STOPPED: "not_initialized",
+    LifecycleState.DEGRADED: "initialized",
+    LifecycleState.READY: "initialized",
 }
+
+
+def _aggregate_state(
+    registry_loaded: bool,
+    connectors: dict[str, ConnectorHealth],
+    disabled: frozenset[str],
+    unready: bool,
+) -> LifecycleState:
+    """The one state the readiness body serves: ``Ready``, else the least ready."""
+    if not unready:
+        return LifecycleState.READY
+    if not registry_loaded:
+        return LifecycleState.UNCONFIGURED
+    order = (
+        LifecycleState.CREDENTIALS_PENDING,
+        LifecycleState.WARMING,
+        LifecycleState.BACKOFF,
+        LifecycleState.DEGRADED,
+    )
+    live = {
+        h.lifecycle_state
+        for name, h in connectors.items()
+        if name not in disabled and not h.ready
+    }
+    return next((s for s in order if s in live), LifecycleState.DEGRADED)
 
 
 class ComponentStateError(ValueError):
@@ -293,16 +318,15 @@ class RunnerHealth:
             fields: dict[str, Any]
             if name in disabled:
                 fields = {
-                    "state": "not_configured",
+                    "lifecycle_state": LifecycleState.UNCONFIGURED,
                     "configuration_status": "disabled",
                     "enabled": False,
                     "alert_suppression_reason": _DISABLED_REASON,
                 }
             else:
-                configuration, state = _COMPONENT_MAP[health.lifecycle_state]
                 fields = {
-                    "state": state,
-                    "configuration_status": configuration,
+                    "lifecycle_state": health.lifecycle_state,
+                    "configuration_status": _CONFIGURATION[health.lifecycle_state],
                     "enabled": True,
                 }
             try:
@@ -366,7 +390,9 @@ class RunnerHealth:
             reasons.append(sink_reason(sink_state))
         now = self._clock()
         body: dict[str, object] = {
-            "status": "ready" if not reasons else "not_ready",
+            "lifecycle_state": _aggregate_state(
+                registry_loaded, connectors, self._disabled, bool(reasons)
+            ).value,
             "reasons": reasons,
             "connectors": {
                 name: health.snapshot(now=now) for name, health in connectors.items()
@@ -374,7 +400,7 @@ class RunnerHealth:
             "components": [
                 {
                     "component_id": record.component_id,
-                    "state": record.state,
+                    "lifecycle_state": record.lifecycle_state.value,
                     "configuration_status": record.configuration_status,
                     "enabled": record.enabled,
                     "last_check_time": record.last_check_time.isoformat(),

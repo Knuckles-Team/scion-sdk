@@ -34,6 +34,7 @@
         "medulla.client": "medulla/client.py",
         "medulla.connector_pack": "medulla/connector_pack.py",
         "medulla.generated": "medulla/generated/__init__.py",
+        "medulla.generated._shared": "medulla/generated/_shared.py",
         "medulla.generated.connector_pack": "medulla/generated/connector_pack.py",
         "medulla.generated.coordination": "medulla/generated/coordination.py",
         "medulla.generated.index_repository": "medulla/generated/index_repository.py",

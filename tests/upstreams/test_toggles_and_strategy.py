@@ -71,11 +71,11 @@ async def test_disabled_skips_and_warn_isolates_a_failing_upstream(
     assert "alpha_save" in names
     assert "beta_save" not in names  # the failing upstream lists nothing
     assert startup_marker(out, "tools").exists()
-    assert registry.status("beta").state == "unavailable"
+    assert registry.status("beta").state == "Backoff"
     assert registry.status("beta").last_error_code is not None
     assert not startup_marker(disabled_out, "tools").exists()  # disabled spawns nothing
-    states = {status.namespace: status.state for status in registry.statuses()}
-    assert states["gamma"] == "disabled"
+    gamma = registry.status("gamma")
+    assert (gamma.state, gamma.reason) == ("Unconfigured", "disabled_by_operator")
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R914.6")
@@ -95,7 +95,7 @@ async def test_raise_strategy_fails_the_list(
         with pytest.raises(MCPError):
             await client.list_tools()
 
-    assert registry.status("beta").state == "unavailable"
+    assert registry.status("beta").state == "Backoff"
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R914.6")
@@ -121,7 +121,7 @@ def test_bad_overlay_entry_leaves_connector_declarations_serving(
     registry = attach_upstreams(server, (base,))
     assert registry is not None
     assert [status.namespace for status in registry.statuses()] == ["alpha"]
-    assert registry.status("alpha").state == "inactive"
+    assert registry.status("alpha").state == "Unconfigured"
 
     # The disabled list wins over the overlay.
     merged = merge_overlay((base,), overlay_file=None, disabled=("alpha",))

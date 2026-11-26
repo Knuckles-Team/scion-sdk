@@ -6,11 +6,12 @@ import hashlib
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 import anyio
 import anyio.to_process
 
+from scion_sdk import decide
 from scion_sdk.adapters._platform_validation import (
     _platform_request_digest,
     _validate_page,
@@ -33,6 +34,12 @@ from scion_sdk.adapters.platform_models import (
     Reason,
     SkippedBackend,
     validate_request_binding,
+)
+from scion_sdk.adapters.platform_order import (
+    PATH_PREFERENCE_QUESTION,
+    ordered_policies,
+    path_id,
+    path_order_timeout_s,
 )
 from scion_sdk.adapters.platform_status import PlatformStatusStore
 from scion_sdk.http.retry import RetryPolicy
@@ -72,6 +79,13 @@ def _failure_reason(failure: BackendFailure) -> Reason:
         if failure.reason in _TRANSIENT | _TERMINAL
         else "invalid_response"
     )
+
+
+def _reported_outcome(attempt: BackendAttempt) -> Literal["ok", "error"] | None:
+    """ok for a validated page, error for a path-health failure, else not reported."""
+    if attempt.outcome == "ok":
+        return "ok"
+    return "error" if attempt.reason in _TRANSIENT else None
 
 
 def _refused(
@@ -316,12 +330,53 @@ class PlatformFallback:
         ctx = _RunState(
             actor, request, capability, deadline, attempts, skipped, inflight
         )
-        for policy in capability.backends:
+        policies = await ordered_policies(self._connector, capability)
+        result: PlatformResult | None = None
+        for policy in policies:
             result = await self._run_backend(ctx, policy)
             if result is not None:
-                return result
-        reason = "chain_exhausted" if attempts else "no_backend"
-        return self._observed_refusal(request, capability, reason, attempts, skipped)
+                break
+        if result is None:
+            reason = "chain_exhausted" if attempts else "no_backend"
+            result = self._observed_refusal(
+                request, capability, reason, attempts, skipped
+            )
+        await self._report_outcomes(request, capability, result.attempts)
+        return result
+
+    async def _report_outcomes(
+        self,
+        request: PlatformRequest,
+        capability: PlatformCapability,
+        attempts: Sequence[BackendAttempt],
+    ) -> None:
+        """One ``Evaluate`` per tried backend; never raises, never changes the result."""
+        runner = decide.current_runner()
+        if runner is None:
+            return
+        final = {a.backend_id: a for a in attempts}
+        try:
+            with anyio.fail_after(path_order_timeout_s()):
+                for backend_id, attempt in final.items():
+                    outcome = _reported_outcome(attempt)
+                    if outcome is None:
+                        continue
+                    await runner.aevaluate(
+                        PATH_PREFERENCE_QUESTION,
+                        path_id(
+                            self._connector,
+                            capability.platform_id,
+                            capability.channel_id,
+                            capability.operation,
+                            backend_id,
+                        ),
+                        outcome,
+                        evaluation_id=hashlib.sha256(
+                            f"{request.request_id}\0{backend_id}".encode()
+                        ).hexdigest(),
+                    )
+        except Exception:  # reporting is advisory and must not alter the read
+            return
 
     async def _run_backend(
         self, ctx: _RunState, policy: BackendPolicy
