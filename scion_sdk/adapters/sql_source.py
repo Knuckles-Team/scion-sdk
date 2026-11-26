@@ -116,7 +116,10 @@ def engine_verifier(client: Any, source_approval: Mapping[str, Any]) -> Verifier
     require_engine_capability("VerifySourceQueryApproval")
 
     async def verify(request: dict[str, Any]) -> Mapping[str, Any]:
-        return await client.verify_source_query_approval(request, source_approval)
+        verdict: Mapping[str, Any] = await client.verify_source_query_approval(
+            request, source_approval
+        )
+        return verdict
 
     return verify
 
