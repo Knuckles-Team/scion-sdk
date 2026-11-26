@@ -115,3 +115,20 @@ def test_threshold_reads_the_environment_with_a_bounded_range() -> None:
     for bad in ("zero", "0", "1001"):
         with pytest.raises(ValueError, match=DEGRADED_FAILURES_ENV):
             degraded_failures_threshold({DEGRADED_FAILURES_ENV: bad})
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917")
+def test_every_edge_and_refusal_of_the_lifecycle() -> None:
+    """Every state/event pair is exactly one of: a legal edge, or refused."""
+    for state in LifecycleState:
+        for event in LifecycleEvent:
+            legal = (state, event) in _LEGAL_PAIRS
+            try:
+                transition(state, event, failures=1, threshold=_THRESHOLD)
+            except LifecycleTransitionRefused:
+                assert not legal or event is LifecycleEvent.CYCLE_FAIL
+            else:
+                assert legal
+    for event in LifecycleEvent:
+        with pytest.raises(LifecycleTransitionRefused):
+            transition(LifecycleState.STOPPED, event)

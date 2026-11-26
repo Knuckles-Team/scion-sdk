@@ -81,7 +81,7 @@ async def _drift_scenario(
         names = sorted(tool.name for tool in await client.list_tools())
         assert "drift_save" in names and "drift_volatile" in names
         baseline = registry.status("drift")
-        assert baseline.state == "ready"
+        assert baseline.state == "Ready"
         assert baseline.fingerprint
         pid = int(str((await client.call_tool("drift_whoami", {})).data))
 
@@ -93,7 +93,7 @@ async def _drift_scenario(
         await client.list_tools()
         status = registry.status("drift")
         report = registry.drift_report("drift")
-        assert status.state == "drifted"
+        assert (status.state, status.reason) == ("Degraded", "drifted")
         assert "volatile" in report.names()
 
         if on_drift == "refuse":
@@ -138,7 +138,7 @@ async def test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace(
     async with Client(server, mode="legacy") as client:
         await client.call_tool("registry_activate", {"namespace": "drift"})
         await client.list_tools()
-    assert registry.status("drift").state == "ready"
+    assert registry.status("drift").state == "Ready"
 
     # A pin that does not match the live fingerprint is drift.
     mismatched = fixture_decl(
@@ -154,6 +154,9 @@ async def test_fingerprint_mismatch_reports_names_and_refuse_hides_namespace(
     async with Client(server, mode="legacy") as client:
         await client.call_tool("registry_activate", {"namespace": "drift"})
         await client.list_tools()
-    assert registry.status("drift").state == "drifted"
+    assert (registry.status("drift").state, registry.status("drift").reason) == (
+        "Degraded",
+        "drifted",
+    )
 
     await _drift_scenario(tmp_path, monkeypatch, tmp_path / "control-refuse", "refuse")

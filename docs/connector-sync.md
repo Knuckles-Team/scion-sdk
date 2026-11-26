@@ -83,7 +83,7 @@ separate timer, so it can only ever say what the scheduler loop itself proved:
 | Route | Meaning | 200 when | 503 body |
 |---|---|---|---|
 | `/health` | liveness: is the scheduler loop still ticking? | the loop completed a full reconcile pass within the liveness window (derived from `registry_refresh_seconds`, floor 30s) | `{"status": "error", "component": "scheduler_loop", "age_seconds": ..., "max_age_seconds": ...}` |
-| `/health/ready` | readiness: can the runner do useful work right now? | the registry has loaded, every currently-registered connector's endpoint credentials resolved, and `sink.readiness()` reports ready | `{"status": "not_ready", "reasons": [...], "connectors": {...}}` |
+| `/health/ready` | readiness: can the runner do useful work right now? | the registry has loaded, every currently-registered connector's endpoint credentials resolved, and `sink.readiness()` reports ready | `{"lifecycle_state": "Degraded", "reasons": [...], "connectors": {...}}` |
 
 `/health/ready` asks the configured `Sink` directly (its `readiness()` method
 -- [Extension ports](extension-ports.md#sink)), bounded by a short timeout so
@@ -102,7 +102,7 @@ connector the registry has ever listed, with no secret values:
 
 ```json
 {
-  "status": "not_ready",
+  "lifecycle_state": "Degraded",
   "reasons": ["credentials unresolved: freshrss-agent"],
   "connectors": {
     "freshrss-agent": {

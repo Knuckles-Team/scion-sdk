@@ -49,8 +49,20 @@ from scion_sdk.manifest.model import ResourceSpec, SchemaMapping, SyncSpec
 from scion_sdk.manifest.presets import ToolPreset
 from scion_sdk.ports.errors import SourceContractError
 from scion_sdk.ports.session import McpSession
+from scion_sdk.repository.delta import accept_index_page
+from scion_sdk.repository.indexing import RepositoryIndexState
 
-__all__ = ["McpToolSourceAdapter"]
+__all__ = ["INDEX_STATE_KEY", "McpToolSourceAdapter"]
+
+#: Where the accepted checkpoint carries the delta index state (R004.15).
+INDEX_STATE_KEY = "index_state"
+
+
+def _previous_index_state(position: Any) -> RepositoryIndexState | None:
+    raw = position.get(INDEX_STATE_KEY) if isinstance(position, Mapping) else None
+    return (
+        None if raw is None else RepositoryIndexState.model_validate(raw, strict=False)
+    )
 
 
 def _require_identity(connector: str, mapping_reference: str) -> None:
@@ -88,6 +100,7 @@ class McpToolSourceAdapter:
         self._resources = {resource.name: resource for resource in resources}
         self._verified_sha256 = ""
         self._fan_values: list[Any] | None = None
+        self._index_state: RepositoryIndexState | None = None
 
     @classmethod
     def from_sync_spec(
@@ -177,6 +190,9 @@ class McpToolSourceAdapter:
             current.position if self._preset.checkpoint_path else current.watermark
         )
         params = page_params(self._preset, current.position, since)
+        previous = _previous_index_state(current.position)
+        if previous is not None:
+            params["index_state"] = previous.model_dump(mode="json")
         arguments = tool_arguments(self._preset, params)
         result = await session.call_tool(self._preset.tool, arguments)
         await _validate_platform_binding(self._preset, arguments, result)
@@ -185,7 +201,24 @@ class McpToolSourceAdapter:
             tool_name=self._preset.tool,
             presets=(self._preset,),
         )
-        return self._page(result, observed, current=current, checkpoint=checkpoint)
+        page = self._page(result, observed, current=current, checkpoint=checkpoint)
+        return self._with_index_state(page, result, previous)
+
+    def index_state(self) -> RepositoryIndexState | None:
+        """The delta index state the last extracted page left, if it carried one."""
+        return self._index_state
+
+    def _with_index_state(
+        self, page: RecordPage, result: Any, previous: RepositoryIndexState | None
+    ) -> RecordPage:
+        if not isinstance(result, Mapping) or "index_page" not in result:
+            return page
+        state = accept_index_page(result["index_page"], previous)
+        self._index_state = state
+        position = dict(page.checkpoint.position)
+        position[INDEX_STATE_KEY] = state.model_dump(mode="json")
+        checkpoint = page.checkpoint.model_copy(update={"position": position})
+        return page.model_copy(update={"checkpoint": checkpoint})
 
     def _page(
         self,

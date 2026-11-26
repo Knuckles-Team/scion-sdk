@@ -51,6 +51,7 @@ def _health() -> RunnerHealth:
     )
 
 
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917.4")
 def test_warming_connector_is_not_ready() -> None:
     health = _health()
     health.sync_registry((_NAME,))
@@ -82,6 +83,26 @@ def test_failing_every_cycle_walks_degraded_backoff_ready_stopped() -> None:
         assert _state(url) == (200, "Stopped")
 
 
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917.4")
+def test_failing_connector_is_not_ready_and_one_vocabulary_is_served() -> None:
+    health = _health()
+    health.sync_registry((_NAME,))
+    health.record_credentials(_NAME, ok=True)
+    health.record_cycle_failure(_NAME, next_retry_seconds=None)
+    with _served(health) as url:
+        status, body = _get(url)
+        assert status == 503
+        # One vocabulary: no ok/error, ready/not_ready or ready/unavailable word.
+        assert "status" not in body
+        assert body["lifecycle_state"] == "Degraded"
+        assert body["connectors"][_NAME]["lifecycle_state"] == "Degraded"
+        assert _components(url)[_NAME]["lifecycle_state"] == "Degraded"
+        assert "state" not in _components(url)[_NAME]
+        health.record_cycle_success(_NAME)
+        status, body = _get(url)
+        assert (status, body["lifecycle_state"]) == (200, "Ready")
+
+
 @pytest.mark.parametrize("failures", [1, 2, 5])
 def test_a_connector_with_failures_is_never_ready(failures: int) -> None:
     health = _health()
@@ -106,14 +127,16 @@ def test_ready_body_lists_component_states() -> None:
     health.record_cycle_success("a")
     with _served(health) as url:
         items = _components(url)
-        assert items["a"]["state"] == "healthy"
+        assert items["a"]["lifecycle_state"] == "Ready"
         assert items["a"]["configuration_status"] == "initialized"
-        assert items["b"]["state"] == "unavailable"  # Warming after registry load
+        assert (
+            items["b"]["lifecycle_state"] == "CredentialsPending"
+        )  # after registry load
         assert items["c"]["configuration_status"] == "disabled"
         assert items["c"]["alert_suppression_reason"] == "disabled_by_operator"
         # a bare Unconfigured and a Stopped connector map to not_configured
         health.sync_registry(("a", "c"), frozenset({"c"}))
-        assert _components(url)["b"]["state"] == "not_configured"
+        assert _components(url)["b"]["lifecycle_state"] == "Stopped"
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R065.4")
@@ -144,7 +167,7 @@ def test_body_has_suppression_reason_and_no_secret() -> None:
         item = _components(url)["off"]
         assert set(item) == {
             "component_id",
-            "state",
+            "lifecycle_state",
             "configuration_status",
             "enabled",
             "last_check_time",
@@ -163,11 +186,14 @@ def test_unconfigured_and_disabled_suppress_alerts() -> None:
     health.sync_registry(("live", "off"), frozenset({"off"}))  # "unset" is Stopped
     with _served(health) as url:
         items = _components(url)
-        assert items["unset"]["state"] == "not_configured"
+        assert items["unset"]["lifecycle_state"] == "Stopped"
         assert items["unset"]["alert"] is False and items["off"]["alert"] is False
         health.record_cycle_success("live")
         assert _components(url)["live"]["alert"] is False
         health.record_cycle_failure("live", next_retry_seconds=1.0)
         degraded = _components(url)
-        assert degraded["live"]["state"] == "degraded" and degraded["live"]["alert"]
+        assert (
+            degraded["live"]["lifecycle_state"] == "Degraded"
+            and degraded["live"]["alert"]
+        )
         assert degraded["off"]["alert"] is False and not degraded["unset"]["alert"]

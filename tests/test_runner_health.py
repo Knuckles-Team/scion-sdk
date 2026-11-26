@@ -498,7 +498,7 @@ def test_health_endpoints_serve_liveness_and_readiness_json() -> None:
             urllib.request.urlopen(f"http://{host}:{port}/health/ready", timeout=5)
         assert ready_error.value.code == 503
         body = json.loads(ready_error.value.read())
-        assert body["status"] == "not_ready"
+        assert body["lifecycle_state"] != "Ready"
 
         with pytest.raises(urllib.error.HTTPError) as not_found:
             urllib.request.urlopen(f"http://{host}:{port}/nope", timeout=5)

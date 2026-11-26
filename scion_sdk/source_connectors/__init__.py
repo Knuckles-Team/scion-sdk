@@ -18,12 +18,15 @@ from typing import Any
 from .base import (
     BaseSourceConnector,
     ExternalAccess,
+    HierarchyConnector,
     LoadConnector,
     PermSyncConnector,
     PollConnector,
     SlimConnector,
     SlimDocument,
+    SourceContainer,
     SourceDocument,
+    SourceGroup,
 )
 from .checkpoint import CheckpointedBatch, ConnectorCheckpoint
 from .registry import (
@@ -41,12 +44,15 @@ __all__ = [
     "ConnectorCheckpoint",
     "ConnectorGovernanceError",
     "ExternalAccess",
+    "HierarchyConnector",
     "LoadConnector",
     "PermSyncConnector",
     "PollConnector",
     "SlimConnector",
     "SlimDocument",
+    "SourceContainer",
     "SourceDocument",
+    "SourceGroup",
     "access_properties",
     "build_connector",
     "discover",

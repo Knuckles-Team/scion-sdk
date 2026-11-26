@@ -116,8 +116,8 @@ async def test_two_stdio_upstreams_are_namespaced_and_lazy(
         content = await client.read_resource(UPSTREAMS_RESOURCE_URI)
         body = json.loads(content[0].text)
         states = {entry["namespace"]: entry for entry in body["upstreams"]}
-        assert states["alpha"]["state"] == "ready"
-        assert states["beta"]["state"] == "inactive"
+        assert states["alpha"]["state"] == "Ready"
+        assert states["beta"]["state"] == "Unconfigured"
 
     # The child started exactly when the namespace was first listed.
     assert (
