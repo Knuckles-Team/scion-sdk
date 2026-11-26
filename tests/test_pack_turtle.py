@@ -7,7 +7,6 @@ import pytest
 from scion_sdk.manifest.pack_declaration import ConnectorPackDeclaration
 from scion_sdk.manifest.pack_preflight import (
     PackPreflightRefused,
-    ShaclClient,
     preflight_pack_turtle,
 )
 from scion_sdk.manifest.pack_turtle import (
@@ -77,14 +76,14 @@ class _Engine:
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R067.4")
 async def test_preflight_uses_engine_validation() -> None:
     turtle = emit_pack_turtle(declaration())
-    engine: ShaclClient = _Engine({"conforms": True})
+    engine = _Engine({"conforms": True})
     check_pack_declaration(declaration())
-    assert await preflight_pack_turtle(engine, turtle) == {"conforms": True}
+    assert await preflight_pack_turtle(engine, turtle)  # type: ignore[arg-type] == {"conforms": True}
     shapes, sent = engine.calls[0]
     assert sent == turtle and "NodeShape" in shapes
     refused = _Engine({"conforms": False, "results": [{"code": "SH_MIN_COUNT"}]})
     with pytest.raises(PackPreflightRefused) as caught:
-        await preflight_pack_turtle(refused, turtle)
+        await preflight_pack_turtle(refused, turtle)  # type: ignore[arg-type]
     assert caught.value.report["results"] == [{"code": "SH_MIN_COUNT"}]
 
 

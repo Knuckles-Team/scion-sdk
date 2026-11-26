@@ -8,15 +8,11 @@ and an engine refusal reaches the caller with its typed code unchanged.
 from __future__ import annotations
 
 from importlib import resources
-from typing import Any, Protocol
+from typing import Any
 
-__all__ = ["PackPreflightRefused", "ShaclClient", "preflight_pack_turtle"]
+from medulla.client import RdfClient
 
-
-class ShaclClient(Protocol):
-    """The engine client surface the preflight needs."""
-
-    async def validate_shacl(self, shapes: str, data_graph: str) -> dict[str, Any]: ...
+__all__ = ["PackPreflightRefused", "preflight_pack_turtle"]
 
 
 class PackPreflightRefused(ValueError):
@@ -36,7 +32,7 @@ def _engine_shapes() -> str:
     )
 
 
-async def preflight_pack_turtle(client: ShaclClient, turtle: str) -> dict[str, Any]:
+async def preflight_pack_turtle(client: RdfClient, turtle: str) -> dict[str, Any]:
     """Validate ``turtle`` inline through the engine; refuse a non-conforming report."""
     report = await client.validate_shacl(_engine_shapes(), turtle)
     if report.get("conforms") is False:
