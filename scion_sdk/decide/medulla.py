@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from scion_sdk.decide.options import Option, declared_source
 from scion_sdk.decide.outcome import (
@@ -50,6 +50,33 @@ from scion_sdk.decide.transport import DecideTransport
 logger = logging.getLogger(__name__)
 
 __all__ = ["MedullaDecisionRunner"]
+
+
+def evaluate_op(
+    tenant: str,
+    question_id: str,
+    option_id: str,
+    outcome: Literal["ok", "error"],
+    evaluation_id: str,
+) -> dict[str, Any]:
+    """The decision log ``Evaluate`` op for one executed option.
+
+    Hand-written to the engine's ``DecisionOutcomeEvaluation`` shape; a test
+    validates it against the generated model.
+    """
+    return {
+        "op": "evaluate",
+        "tenant_id": tenant,
+        "evaluation": {
+            "record_id": question_id,
+            "evaluation_id": evaluation_id,
+            "class": "observation",
+            "selected_agent": option_id,
+            "lease_holder": "connector-transport",
+            "fidelity": "final_output",
+            "success": outcome == "ok",
+        },
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,6 +218,26 @@ class MedullaDecisionRunner:
         prepared = self._prepare(question_id, options, params, candidates)
         reading = await self._consult(prepared)
         return _settle(reading, fallback)
+
+    async def aevaluate(
+        self,
+        question_id: str,
+        option_id: str,
+        outcome: Literal["ok", "error"],
+        *,
+        evaluation_id: str,
+    ) -> None:
+        """Report one executed option's outcome through the decision log ``Evaluate`` op.
+
+        Never raises; a transport failure is logged and the caller's result is
+        unchanged.
+        """
+        try:
+            await self.transport.log(
+                evaluate_op(self.tenant, question_id, option_id, outcome, evaluation_id)
+            )
+        except Exception as exc:
+            logger.warning("outcome of %s not reported: %s", question_id, exc)
 
     async def achoose_many(
         self,

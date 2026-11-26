@@ -2,8 +2,9 @@
 
 The registry tracks each upstream's state and serves it through the
 read-only ``registry_status`` tool and the ``upstreams`` block of the
-readiness body. ``inactive`` is a lazy upstream nobody activated, and it is
-not a failure. A status holds an error code and never the error text of an
+readiness body. Each upstream owns one lifecycle machine (R917.6);
+``Unconfigured`` with the reason ``not_activated`` is a lazy upstream nobody
+activated, and it is not a failure. A status holds an error code and never the error text of an
 upstream. A probe runs only for active namespaces, every
 ``probe_interval_s``; a probe never wakes an inactive upstream.
 """
@@ -13,11 +14,17 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import anyio
 
 from scion_sdk.connector_hooks import Readiness, ReadinessValue
+from scion_sdk.connector_lifecycle import (
+    LifecycleEvent,
+    LifecycleState,
+    degraded_failures_threshold,
+    transition,
+)
 from scion_sdk.mcp.upstreams.drift import (
     DriftReport,
     diff_tool_fingerprints,
@@ -45,6 +52,47 @@ __all__ = [
 _logger = logging.getLogger(__name__)
 
 
+def _to_warming(state: LifecycleState) -> LifecycleState:
+    """Walk an upstream that has not yet been seen up to ``Warming``."""
+    if state is LifecycleState.UNCONFIGURED:
+        state = transition(state, LifecycleEvent.REGISTRY_LOADED)
+    if state is LifecycleState.CREDENTIALS_PENDING:
+        state = transition(state, LifecycleEvent.CREDS_OK)
+    return state
+
+
+def _listed_state(state: LifecycleState, drifted: bool) -> LifecycleState:
+    """A successful ``tools/list`` is ``cycle_ok``; a drifted listing is a failed cycle."""
+    state = _to_warming(state)
+    if drifted:
+        return transition(state, LifecycleEvent.CYCLE_FAIL, failures=1)
+    return transition(state, LifecycleEvent.CYCLE_OK)
+
+
+def _failed_state(state: LifecycleState, code: str, failures: int) -> LifecycleState:
+    """A failed interaction is ``cycle_fail``.
+
+    A listing or spawn failure arrives after the pool's own retries, so it
+    takes the upstream to ``Backoff``; an open breaker is ``Degraded`` with the
+    reason ``circuit_open`` (R918).
+    """
+    threshold = degraded_failures_threshold()
+    state = transition(
+        _to_warming(state),
+        LifecycleEvent.CYCLE_FAIL,
+        failures=failures,
+        threshold=threshold,
+    )
+    if code != UPSTREAM_CIRCUIT_OPEN and state is LifecycleState.DEGRADED:
+        state = transition(
+            state,
+            LifecycleEvent.CYCLE_FAIL,
+            failures=max(failures, threshold),
+            threshold=threshold,
+        )
+    return state
+
+
 class UpstreamRegistry:
     """The live status of every declared upstream, keyed by namespace."""
 
@@ -66,14 +114,12 @@ class UpstreamRegistry:
         #: artifact exchange (R914.13); ``None`` when none does.
         self.exchange_state: str | None = None
         for decl in declarations:
-            state: Literal["disabled", "inactive"] = (
-                "disabled" if not decl.enabled else "inactive"
-            )
             self._statuses[decl.effective_namespace] = UpstreamStatus(
                 name=decl.name,
                 namespace=decl.effective_namespace,
                 kind=decl.kind,
-                state=state,
+                state=LifecycleState.UNCONFIGURED,
+                reason="not_activated" if decl.enabled else "disabled_by_operator",
             )
 
     @property
@@ -126,9 +172,12 @@ class UpstreamRegistry:
             self._drift[namespace] = report
             drifted = report.is_drifted or expected_mismatch
             current = self._statuses[namespace]
+            state = _listed_state(current.state, drifted)
             self._statuses[namespace] = current.model_copy(
                 update={
-                    "state": "drifted" if drifted else "ready",
+                    "state": state,
+                    "reason": "drifted" if drifted else None,
+                    "consecutive_failures": 0,
                     "tool_count": len(tools),
                     "fingerprint": fingerprint,
                     "version": version if version is not None else current.version,
@@ -142,12 +191,15 @@ class UpstreamRegistry:
     async def note_failure(self, decl: UpstreamDecl, code: str) -> None:
         """Record a refused or failed interaction with the upstream."""
         namespace = decl.effective_namespace
-        state = "circuit_open" if code == UPSTREAM_CIRCUIT_OPEN else "unavailable"
         async with self._lock:
             current = self._statuses[namespace]
+            failures = current.consecutive_failures + 1
+            state = _failed_state(current.state, code, failures)
             self._statuses[namespace] = current.model_copy(
                 update={
                     "state": state,
+                    "reason": "circuit_open" if code == UPSTREAM_CIRCUIT_OPEN else None,
+                    "consecutive_failures": failures,
                     "last_error_code": code,
                     "tool_count": current.tool_count,
                     "fingerprint": current.fingerprint,
@@ -174,7 +226,10 @@ class UpstreamRegistry:
             decl = self._declarations[namespace]
             if not decl.enabled:
                 continue
-            if status.state in ("unavailable", "circuit_open"):
+            if (
+                status.state is LifecycleState.BACKOFF
+                or status.reason == "circuit_open"
+            ):
                 return True
         return False
 
@@ -194,10 +249,13 @@ def compose_readiness(
             **base.detail,
             **registry.readiness_block(),
         }
-        ready = base.ready
         if registry.error_strategy == "raise" and registry.has_fatal():
-            ready = False
-        return Readiness(ready=ready, detail=detail)
+            return Readiness(
+                ready=False, detail=detail, lifecycle_state=LifecycleState.BACKOFF
+            )
+        return Readiness(
+            ready=base.ready, detail=detail, lifecycle_state=base.lifecycle_state
+        )
 
     return composed
 

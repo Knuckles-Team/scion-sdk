@@ -14,6 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from scion_sdk.connector_lifecycle import LifecycleState
 from scion_sdk.credentials.references import (
     SecretReferenceError,
     parse_secret_reference,
@@ -277,25 +278,15 @@ class UpstreamDecl(BaseModel):
             _check_reference(self.bridge.token_ref, f"{self.name} bridge token_ref")
 
 
-UpstreamState = Literal[
-    "disabled",
-    "inactive",
-    "starting",
-    "ready",
-    "degraded",
-    "unavailable",
-    "drifted",
-    "circuit_open",
-]
-
-
 class UpstreamStatus(BaseModel):
     """The health of one upstream, as served by ``registry_status`` (R914.9).
 
-    ``last_error_code`` holds a refusal *code*, never upstream error text.
-    ``fingerprint`` and ``version`` come from the last successful
-    ``tools/list``; ``inactive`` is a lazy upstream nobody activated, not a
-    failure.
+    ``state`` is the upstream's one :class:`LifecycleState` (R917.6);
+    ``reason`` names why (``disabled_by_operator``, ``not_activated``,
+    ``drifted``, ``circuit_open``). ``last_error_code`` holds a refusal *code*,
+    never upstream error text. ``fingerprint`` and ``version`` come from the
+    last successful ``tools/list``; ``Unconfigured`` with ``not_activated`` is
+    a lazy upstream nobody activated, not a failure.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -303,7 +294,9 @@ class UpstreamStatus(BaseModel):
     name: str
     namespace: str
     kind: UpstreamKind
-    state: UpstreamState
+    state: LifecycleState
+    reason: str | None = None
+    consecutive_failures: int = 0
     tool_count: int = 0
     fingerprint: str | None = None
     version: str | None = None
