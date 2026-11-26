@@ -12,6 +12,7 @@ so a caller's own control flow never changes shape.
 from __future__ import annotations
 
 from scion_sdk.runner.health_state import RunnerHealth
+from scion_sdk.runner.stage_runner import StageReport
 
 __all__ = [
     "note_credentials",
@@ -19,6 +20,7 @@ __all__ = [
     "note_cycle_success",
     "note_heartbeat",
     "note_registry_loaded",
+    "note_stage_report",
 ]
 
 
@@ -56,3 +58,11 @@ def note_cycle_failure(
     """Record a failed cycle when tracking is enabled."""
     if health is not None:
         health.record_cycle_failure(connector, next_retry_seconds=next_retry_seconds)
+
+
+def note_stage_report(
+    health: RunnerHealth | None, connector: str, report: StageReport
+) -> None:
+    """Record a stage report when tracking is enabled."""
+    if health is not None:
+        health.record_stage_report(connector, report.as_document())

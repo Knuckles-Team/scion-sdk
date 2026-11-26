@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from collections.abc import Mapping
 
 import anyio
@@ -13,9 +14,11 @@ from scion_sdk.ports.session import McpSession
 from scion_sdk.ports.source_adapter import SourceAdapter
 from scion_sdk.runner.credentialed_endpoint import resolve_endpoint
 from scion_sdk.runner.descriptors import ConnectorDescriptor
+from scion_sdk.runner.errors import StageCycleFailed
 from scion_sdk.runner.health_reporting import (
     note_cycle_failure,
     note_cycle_success,
+    note_stage_report,
 )
 from scion_sdk.runner.logs import structured
 from scion_sdk.runner.plans import (
@@ -26,6 +29,7 @@ from scion_sdk.runner.plans import (
 )
 from scion_sdk.runner.provisioning import provision_content
 from scion_sdk.runner.services import RunnerServices
+from scion_sdk.runner.stage_runner import run_stages
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
 
 __all__ = ["ConnectorWorker"]
@@ -155,7 +159,27 @@ class ConnectorWorker:
                 await self._provision(session)
             for preset in sorted(plan.presets):
                 await self._sync(session, adapters[preset])
+            if plan.stages:
+                await self._stages(session, adapters, plan)
         note_cycle_success(self._services.health, self._descriptor.connector)
+
+    async def _stages(
+        self, session: McpSession, adapters: Adapters, plan: CyclePlan
+    ) -> None:
+        descriptor, services = self._descriptor, self._services
+        target = SyncTarget(
+            connector=descriptor.connector,
+            sink=services.sink,
+            max_pages=descriptor.max_pages_per_cycle,
+            empty_authoritative_approval=descriptor.empty_authoritative_approval
+            or None,
+            tenant=descriptor.tenant,
+            stages=plan.stages,
+        )
+        report = await run_stages(target, session, adapters, run_id=uuid.uuid4().hex)
+        note_stage_report(services.health, descriptor.connector, report)
+        if not report.succeeded:
+            raise StageCycleFailed(descriptor.connector)
 
     async def _provision(self, session: McpSession) -> None:
         name, services = self._descriptor.connector, self._services
