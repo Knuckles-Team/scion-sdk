@@ -142,9 +142,7 @@ class PkceChallengeTransport(Protocol):
 
     def callback_uri(self) -> str: ...
 
-    async def deliver(
-        self, challenge: PkceChallenge, authorization_url: str
-    ) -> None: ...
+    async def deliver(self, challenge: PkceChallenge, url: str) -> None: ...
 
     async def receive(self, challenge: PkceChallenge, timeout_s: float) -> str | None:
         """The complete redirect response, or ``None`` when the input timed out."""
