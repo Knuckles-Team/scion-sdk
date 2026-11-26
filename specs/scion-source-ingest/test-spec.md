@@ -468,7 +468,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-SOURCE-INGEST-R004.18` | `tests/test_incremental_index_served.py::test_delta_semantics_and_memory` |
 | `SCION-SOURCE-INGEST-R013.1` | `tests/test_harness_manifest.py::test_manifest_rejects_duplicates_unknown_versions_missing_owners_and_unbound_operations` |
 | `SCION-SOURCE-INGEST-R013.2` | `tests/test_harness_sessions.py::test_full_coverage_dedup_restart_and_per_source_progress` |
-| `SCION-SOURCE-INGEST-R013.3` | `tests/test_harness_sessions.py::test_runner_calls_adapter_then_index_method`, `tests/test_harness_sessions_served.py::test_full_manifest_sync_index_and_readback` |
+| `SCION-SOURCE-INGEST-R013.3` | `tests/test_harness_sessions.py::test_adapter_calls_operation_then_index_once_per_page`, `tests/test_harness_sessions.py::test_index_refuses_naming_the_method_while_the_pin_lacks_it` |
 | `SCION-SOURCE-INGEST-R013.4` | `tests/test_harness_sessions.py::test_refusals_make_zero_denied_calls_and_keep_cursors` |
 | `SCION-SOURCE-INGEST-R013.5` | `tests/test_harness_sessions.py::test_receipts_survive_restart_and_cover_every_entry` |
 | `SCION-SOURCE-INGEST-R013.6` | `tests/test_harness_sessions_served.py::test_full_manifest_sync_index_and_readback` |
