@@ -14,6 +14,10 @@ than a brittle text search.
 
 from __future__ import annotations
 
+import ast
+import hashlib
+import os
+import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,13 +31,17 @@ from scion_sdk.testing._fleet_walk import (
 
 __all__ = [
     "BATCH_LETTERS",
+    "CensusReceipt",
     "JsonTagLoaderEntry",
+    "LoaderInventoryItem",
     "OperationMapping",
     "PackageScanResult",
     "batch_census",
     "batch_roots",
+    "fleet_census_receipt",
     "loader_parity_problems",
     "scan_for_meristem_imports",
+    "scan_json_tag_loaders",
     "scan_many_packages",
 ]
 
@@ -195,3 +203,126 @@ def _mapping_problems(op: str, m: OperationMapping) -> list[str]:
         for source, target, message in _MAPPING_FACETS
         if getattr(m, source) != getattr(m, target)
     ]
+
+
+@dataclass(frozen=True)
+class CensusReceipt:
+    """SCION-CONNECTOR-CONTROL-R014.27: one package's migration evidence."""
+
+    package: str
+    revision: str
+    clean: bool
+    scanned_files: int
+
+
+def _git_head(root: Path) -> str:
+    try:
+        done = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    head = done.stdout.strip()
+    return head if done.returncode == 0 and len(head) == 40 else ""
+
+
+def _python_files(root: Path, exclude: frozenset[str]) -> list[Path]:
+    found: list[Path] = []
+    for base, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in exclude]
+        found.extend(Path(base) / name for name in files if name.endswith(".py"))
+    return found
+
+
+def fleet_census_receipt(
+    roots: Iterable[Path],
+    *,
+    exclude_dirs: frozenset[str] = _DEFAULT_EXCLUDED_DIRS,
+) -> tuple[CensusReceipt, ...]:
+    """A receipt per connector root: package, git HEAD, clean, scanned files.
+
+    A root that cannot be resolved to a package directory or to a git revision
+    is unclean; the owner removes the superseded toolkit only after an
+    all-clean receipt.
+    """
+    roots = list(roots)
+    results = scan_many_packages(roots, exclude_dirs=exclude_dirs)
+    receipts: list[CensusReceipt] = []
+    for root in roots:
+        result = results[root.name]
+        resolved = root.is_dir()
+        revision = _git_head(root) if resolved else ""
+        receipts.append(
+            CensusReceipt(
+                package=result.package,
+                revision=revision,
+                clean=resolved and bool(revision) and result.migrated,
+                scanned_files=len(_python_files(root, exclude_dirs)) if resolved else 0,
+            )
+        )
+    return tuple(receipts)
+
+
+@dataclass(frozen=True)
+class LoaderInventoryItem:
+    """SCION-CONNECTOR-CONTROL-R020.1: one JSON tag loader found in a package."""
+
+    package: str
+    loader_path: str
+    json_path: str
+    json_digest: str
+
+
+def _json_literals(tree: ast.AST) -> list[str]:
+    return [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value.endswith(".json")
+    ]
+
+
+def _reads_json(tree: ast.AST) -> bool:
+    return any(
+        isinstance(node, ast.Attribute) and node.attr in {"load", "loads"}
+        for node in ast.walk(tree)
+    )
+
+
+def scan_json_tag_loaders(
+    package_roots: Iterable[Path],
+    *,
+    exclude_dirs: frozenset[str] = _DEFAULT_EXCLUDED_DIRS,
+) -> tuple[LoaderInventoryItem, ...]:
+    """Find every loader path that reads a shipped JSON tag file, with its digest.
+
+    A loader is a Python source that parses JSON and names a ``*.json`` file
+    that exists under the package root. The digest is the file's SHA-256.
+    """
+    items: list[LoaderInventoryItem] = []
+    for root in package_roots:
+        for source in sorted(_python_files(root, exclude_dirs)):
+            try:
+                tree = ast.parse(source.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError, UnicodeDecodeError):
+                continue
+            if not _reads_json(tree):
+                continue
+            for literal in sorted(set(_json_literals(tree))):
+                target = next(iter(root.rglob(Path(literal).name)), None)
+                if target is None or not target.is_file():
+                    continue
+                items.append(
+                    LoaderInventoryItem(
+                        package=root.name,
+                        loader_path=str(source.relative_to(root)),
+                        json_path=str(target.relative_to(root)),
+                        json_digest=hashlib.sha256(target.read_bytes()).hexdigest(),
+                    )
+                )
+    return tuple(items)
