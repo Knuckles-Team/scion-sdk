@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-from scion_sdk.mcp._env_drift_scan import _ENV_NAME
+from scion_sdk.env_scan import ENV_NAME
 
 _ENV_DECL = re.compile(r"^\s*#?\s*(?:export\s+)?([A-Z][A-Z0-9_]*)\s*=")
 _SUBST = re.compile(r"\$\{([^}]*)\}")
@@ -52,7 +52,7 @@ def _compose_env_keys(root: Path) -> dict[str, set[str]]:
         keys: set[str] = set()
         for service in _compose_services(_load_yaml(path)):
             keys |= _service_env_keys(service)
-        keys = {k for k in keys if _ENV_NAME.fullmatch(k)}
+        keys = {k for k in keys if ENV_NAME.fullmatch(k)}
         if keys:
             out[path.name] = keys
     return out
@@ -63,7 +63,7 @@ def _subst_names(value: Any) -> set[str]:
     names: set[str] = set()
     for inner in _SUBST.findall(text):
         name = re.split(r"[:?\-+]", inner.strip(), maxsplit=1)[0]
-        if _ENV_NAME.fullmatch(name):
+        if ENV_NAME.fullmatch(name):
             names.add(name)
     return names
 
@@ -92,7 +92,7 @@ def _server_env_keys(server: Any) -> set[str]:
     env = server.get("env") if isinstance(server, dict) else None
     if not isinstance(env, dict):
         return set()
-    return {k for k in env if _ENV_NAME.fullmatch(str(k))}
+    return {k for k in env if ENV_NAME.fullmatch(str(k))}
 
 
 def _mcp_config_env(root: Path) -> list[tuple[str, set[str]]]:

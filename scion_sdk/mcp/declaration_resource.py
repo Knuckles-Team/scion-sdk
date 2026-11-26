@@ -15,6 +15,7 @@ from scion_sdk.ingest.live_declaration import build_declaration
 from scion_sdk.manifest.resource_descriptor import RESOURCES_URI
 from scion_sdk.manifest.sources import IngestSourceDeclaration
 from scion_sdk.mcp._tool_surface_base import registered_tools
+from scion_sdk.mcp.descriptors import scopes_body
 
 __all__ = ["register_live_declaration"]
 
@@ -54,9 +55,11 @@ def register_live_declaration(
                     "surfaces": await surface_summary(current_descriptors),
                 }
             )
-        return json.dumps(
-            declaration.model_dump(mode="json", exclude_unset=True), sort_keys=True
-        )
+        body = declaration.model_dump(mode="json", exclude_unset=True)
+        scopes = scopes_body(mcp)
+        if scopes is not None:
+            body["scopes"] = scopes
+        return json.dumps(body, sort_keys=True)
 
     mcp.resource(
         RESOURCES_URI,

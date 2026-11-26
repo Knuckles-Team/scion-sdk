@@ -159,11 +159,11 @@ These future tests have not run. The producer, gate, and writer attachments are 
 - **CC-90 / SCION-CONNECTOR-CONTROL-R052.4:** Each refusal produces zero provider effects. Proposed: `tests/test_visual_observation_served.py::test_invalid_scope_refuses_before_provider_effect`.
 - **CC-91 / SCION-CONNECTOR-CONTROL-R052.5:** EG readback confirms provenance without returning raw content. Proposed: `tests/test_visual_observation_served.py::test_readback_excludes_visual_payload`.
 - **CC-92 / SCION-CONNECTOR-CONTROL-R052.6:** The observed path proves reuse and zero effects on refusal. Proposed: `tests/test_visual_observation_served.py::test_two_step_reuse_isolation_and_stale_refusal`.
-- **CC-93 / SCION-CONNECTOR-CONTROL-R053.1:** Reject duplicate declarations, literals, and unknown components. Proposed: `tests/test_environment_manifest_served.py::test_manifest_rejects_duplicate_literal_and_unknown_entries`.
-- **CC-94 / SCION-CONNECTOR-CONTROL-R053.2:** Undeclared reads and missing required declarations block startup. Proposed: `tests/test_environment_manifest_served.py::test_missing_and_undeclared_inputs_block_startup`.
+- **CC-93 / SCION-CONNECTOR-CONTROL-R053.1:** Reject duplicate declarations, literals, and unknown components. Proposed: `tests/test_environment_manifest_served.py::test_model_rejects_duplicates_and_credential_defaults`.
+- **CC-94 / SCION-CONNECTOR-CONTROL-R053.2:** Undeclared reads and missing required declarations block startup. Proposed: `tests/test_environment_manifest_served.py::test_missing_and_undeclared_inputs_block_export`.
 - **CC-95 / SCION-CONNECTOR-CONTROL-R053.3:** The served launcher consumes the SDK declaration set. Proposed: `tests/test_environment_manifest_served.py::test_host_startup_consumes_sdk_declaration_set`.
 - **CC-96 / SCION-CONNECTOR-CONTROL-R053.4:** A secret canary is absent from every refusal diagnostic. Proposed: `tests/test_environment_manifest_served.py::test_refusal_diagnostics_redact_secret_values`.
-- **CC-97 / SCION-CONNECTOR-CONTROL-R053.5:** Independent readback reproduces the declaration set and decision. Proposed: `tests/test_environment_manifest_served.py::test_readback_matches_manifest_and_decision`.
+- **CC-97 / SCION-CONNECTOR-CONTROL-R053.5:** Independent readback reproduces the declaration set and decision. Proposed: `tests/test_environment_manifest_served.py::test_digests_reproduce_from_pinned_inputs`.
 - **CC-98 / SCION-CONNECTOR-CONTROL-R053.6:** The healthy case serves; each negative case refuses before admission. Proposed: `tests/test_environment_manifest_served.py::test_served_startup_accepts_declared_and_refuses_invalid`.
 - **CC-99 / SCION-CONNECTOR-CONTROL-R054.1:** Planned `tests/test_json_tag_loader_migration_served.py::test_inventory_finds_every_source_loader` validates complete entries, ordering, duplicate rejection and changed source digests.
 - **CC-100 / SCION-CONNECTOR-CONTROL-R054.2:** Planned `tests/test_json_tag_loader_migration_served.py::test_registered_operations_match_source_schemas` detects missing loaders, hidden dynamic paths, unmapped operations and every schema/tag difference.
@@ -565,9 +565,9 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R035.4` | `tests/test_credential_provider.py::test_refusal_reasons_precede_resolver_and_leak_nothing`, `tests/test_credential_provider.py::test_refusal_reasons_precede_resolver_and_leak_nothing` |
 | `SCION-CONNECTOR-CONTROL-R035.5` | `tests/test_scoped_credential_transport.py::test_use_record_joins_receipts_and_excludes_secrets` |
 | `SCION-CONNECTOR-CONTROL-R035.6` | `tests/test_scoped_credential_transport.py::test_served_bound_credential_resolution` |
-| `SCION-CONNECTOR-CONTROL-R037` | `tests/test_access_contracts.py::test_supplier_and_purchase_order_fields_match_recorded_fixture` |
-| `SCION-CONNECTOR-CONTROL-R038` | `tests/test_service_health.py::test_served_health_contract` |
-| `SCION-CONNECTOR-CONTROL-R039` | `tests/test_access_contracts.py::test_deployment_contract_matches_served_fixture` |
+| `SCION-CONNECTOR-CONTROL-R037` | `tests/test_operation_contracts.py::test_supplier_and_purchase_order_fields_match_recorded_fixture` |
+| `SCION-CONNECTOR-CONTROL-R038` | `tests/test_operation_contracts.py::test_served_health_contract` |
+| `SCION-CONNECTOR-CONTROL-R039` | `tests/test_operation_contracts.py::test_deployment_contract_matches_served_fixture` |
 | `SCION-CONNECTOR-CONTROL-R045.12` | `tests/test_operation_descriptors.py::test_tools_list_carries_descriptor_and_scopes` |
 | `SCION-CONNECTOR-CONTROL-R050.2` | `tests/test_ordered_progress.py::test_concurrent_updates_are_ordered`, `tests/test_request_cache.py::test_entries_expire_at_deadline` |
 | `SCION-CONNECTOR-CONTROL-R050.3` | planned `tests/test_tool_context_served.py::test_both_registrars_share_context_identity` |
