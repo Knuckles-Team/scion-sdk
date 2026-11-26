@@ -16,6 +16,7 @@ from medulla.generated.write_back import (
     WriteBackOutcome,
 )
 
+from scion_sdk.engine_capability import EngineCapabilityUnavailable
 from scion_sdk.ports.audit_reservation import (
     AuditReservation,
     AuditReservationPort,
@@ -173,6 +174,8 @@ class GovernedWriteBack:
             return
         try:
             result = await self._proof_gate.verify(change_set)
+        except EngineCapabilityUnavailable:
+            raise
         except Exception:
             raise WalletProofRefusedError("verification_unavailable") from None
         if not isinstance(result, WalletProofResult) or result.outcome != "verified":

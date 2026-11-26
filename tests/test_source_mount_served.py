@@ -69,6 +69,7 @@ def _served(backend: SourceBackend) -> FastMCP[Any]:
     return server
 
 
+@pytest.mark.spec("SCION-SCM-R002")
 @pytest.mark.spec("SCION-SCM-R002.6")
 async def test_served_mount_read_write_and_conflicting_flush(tmp_path: Path) -> None:
     backend = SourceBackend(FILES)
