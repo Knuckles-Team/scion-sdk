@@ -271,6 +271,7 @@ async def test_content_pack_is_complete_and_stable(sessions: SessionFactory) -> 
         "connector://resources",
         "ontology://demo-agent/demo.ttl",
         "prompt://demo-mcp/demo_agent",
+        "seed://demo-agent/seed.ttl",
         "shapes://demo-agent/demo.shapes.ttl",
         "skill://demo-reader/SKILL.md",
         "tool://demo-mcp/demo_reader",

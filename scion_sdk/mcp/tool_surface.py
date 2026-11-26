@@ -46,6 +46,7 @@ from scion_sdk.mcp._tool_surface_sources import (
     _register_declared_sources,
 )
 from scion_sdk.mcp.actor_binding import ACTOR_REQUIRED_META
+from scion_sdk.mcp.content import install_pending_seed
 from scion_sdk.mcp.credential_context import CredentialBinder, bind_credential_context
 from scion_sdk.mcp.method_tools import (
     GATED_TAG,
@@ -267,6 +268,7 @@ def register_tool_surface(
     if verbose_register is not None:
         _run_verbose_register(mcp, verbose_register)
     _mark_actor_required(mcp, actor_required)
+    install_pending_seed(mcp)
     return tags
 
 
