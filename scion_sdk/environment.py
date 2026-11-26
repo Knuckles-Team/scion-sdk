@@ -187,6 +187,7 @@ _TABLE: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "int",
         ("scion_sdk.source_connectors.http_safety",),
     ),
+    ("SOURCE_MOUNT_BACKEND", "str", ("scion_sdk.source.mount",)),
     ("SSL_CERT_DIR", "str", ("scion_sdk.tls.selection",)),
     ("SSL_CERT_FILE", "str", ("scion_sdk.tls.selection",)),
     ("TECHNITIUM_DNS_ENABLE_WRITE", "bool", ("scion_sdk.writeback_sinks.sinks.ops",)),
