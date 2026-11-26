@@ -42,6 +42,7 @@ from scion_sdk.mcp.prompt_pack_meta import ContentError
 
 __all__ = [
     "PROMPT_META_KEY",
+    "RELEASE_URI",
     "ConnectorContent",
     "ContentError",
     "ContentRegistration",
@@ -50,7 +51,11 @@ __all__ = [
     "ontology_resources",
     "register_connector_content",
     "register_ontology_resources",
+    "register_release_resource",
 ]
+
+#: The signed release evidence resource (SCION-CONNECTOR-CONTROL-R650.1.1).
+RELEASE_URI = "connector://release"
 
 
 @dataclass(frozen=True)
@@ -67,6 +72,11 @@ class ConnectorContent:
     connector: str
     package_root: Path
     package_version: str
+
+    @property
+    def release_path(self) -> Path:
+        """``<package root>/release.json``, the signed release evidence."""
+        return self.package_root / "release.json"
 
     def __post_init__(self) -> None:
         if not self.connector.strip() or not self.package_version.strip():
@@ -210,6 +220,36 @@ def _content_resources(content: ConnectorContent) -> list[FileResource | TextRes
     return found
 
 
+def register_release_resource(mcp: Any, content: ConnectorContent) -> bool:
+    """Serve ``release.json`` as ``connector://release`` when the file exists.
+
+    Raises:
+        ContentError: the file is malformed.
+    """
+    from scion_sdk.manifest.release_signature import (
+        ReleaseSigningError,
+        read_release_evidence,
+    )
+
+    path = content.release_path
+    if not path.is_file():
+        return False
+    text = path.read_text(encoding="utf-8")
+    try:
+        read_release_evidence(text)
+    except ReleaseSigningError as error:
+        raise ContentError(f"{path.name} is malformed: {error}") from None
+    mcp.add_resource(
+        TextResource(
+            uri=AnyUrl(RELEASE_URI),
+            name=RELEASE_URI,
+            text=text,
+            mime_type="application/json",
+        )
+    )
+    return True
+
+
 def register_connector_content(
     mcp: Any, content: ConnectorContent
 ) -> ContentRegistration:
@@ -230,6 +270,7 @@ def register_connector_content(
     for resource in resources:
         mcp.add_resource(resource)
     descriptors = _register_resource_descriptors(mcp, content)
+    register_release_resource(mcp, content)
     return ContentRegistration(
         skills=skill_count,
         prompts=len(prompt_paths),
