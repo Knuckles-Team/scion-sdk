@@ -190,7 +190,7 @@ def create_mcp_server(
         register_enterprise_tools(mcp, enterprise_dispatcher)
     if content is not None:
         register_connector_content(mcp, content)
-    middlewares = build_middleware(no_auth=no_auth)
+    middlewares = build_middleware(no_auth=no_auth, connector_id=name)
     if args.fixture_mode:
         middlewares.append(_fixture_middleware(content))
     return args, mcp, middlewares
