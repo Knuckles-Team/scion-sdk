@@ -364,7 +364,7 @@ Entry point: a connector's console script starts its server module, which calls 
 - Arbora served agent: `ARBORA-A2A-R001.3` consumes rows `SCION-CENTRALIZED-CAPABILITIES-R017.1` and `SCION-CENTRALIZED-CAPABILITIES-R017.2`; see [contracts/a2a-storage.md](contracts/a2a-storage.md).
 - Engine conformance evidence: `MEDULLA-TYPED-PACKS-R807` receives the record of `SCION-CENTRALIZED-CAPABILITIES-R041`; see [contracts/conformance-evidence.md](contracts/conformance-evidence.md).
 
-## Linked Data, SPARQL, instance profile and reconciliation clients (R051 to R054)
+### Linked Data, SPARQL, instance profile and reconciliation clients (R051 to R054)
 
 Call paths. A connector's server module calls a client in `scion_sdk/transports/`: `linked_data.py`, `sparql.py` or `reconciliation.py`. Each client builds its HTTP client through `build_http_client` (`scion_sdk/http/client.py:287`), so the egress guard (R002), the retry policy (R001) and the TLS profile with a client certificate (R008, `scion_sdk/tls/profile.py:33`) apply. `build_instance_profile` (`scion_sdk/ontology/instance_profile.py`) calls `SparqlClient.select` and hands the profile to the engine client adapter (R018).
 
