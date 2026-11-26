@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from major_version_fixtures import NOW, PACKAGES, build_fleet, passing_runner, rewrite
 
-import scion_sdk.certify.rollout as rollout
+import scion_sdk.testing.rollout as rollout
 from scion_sdk.testing.major_version import RolloutEvidence
 
 
@@ -47,7 +47,7 @@ def test_rollout_command_and_every_writer_call_the_gate(
         [
             sys.executable,
             "-m",
-            "scion_sdk.certify.rollout",
+            "scion_sdk.testing.rollout",
             "--plan",
             str(plan),
             "--evidence",
@@ -95,7 +95,7 @@ def test_fleet_preflight_refusal_preserves_all_pins(tmp_path: Path) -> None:
     plan, files = _plan(tmp_path, [sys.executable, "-c", "raise SystemExit(1)"])
     before = {n: p.read_bytes() for n, p in files.items()}
     done = subprocess.run(  # nosec B603
-        [sys.executable, "-m", "scion_sdk.certify.rollout", "--plan", str(plan)],
+        [sys.executable, "-m", "scion_sdk.testing.rollout", "--plan", str(plan)],
         capture_output=True,
         text=True,
         timeout=120,

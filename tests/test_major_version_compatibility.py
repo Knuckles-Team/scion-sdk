@@ -15,7 +15,6 @@ from major_version_fixtures import (
     sha,
 )
 
-from scion_sdk.certify.rollout import command_suite_runner, run_rollout
 from scion_sdk.testing.fleet_migration import (
     InventoryIncomplete,
     evaluate_major_version_compatibility,
@@ -30,6 +29,7 @@ from scion_sdk.testing.major_version import (
     require_package_pin_change,
     rollout_decision,
 )
+from scion_sdk.testing.rollout import command_suite_runner, run_rollout
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R007.2")
