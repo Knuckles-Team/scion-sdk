@@ -33,6 +33,7 @@ __all__ = [
     "Storage",
     "create_a2a_app",
     "require_a2a_extra",
+    "streaming_wired",
 ]
 
 #: JSON-RPC code for a caller naming a context or cursor it does not own.
@@ -583,6 +584,16 @@ class _ProtocolGate:
         await self._inner(scope, _replay_body(body), send)
 
 
+def streaming_wired(storage: Any) -> bool:
+    """Whether the wired storage holds the turn-event log that ``message/stream`` needs.
+
+    The agent card advertises ``streaming`` from this and from nothing else: the
+    protocol gate serves ``message/stream`` and ``tasks/resubscribe`` only over
+    that log.
+    """
+    return isinstance(storage, Storage)
+
+
 def require_a2a_extra(feature: str) -> None:
     """Raise ``ImportError`` naming the ``a2a`` extra when it is absent."""
     missing = []
@@ -649,7 +660,23 @@ def create_a2a_app(
         async with app.task_manager, worker.run(), gate.lifespan(app):
             yield
 
-    app = FastA2A(
+    class _DerivedCardApp(FastA2A):  # type: ignore[misc]
+        """The fasta2a app whose card derives ``streaming`` from the wired storage.
+
+        fasta2a hardcodes ``streaming: false``; the gate serves streaming, so the
+        card reports what is wired.
+        """
+
+        async def _agent_card_endpoint(self, request: Any) -> Any:
+            from starlette.responses import Response
+
+            card = json.loads(bytes((await super()._agent_card_endpoint(request)).body))
+            card.setdefault("capabilities", {})["streaming"] = streaming_wired(storage)
+            return Response(
+                json.dumps(card).encode("utf-8"), media_type="application/json"
+            )
+
+    app = _DerivedCardApp(
         storage=storage,
         broker=broker,
         name=name,
