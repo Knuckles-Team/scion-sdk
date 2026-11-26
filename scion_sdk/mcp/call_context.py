@@ -28,7 +28,7 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from mcp.shared.exceptions import MCPError
 
 from scion_sdk.config import setting
-from scion_sdk.identity import current_actor
+from scion_sdk.identity import ActorType, current_actor
 from scion_sdk.mcp.context import (
     ToolExecutionContext,
     ToolExecutionResult,
@@ -172,12 +172,17 @@ class ToolContextMiddleware(Middleware):
         self, fast_ctx: Any, tool: str, meta: dict[str, Any]
     ) -> ToolExecutionContext:
         actor = current_actor()
+        # An unauthenticated caller has no tenant; it runs in the reserved
+        # "anonymous" scope and holds no entitlements (the tool refuses it).
+        tenant = actor.tenant_id or (
+            "anonymous" if actor.actor_type is ActorType.ANONYMOUS else ""
+        )
         request_id = str(getattr(fast_ctx, "request_id", "") or uuid.uuid4().hex)
         session = _session(fast_ctx)
         token = meta.get("progressToken")
         try:
             return ToolExecutionContext(
-                tenant_id=actor.tenant_id,
+                tenant_id=tenant,
                 actor_id=actor.actor_id,
                 session_id=session,
                 request_id=request_id,
