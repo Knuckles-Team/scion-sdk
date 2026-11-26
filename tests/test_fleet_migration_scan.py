@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 
 from scion_sdk.testing.fleet_migration import (
+    BATCH_LETTERS,
     PackageScanResult,
+    batch_census,
+    batch_roots,
     scan_for_meristem_imports,
     scan_many_packages,
 )
@@ -183,3 +186,48 @@ def test_scan_many_packages_reports_each_root_by_name(tmp_path: Path) -> None:
     assert results["clean_pkg"].migrated
     assert not results["legacy_pkg"].migrated
     assert results["legacy_pkg"].offending_files == ("a.py",)
+
+
+_ROWS = ("R009", "R010", "R011", "R012", "R013")
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R009")
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R010")
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R011")
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R012")
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R013")
+def test_batch_census_is_clean(tmp_path: Path) -> None:
+    """Each alphabetical batch is selected from the tree and scanned in one call;
+    a legacy import, an unresolved dynamic import and a missing package are all
+    reported as not clean."""
+    sample = {"R009": "ansible-tower-mcp", "R010": "gitlab-api", "R011": "kafka-mcp"}
+    sample |= {"R012": "plane-agent", "R013": "wger-agent"}
+    for name in sample.values():
+        _write(tmp_path / name / "server.py", "import scion_sdk\n")
+    _write(tmp_path / "zeta-mcp" / "a.py", "import meristem.core.config\n")
+    _write(
+        tmp_path / "tidy-api" / "a.py", "import importlib\nimportlib.import_module(x)"
+    )
+    (tmp_path / "notes.txt").write_text("not a package", encoding="utf-8")
+
+    for row in _ROWS[:4]:
+        results = batch_census(tmp_path, row, expected=[sample[row]])
+        assert results[sample[row]].migrated
+        assert all(name[0] in BATCH_LETTERS[row] for name in results)
+        assert all(r.migrated for r in results.values())
+
+    last = batch_census(tmp_path, "R013", expected=["wger-agent", "weather-gone"])
+    assert last["wger-agent"].migrated
+    assert not last["zeta-mcp"].migrated
+    assert not last["tidy-api"].migrated
+    assert not last["weather-gone"].migrated
+    assert last["zeta-mcp"].offending_files == ("a.py",)
+    assert last["tidy-api"].unscanned_files == ("a.py",)
+
+
+def test_batch_roots_selects_by_first_letter_and_keeps_expected(tmp_path: Path) -> None:
+    for name in ("alpha-mcp", "echo-api", "foxtrot", ".hidden"):
+        (tmp_path / name).mkdir()
+    (tmp_path / "apple.txt").write_text("file", encoding="utf-8")
+    roots = batch_roots(tmp_path, BATCH_LETTERS["R009"], expected=["bravo-mcp"])
+    assert [root.name for root in roots] == ["alpha-mcp", "bravo-mcp", "echo-api"]

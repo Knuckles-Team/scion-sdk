@@ -26,13 +26,25 @@ from scion_sdk.testing._fleet_walk import (
 )
 
 __all__ = [
+    "BATCH_LETTERS",
     "JsonTagLoaderEntry",
     "OperationMapping",
     "PackageScanResult",
+    "batch_census",
+    "batch_roots",
     "loader_parity_problems",
     "scan_for_meristem_imports",
     "scan_many_packages",
 ]
+
+#: SCION-CONNECTOR-CONTROL-R009-R013: the five alphabetical migration batches.
+BATCH_LETTERS: dict[str, str] = {
+    "R009": "abcde",
+    "R010": "fghij",
+    "R011": "klmno",
+    "R012": "pqrs",
+    "R013": "tuvwxyz",
+}
 
 _REGISTRATION_KINDS = frozenset({"operation", "callback", "action_dispatch"})
 
@@ -67,6 +79,41 @@ def scan_many_packages(
             raise ValueError("connector package names must be unique")
         results[root.name] = scan_for_meristem_imports(root, exclude_dirs=exclude_dirs)
     return results
+
+
+def batch_roots(
+    agents_root: Path, first_letters: str, expected: Iterable[str] = ()
+) -> list[Path]:
+    """Return the connector roots of one batch, selected at call time.
+
+    A batch is every directory under ``agents_root`` whose name starts with one
+    of ``first_letters``. Each ``expected`` name that has no directory is still
+    returned, so the census reports it as not migrated instead of omitting it.
+    """
+    letters = first_letters.lower()
+    names = {
+        p.name
+        for p in agents_root.iterdir()
+        if p.is_dir() and not p.name.startswith(".") and p.name[:1].lower() in letters
+    }
+    names.update(expected)
+    return [agents_root / name for name in sorted(names)]
+
+
+def batch_census(
+    agents_root: Path,
+    batch: str,
+    expected: Iterable[str] = (),
+    *,
+    exclude_dirs: frozenset[str] = _DEFAULT_EXCLUDED_DIRS,
+) -> dict[str, PackageScanResult]:
+    """Scan one R009-R013 batch through the shared ``scan_many_packages`` call.
+
+    ``batch`` is the row suffix (``"R009"`` to ``"R013"``). An unresolved
+    dynamic import or a missing expected package is never reported clean.
+    """
+    roots = batch_roots(agents_root, BATCH_LETTERS[batch], expected)
+    return scan_many_packages(roots, exclude_dirs=exclude_dirs)
 
 
 @dataclass(frozen=True)
