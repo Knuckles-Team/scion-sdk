@@ -18,6 +18,7 @@ __all__ = [
     "STRUCTURAL_ID_FIELDS",
     "field_name",
     "field_redaction",
+    "is_secret_field",
     "runtime_deny_terms",
     "usable_terms",
 ]
@@ -71,19 +72,23 @@ PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("iban", re.compile(r"(?i)\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){11,30}\b")),
 )
 
-_SECRET_FIELDS = frozenset(
-    [
-        "authorization",
-        "api_key",
-        "apikey",
-        "access_token",
-        "refresh_token",
-        "client_secret",
-        "password",
-        "secret",
-        "token",
-    ]
+_SECRET_NAME = re.compile(
+    r"(?:^|_)(?:token|secret|password|passwd|passphrase|api_key|apikey|private_key"
+    r"|access_key|secret_key|client_secret|credentials|connection_string|dsn"
+    r"|auth_header|authorization|cookie|session_key)(?:_(?:value|plaintext|raw))?$"
 )
+# A cursor or coordination token, and a flag about a secret, hold no secret value.
+_NOT_SECRET_NAME = re.compile(
+    r"(?:^|_)(?:continuation|page|fencing|cancellation|next|sync|cursor)_token$"
+    r"|^(?:has|is)_"
+)
+
+
+def is_secret_field(field: str) -> bool:
+    """Whether a normalized field name ends in a credential word (R025.7.2)."""
+    return bool(_SECRET_NAME.search(field)) and not _NOT_SECRET_NAME.search(field)
+
+
 _LOCATION_FIELDS = frozenset(
     [
         "base_url",
@@ -155,7 +160,6 @@ STRUCTURAL_ID_FIELDS = frozenset(
     ]
 )
 _FIELD_REDACTIONS: tuple[tuple[frozenset[str], str, str], ...] = (
-    (_SECRET_FIELDS, "secret_field", "[REDACTED_SECRET]"),
     (_LOCATION_FIELDS, "location_field", "[REDACTED_LOCATION]"),
 )
 _IGNORED_TERMS = frozenset(
@@ -178,7 +182,8 @@ _MIN_TERM = 3
 
 
 def field_name(value: object) -> str:
-    return re.sub(r"[^a-z0-9]+", "_", str(value).strip().lower()).strip("_")
+    spaced = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", str(value).strip())
+    return re.sub(r"[^a-z0-9]+", "_", spaced.lower()).strip("_")
 
 
 def populated(item: object) -> bool:
@@ -242,6 +247,8 @@ def field_redaction(
 ) -> tuple[str, str] | None:
     if not populated(item):
         return None
+    if is_secret_field(field):
+        return "secret_field", "[REDACTED_SECRET]"
     for fields, label, replacement in _FIELD_REDACTIONS:
         if field in fields:
             return label, replacement
