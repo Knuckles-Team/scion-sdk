@@ -580,6 +580,7 @@ public_modules = [
     "scion_sdk.observation",
     "scion_sdk.provisioning",
     "scion_sdk.mcp.tool_declaration",
+    "scion_sdk.mcp.descriptors",
     "scion_sdk.certify.release_cli",
     "scion_sdk.adapters.sandbox_provisioner",
     "scion_sdk.mcp.sandbox_tools",

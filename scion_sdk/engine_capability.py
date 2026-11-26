@@ -22,6 +22,7 @@ __all__ = [
 ENGINE_CAPABILITIES: Mapping[str, tuple[str, str]] = {
     "InstanceProfile": ("medulla.generated.source_ingestion", "InstanceProfile"),
     "ProfileSubmission": ("medulla.generated.source_ingestion", "ProfileSubmission"),
+    "DescribeContract": ("medulla.generated.models", "DescribeContractPage"),
     "SchemaDriftQuarantinedError.drift": ("medulla", "SchemaDriftQuarantinedError"),
 }
 
