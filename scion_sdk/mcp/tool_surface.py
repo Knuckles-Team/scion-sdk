@@ -45,6 +45,7 @@ from scion_sdk.mcp._tool_surface_sources import (
     _package_root,
     _register_declared_sources,
 )
+from scion_sdk.mcp.credential_context import CredentialBinder, bind_credential_context
 from scion_sdk.mcp.method_tools import (
     GATED_TAG,
     GRANULAR_TAG,
@@ -176,6 +177,7 @@ def register_tool_surface(
     result_coercer: Callable[[Any], Any] | None = None,
     package_root: Path | None = None,
     instances: ConnectorInstances | None = None,
+    credential_binder: CredentialBinder | None = None,
 ) -> list[str]:
     """Register one tool per API operation, plus the connector's other tools.
 
@@ -185,6 +187,9 @@ def register_tool_surface(
     ``<prefix>_<operation>`` where ``prefix`` is ``tool_prefix`` or derived
     from ``service`` (:func:`operation_prefix`). ``manifest`` carries the
     OpenAPI operation entries for ``client_cls``.
+
+    ``credential_binder``, when given, binds the host-granted credential
+    binding to each tool call (SCION-CONNECTOR-CONTROL-R035.3).
 
     ``instances``, when given, advertises an optional ``instance`` argument
     on every operation tool; a named instance resolves its client through the
@@ -221,6 +226,8 @@ def register_tool_surface(
             (neither a covered split) share a name.
     """
     del action_providers
+    if credential_binder is not None:
+        bind_credential_context(mcp, credential_binder)
     tags = _register_condensed(
         mcp, _condensed_entries(tool_registry, tools_module, registrars)
     )
