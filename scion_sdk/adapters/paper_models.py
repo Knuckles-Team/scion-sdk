@@ -25,6 +25,7 @@ from pydantic import (
 )
 
 __all__ = [
+    "CitationEdge",
     "DocumentOffer",
     "DocumentReceipt",
     "FieldAlternative",
@@ -32,9 +33,13 @@ __all__ = [
     "PaperContinuation",
     "PaperQuery",
     "PaperRecord",
+    "PaperRejection",
     "PaperSearchResult",
     "ProviderReference",
     "ProviderReport",
+    "citation_edge_digest",
+    "revision_digest",
+    "unidentified_canonical_id",
 ]
 
 Identity = Annotated[str, Field(min_length=1, max_length=512, pattern=r"^\S(?:.*\S)?$")]
@@ -189,6 +194,39 @@ class DocumentOffer(_Model):
         return value
 
 
+class CitationEdge(_Model):
+    """A cited paper and the evidence that names it; never a bare count."""
+
+    cited_canonical_id: Identity
+    source_evidence: tuple[FieldEvidence, ...] = Field(
+        min_length=1, max_length=1000, strict=False
+    )
+
+
+def unidentified_canonical_id(title: str, authors: tuple[str, ...]) -> str:
+    """The fallback id of a paper with no DOI or alias (SCION-SOURCE-INGEST-R005.31)."""
+    payload = json.dumps(
+        [title, list(authors)], ensure_ascii=False, separators=(",", ":")
+    )
+    return "unidentified:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def citation_edge_digest(edges: tuple[CitationEdge, ...]) -> str:
+    """SHA-256 over the canonical edge set."""
+    payload = json.dumps(
+        [edge.model_dump(mode="json") for edge in edges],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def revision_digest(canonical_id: str, revision: str | None) -> str:
+    """SHA-256 binding a canonical id to one revision."""
+    return hashlib.sha256(f"{canonical_id}\n{revision or ''}".encode()).hexdigest()
+
+
 class PaperRecord(_Model):
     """A canonical paper revision with source-attributed fields."""
 
@@ -208,6 +246,47 @@ class PaperRecord(_Model):
     alternate_values: dict[str, tuple[FieldAlternative, ...]] = Field(
         default_factory=dict
     )
+    citation_edges: tuple[CitationEdge, ...] = Field(
+        default=(), max_length=10_000, strict=False
+    )
+    citation_edge_digest: Digest | None = None
+    revision_digest: Digest | None = None
+    assertion_receipt: Identity | None = None
+
+    @model_validator(mode="after")
+    def bind_identity_and_edges(self) -> PaperRecord:
+        if self.canonical_id.startswith("unidentified:") and (
+            self.title is None
+            or self.canonical_id != unidentified_canonical_id(self.title, self.authors)
+        ):
+            raise ValueError("unidentified id does not bind title and authors")
+        cited = [edge.cited_canonical_id for edge in self.citation_edges]
+        if len(set(cited)) != len(cited) or self.canonical_id in cited:
+            raise ValueError("citation edges repeat a paper or cite the paper itself")
+        if self.citation_edge_digest not in (
+            None,
+            citation_edge_digest(self.citation_edges),
+        ):
+            raise ValueError("citation edge digest does not bind the edges")
+        if self.revision_digest not in (
+            None,
+            revision_digest(self.canonical_id, self.revision),
+        ):
+            raise ValueError("revision digest does not bind the revision")
+        return self
+
+
+PaperRejectionReason = Literal[
+    "conflicting_values", "invalid_edge", "missing_identity", "extraction_failed"
+]
+
+
+class PaperRejection(_Model):
+    """One paper's refusal; it keeps identity and reason, never raw content."""
+
+    provider_id: Identity
+    record_id: Identity
+    reason: PaperRejectionReason
 
 
 class ProviderReport(_Model):

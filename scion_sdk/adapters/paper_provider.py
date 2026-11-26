@@ -8,6 +8,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import Field, model_validator
 
 from scion_sdk.adapters.paper_models import (
+    CitationEdge,
     DocumentOffer,
     FieldEvidence,
     Identity,
@@ -35,9 +36,19 @@ class ProviderPaper(_Model):
         default=(), max_length=1000, strict=False
     )
     field_provenance: dict[str, tuple[FieldEvidence, ...]] = Field(default_factory=dict)
+    citation_edges: tuple[CitationEdge, ...] = Field(
+        default=(), max_length=10_000, strict=False
+    )
+    unidentified: bool = False
 
     @model_validator(mode="after")
     def bind_evidence(self) -> ProviderPaper:
+        for edge in self.citation_edges:
+            _check_evidence(self.reference, edge.source_evidence)
+        if self.unidentified and (
+            self.doi is not None or self.canonical_alias is not None or not self.title
+        ):
+            raise ValueError("an unidentified paper has a title and no DOI or alias")
         fields = {"title", "authors", "abstract", "publication_date"}
         if not self.field_provenance.keys() <= fields:
             raise ValueError("unknown field provenance")

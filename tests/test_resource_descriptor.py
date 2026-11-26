@@ -52,7 +52,7 @@ def test_descriptor_round_trips_and_names_only_a_credential_reference():
 
 
 def test_transport_declaration_does_not_admit_unimplemented_resources():
-    with pytest.raises(ResourceDeclarationError, match="ACCESS_KIND_UNKNOWN"):
+    with pytest.raises(ResourceDeclarationError, match="TRANSPORT_UNIMPLEMENTED"):
         _descriptor(access_kind="stream_topic")
     with pytest.raises(ResourceDeclarationError, match="PAGINATION_UNDECLARED"):
         _descriptor(pagination="sync_token")

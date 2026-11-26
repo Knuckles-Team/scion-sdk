@@ -17,8 +17,13 @@ from scion_sdk.adapters.paper_download import (
     DocumentRequest,
     PaperDocumentService,
 )
-from scion_sdk.adapters.paper_merge import merge_paper_records
+from scion_sdk.adapters.paper_merge import (
+    PaperFactOutcome,
+    extract_paper_facts,
+    merge_paper_records,
+)
 from scion_sdk.adapters.paper_models import (
+    CitationEdge,
     DocumentOffer,
     DocumentReceipt,
     FieldAlternative,
@@ -26,9 +31,12 @@ from scion_sdk.adapters.paper_models import (
     PaperContinuation,
     PaperQuery,
     PaperRecord,
+    PaperRejection,
     PaperSearchResult,
     ProviderReference,
     ProviderReport,
+    citation_edge_digest,
+    unidentified_canonical_id,
 )
 from scion_sdk.adapters.paper_provider import (
     ProviderFailure,
@@ -350,3 +358,146 @@ def test_dedup_partial_failure_quota_download_and_metadata_fallback(
                 _Fixed("first", ()), _policy("first", "g"), retries=bad_retries
             )
     assert json.dumps(result.model_dump(mode="json"))
+
+
+def _edge(provider, record, cited):
+    return CitationEdge(
+        cited_canonical_id=cited,
+        source_evidence=(
+            FieldEvidence(
+                provider_id=provider, source_id=record, location="references"
+            ),
+        ),
+    )
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.5")
+def test_provenance_conflicts_redaction_and_identity_stable_across_retries():
+    first = _paper("first", "1", title="First title", doi="10.1234/abc")
+    second = _paper("second", "x", title="Second title", doi="10.1234/abc").model_copy(
+        update={
+            "reference": ProviderReference(
+                provider_id="second",
+                record_id="x",
+                original_id="https://example.test/p?token=secret#frag",
+            )
+        }
+    )
+    one = merge_paper_records(_query(), (first, second))
+    again = merge_paper_records(_query(), (second, first))
+    assert one == again and one[0].revision_digest == again[0].revision_digest
+    (merged,) = one
+    assert merged.field_provenance["title"][0].provider_id == "first"
+    assert merged.alternate_values["title"][0].evidence[0].source_id == "x"
+    dumped = merged.model_dump_json()
+    assert "secret" not in dumped and "frag" not in dumped
+    assert merged.references[1].original_id == "https://example.test/p"
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.31")
+def test_record_binds_provenance_edges_and_identity_bounds():
+    citing = _paper("first", "1", doi="10.1234/a").model_copy(
+        update={"citation_edges": (_edge("first", "1", "doi:10.1234/b"),)}
+    )
+    (record,) = merge_paper_records(_query(), (citing,))
+    assert [e.cited_canonical_id for e in record.citation_edges] == ["doi:10.1234/b"]
+    assert record.citation_edge_digest == citation_edge_digest(record.citation_edges)
+    # A citation count is a claim, never an edge; edges name papers.
+    with pytest.raises(ValidationError):
+        CitationEdge(cited_canonical_id="doi:10.1234/b", source_evidence=())
+    with pytest.raises(ValidationError):
+        record.model_copy(update={"citation_edge_digest": "0" * 64}).model_validate(
+            record.model_copy(update={"citation_edge_digest": "0" * 64}).model_dump()
+        )
+    # An unidentified paper takes the fallback id of its title and authors.
+    lone = _paper("first", "2", title="No ids", doi=None).model_copy(
+        update={"unidentified": True}
+    )
+    (fallback,) = merge_paper_records(_query(), (lone,))
+    assert fallback.canonical_id == unidentified_canonical_id("No ids", ())
+    assert fallback.canonical_id.startswith("unidentified:")
+    with pytest.raises(ValidationError, match="does not bind title"):
+        fallback.model_copy(update={"title": "Other"}).model_validate(
+            fallback.model_copy(update={"title": "Other"}).model_dump()
+        )
+    with pytest.raises(ValidationError):
+        lone.model_validate(lone.model_copy(update={"doi": "10.1234/z"}).model_dump())
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.32")
+def test_edges_refusals_and_mixed_outcomes():
+    good = _paper("first", "1", doi="10.1234/a").model_copy(
+        update={"citation_edges": (_edge("first", "1", "doi:10.1234/b"),)}
+    )
+    other = _paper("second", "9", doi="10.1234/a").model_copy(
+        update={
+            "citation_edges": (
+                _edge("second", "9", "doi:10.1234/b"),
+                _edge("second", "9", "doi:10.1234/c"),
+            )
+        }
+    )
+    outcome = extract_paper_facts(_query(), (other, good))
+    assert isinstance(outcome, PaperFactOutcome)
+    (paper,) = outcome.papers
+    assert outcome.rejections == ()
+    assert [e.cited_canonical_id for e in paper.citation_edges] == [
+        "doi:10.1234/b",
+        "doi:10.1234/c",
+    ]
+    assert {e.provider_id for e in paper.citation_edges[0].source_evidence} == {
+        "first",
+        "second",
+    }
+    # An edge whose evidence names another record is refused at the provider paper.
+    with pytest.raises(ValidationError, match="does not bind"):
+        good.model_validate(
+            good.model_copy(
+                update={"citation_edges": (_edge("first", "other", "doi:10.1234/b"),)}
+            ).model_dump()
+        )
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.34")
+def test_identity_and_provenance_refusals_are_per_paper():
+    healthy = _paper("first", "ok", title="Healthy", doi="10.1234/ok")
+    own = _paper("first", "self", title="Self", doi="10.1234/self").model_copy(
+        update={"citation_edges": (_edge("first", "self", "doi:10.1234/self"),)}
+    )
+    clash_a = _paper("first", "c1", title="A", doi="10.1234/clash")
+    clash_b = _paper("first", "c2", title="B", doi="10.1234/clash")
+    outcome = extract_paper_facts(_query(), (healthy, own, clash_a, clash_b))
+    assert [p.canonical_id for p in outcome.papers] == ["doi:10.1234/ok"]
+    assert outcome.papers[0] == merge_paper_records(_query(), (healthy,))[0]
+    reasons = {(r.record_id, r.reason) for r in outcome.rejections}
+    assert reasons == {
+        ("self", "extraction_failed"),
+        ("c1", "conflicting_values"),
+        ("c2", "conflicting_values"),
+    }
+    assert all(isinstance(r, PaperRejection) for r in outcome.rejections)
+    assert "Self" not in "".join(r.model_dump_json() for r in outcome.rejections)
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.35")
+def test_field_provenance_and_edge_binding():
+    unidentified = _paper("first", "u", title="Only title").model_copy(
+        update={"unidentified": True}
+    )
+    cited = _paper("first", "1", doi="10.1234/a").model_copy(
+        update={"citation_edges": (_edge("first", "1", "doi:10.1234/b"),)}
+    )
+    outcome = extract_paper_facts(_query(), (unidentified, cited))
+    by_id = {p.canonical_id: p for p in outcome.papers}
+    fact = by_id["doi:10.1234/a"]
+    assert fact.revision_digest and fact.citation_edge_digest
+    assert fact.field_provenance["title"][0].source_id == "1"
+    assert fact.citation_edges[0].source_evidence[0].location == "references"
+    assert fact.assertion_receipt is None
+    nameless = next(p for p in outcome.papers if p.canonical_id.startswith("unid"))
+    assert nameless.title == "Only title"
+    assert nameless.field_provenance["title"][0].source_id == "u"
+    with pytest.raises(ValidationError):
+        fact.model_validate(
+            fact.model_copy(update={"assertion_receipt": " "}).model_dump()
+        )
