@@ -12,6 +12,7 @@ from typing import Any, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from scion_sdk.artifacts.annotations import (
+    READABLE_FORM_KEY,
     _annotations_from_mcp,
     _declared_annotations,
 )
@@ -111,4 +112,21 @@ def facts_from_declaration(
         arg_schema=body["input_schema"],
         schema_tokens=schema_tokens(canonical_json(body)),
         declared_by=source,
+        readable_form=_declared_readable_form(declared),
     )
+
+
+def _declared_readable_form(declared: Mapping[str, Any]) -> ReadableForm | None:
+    form = declared.get(READABLE_FORM_KEY)
+    if form is None:
+        return None
+    if not isinstance(form, Mapping):
+        raise MalformedArtifactError("readable_form must be an object")
+    try:
+        return ReadableForm(
+            template_id=form.get("template_id", ""),
+            max_chars=form.get("max_chars", 4000),
+            question_set_ref=form.get("question_set_ref"),
+        )
+    except (TypeError, ValueError) as exc:
+        raise MalformedArtifactError("readable_form is malformed") from exc
