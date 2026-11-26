@@ -161,3 +161,38 @@ def test_repository_identities_reject_nul(
 @pytest.mark.parametrize("path", ["src/café.py", "space name.py", "line\nbreak.py"])
 def test_repository_file_preserves_valid_posix_names(path: str) -> None:
     assert _file(path, b"source").path == path
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R004.13")
+def test_index_state_sequence_is_monotonic_and_strict() -> None:
+    from datetime import UTC, datetime
+
+    from scion_sdk.repository import RepositoryIndexState
+
+    def state(seq: int, **over: object) -> RepositoryIndexState:
+        values: dict[str, object] = {
+            "repository": "repo-a",
+            "sequence": seq,
+            "changed_files_digest": _digest(b"files"),
+            "parser_versions": {"python": "1"},
+            "semantic_mode": "syntax",
+            "layout_revision": "v1",
+            "peak_resident_bytes": 10,
+            "released_at": datetime(2026, 1, 1, tzinfo=UTC),
+        }
+        return RepositoryIndexState(**{**values, **over})  # type: ignore[arg-type]
+
+    first, second = state(1), state(2)
+    second.follows(first)
+    first.follows(None)
+    with pytest.raises(ValueError, match="grow"):
+        first.follows(second)
+    with pytest.raises(ValueError, match="grow"):
+        second.follows(second)
+    with pytest.raises(ValueError, match="another repository"):
+        state(3, repository="repo-b").follows(second)
+    for bad in ({"sequence": 0}, {"semantic_mode": "other"}, {"extra": 1}):
+        with pytest.raises(ValidationError):
+            state(1, **bad)
+    with pytest.raises(ValidationError):
+        first.sequence = 5  # type: ignore[misc]

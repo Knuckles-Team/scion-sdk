@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Literal
 
 from medulla.client import MedullaClient
 from medulla.generated.index_repository import IndexResult
+from pydantic import BaseModel, ConfigDict, Field
 
 from scion_sdk.repository.errors import RepositoryTransportError
 from scion_sdk.repository.models import RepositoryBatchLimits, RepositoryFile
 
-__all__ = ["RepositoryBatchReceipt"]
+__all__ = ["RepositoryBatchReceipt", "RepositoryIndexState"]
 
 
 @dataclass(frozen=True)
@@ -19,6 +22,33 @@ class RepositoryBatchReceipt:
 
     paths: tuple[str, ...]
     result: IndexResult
+
+
+class RepositoryIndexState(BaseModel):
+    """What one delta index release covered (SCION-SOURCE-INGEST-R004.13).
+
+    ``sequence`` is a positive integer that only grows for one repository.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    repository: str = Field(min_length=1)
+    sequence: int = Field(ge=1)
+    changed_files_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    parser_versions: dict[str, str]
+    semantic_mode: Literal["syntax", "typed"]
+    layout_revision: str = Field(min_length=1)
+    peak_resident_bytes: int = Field(ge=0)
+    released_at: datetime
+
+    def follows(self, previous: RepositoryIndexState | None) -> None:
+        """Refuse a state that does not strictly grow ``previous``'s sequence."""
+        if previous is None:
+            return
+        if previous.repository != self.repository:
+            raise ValueError("index state belongs to another repository")
+        if self.sequence <= previous.sequence:
+            raise ValueError("index state sequence must grow")
 
 
 class _RepositoryBatcher:

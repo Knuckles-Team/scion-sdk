@@ -91,6 +91,7 @@ async def test_served_read_is_stable_and_preserves_source(
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.7")
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.8")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.10")
 async def test_reader_refuses_invalid_and_escaping_files(tmp_path: Path) -> None:
     reader = BookmarkReader(tmp_path, vocabulary_revision="v1", domains={})
     for path in ("../outside", "/absolute", "a//b", "a/./b"):
@@ -119,6 +120,7 @@ async def test_reader_refuses_invalid_and_escaping_files(tmp_path: Path) -> None
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.7")
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.8")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.11")
 async def test_continuation_binds_file_digest_and_preserves_offsets(
     tmp_path: Path,
 ) -> None:

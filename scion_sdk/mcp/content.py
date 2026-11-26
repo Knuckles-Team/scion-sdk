@@ -43,6 +43,7 @@ from scion_sdk.mcp.prompt_pack_meta import ContentError
 __all__ = [
     "PROMPT_META_KEY",
     "RELEASE_URI",
+    "SEED_RESOURCE_URI",
     "ConnectorContent",
     "ContentError",
     "ContentRegistration",
@@ -56,6 +57,10 @@ __all__ = [
 
 #: The signed release evidence resource (SCION-CONNECTOR-CONTROL-R650.1.1).
 RELEASE_URI = "connector://release"
+
+
+#: The seed graph resource of a connector (R068.1).
+SEED_RESOURCE_URI = "seed://{connector}/seed.ttl"
 
 
 @dataclass(frozen=True)

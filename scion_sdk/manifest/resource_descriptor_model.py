@@ -17,6 +17,13 @@ _RESOURCE_KINDS = frozenset({"data", "ontology", "shapes", "skill", "seed", "man
 _RESOURCE_ACCESS_KINDS = frozenset(
     {"mcp_tool", "http_endpoint", "graphql_query", "a2a_skill", "virtual_graph"}
 )
+#: Dialects and capabilities a ``virtual_graph`` resource declares (R912).
+VIRTUAL_GRAPH_DIALECTS = frozenset(
+    {"mssql", "oracle", "db2", "mongodb", "documentdb", "snowflake", "bigquery"}
+)
+VIRTUAL_GRAPH_CAPABILITIES = frozenset(
+    {"projection", "predicate", "limit", "join", "aggregate", "order", "capture"}
+)
 _RESOURCE_PAGINATION_MODES = frozenset({"none", "cursor", "offset", "page"})
 
 
@@ -75,6 +82,8 @@ class ResourceDescriptor:
     start_page: int = 1
     start_offset: int = 0
     completion: str | None = None
+    dialect: str | None = None
+    capabilities: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         """Refuse unsafe values even when callers construct a descriptor directly."""
@@ -90,6 +99,7 @@ class ResourceDescriptor:
     def from_json(cls, document: Mapping[str, Any]) -> ResourceDescriptor:
         """Read the SDK's serialized descriptor and validate its contract."""
         values = dict(document)
+        values["capabilities"] = tuple(values.get("capabilities") or ())
         values["fields"] = tuple(
             FieldBinding(**field) for field in values.get("fields", ())
         )
@@ -119,6 +129,8 @@ class ResourceDescriptor:
             "start_page": self.start_page,
             "start_offset": self.start_offset,
             "completion": self.completion,
+            "dialect": self.dialect,
+            "capabilities": list(self.capabilities),
             "read_only": self.read_only,
             "owner": self.owner,
             "credential_ref": self.credential_ref,
@@ -184,6 +196,26 @@ def _validate_paging_numbers(
     return None
 
 
+def _validate_dialect(entry: Mapping[str, Any]) -> ResourceDeclarationError | None:
+    """A ``virtual_graph`` names a known dialect and known capabilities (R912)."""
+    name = entry.get("name")
+    dialect = entry.get("dialect")
+    capabilities = entry.get("capabilities") or ()
+    if entry.get("access_kind", "mcp_tool") != "virtual_graph":
+        if dialect is not None or capabilities:
+            return ResourceDeclarationError(
+                "CONTRACT_DIALECT_UNKNOWN", f"{name}: dialect needs a virtual_graph"
+            )
+        return None
+    if dialect not in VIRTUAL_GRAPH_DIALECTS or not set(capabilities) <= (
+        VIRTUAL_GRAPH_CAPABILITIES
+    ):
+        return ResourceDeclarationError(
+            "CONTRACT_DIALECT_UNKNOWN", f"{name}: unknown dialect or capability"
+        )
+    return None
+
+
 def _validate(
     entry: Mapping[str, Any], classes: frozenset[str] | None
 ) -> ResourceDeclarationError | None:
@@ -206,6 +238,9 @@ def _validate(
             "RESOURCE_UNMAPPED",
             f"{name}: {entry.get('ontology_class')!r} is not declared in the ontology",
         )
+    dialect_refusal = _validate_dialect(entry)
+    if dialect_refusal is not None:
+        return dialect_refusal
     ref = entry.get("credential_ref")
     if ref is not None:
         try:
