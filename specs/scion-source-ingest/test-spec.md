@@ -461,10 +461,10 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-SOURCE-INGEST-R005.35` | `tests/test_paper_contract.py::test_field_provenance_and_edge_binding`, `tests/test_paper_contract.py::test_field_provenance_and_edge_binding` |
 | `SCION-SOURCE-INGEST-R005.36` | `tests/test_citation_extraction_served.py::test_paper_facts_and_edges` |
 | `SCION-SOURCE-INGEST-R004.13` | `tests/test_repository_models.py::test_index_state_sequence_is_monotonic_and_strict`, `tests/test_repository_models.py::test_index_state_sequence_is_monotonic_and_strict` |
-| `SCION-SOURCE-INGEST-R004.14` | `tests/test_repository_effect_contract.py::test_delta_reads_only_changed_files`, `tests/test_incremental_index_served.py::test_delta_semantics_and_memory` |
-| `SCION-SOURCE-INGEST-R004.15` | `tests/test_repository_effect_contract.py::test_state_flows_worker_to_adapter` |
-| `SCION-SOURCE-INGEST-R004.16` | `tests/test_repository_effect_contract.py::test_refusals_isolate_one_file_and_require_release` |
-| `SCION-SOURCE-INGEST-R004.17` | `tests/test_repository_effect_contract.py::test_page_evidence_attributes_memory_and_files`, `tests/test_repository_effect_contract.py::test_page_evidence_attributes_memory_and_files` |
+| `SCION-SOURCE-INGEST-R004.14` | `tests/test_repository_delta_index.py::test_delta_reads_only_changed_files`, `tests/test_incremental_index_served.py::test_delta_semantics_and_memory` |
+| `SCION-SOURCE-INGEST-R004.15` | `tests/test_repository_delta_index.py::test_state_flows_worker_to_adapter` |
+| `SCION-SOURCE-INGEST-R004.16` | `tests/test_repository_delta_index.py::test_refusals_isolate_one_file_and_require_release` |
+| `SCION-SOURCE-INGEST-R004.17` | `tests/test_repository_delta_index.py::test_page_evidence_attributes_memory_and_files`, `tests/test_repository_delta_index.py::test_page_evidence_attributes_memory_and_files` |
 | `SCION-SOURCE-INGEST-R004.18` | `tests/test_incremental_index_served.py::test_delta_semantics_and_memory` |
 | `SCION-SOURCE-INGEST-R013.1` | `tests/test_harness_manifest.py::test_manifest_rejects_duplicates_unknown_versions_missing_owners_and_unbound_operations` |
 | `SCION-SOURCE-INGEST-R013.2` | `tests/test_harness_sessions.py::test_full_coverage_dedup_restart_and_per_source_progress` |
