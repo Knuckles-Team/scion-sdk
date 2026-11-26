@@ -123,6 +123,7 @@ Documentation = "https://knuckles-team.github.io/scion-sdk/"
 connector-sync = "scion_sdk.runner.cli:main"
 connector-certify = "scion_sdk.certify.cli:main"
 connector-release-sign = "scion_sdk.certify.release_cli:main"
+connector-rollout = "scion_sdk.testing.rollout:main"
 ingest-worker = "scion_sdk.runner.ingest_worker_cli:main"
 
 [project.entry-points.pytest11]
@@ -243,7 +244,7 @@ testpaths = ["tests"]
 # however pytest is launched (the shared gates job runs it without `python -m`).
 pythonpath = ["."]
 timeout = 120
-addopts = "-p no:cacheprovider"
+addopts = "-p no:cacheprovider -rfE"
 markers = [
     "spec: binds a test to a spec requirement ID",
 ]
@@ -296,6 +297,7 @@ public_modules = [
     "scion_sdk.adapters.paper_search",
     "scion_sdk.adapters.paper_tool",
     "scion_sdk.adapters.paper_maintenance",
+    "scion_sdk.adapters.paper_admission",
     "scion_sdk.adapters.media_tags",
     "scion_sdk.adapters.workspace_reader",
     "scion_sdk.raw_source",
@@ -421,6 +423,8 @@ public_modules = [
     "scion_sdk.manifest.live_contract",
     "scion_sdk.manifest.model",
     "scion_sdk.manifest.pack_declaration",
+    "scion_sdk.manifest.pack_preflight",
+    "scion_sdk.manifest.views",
     "scion_sdk.source",
     "scion_sdk.source.client",
     "scion_sdk.source.mcp_transport",
@@ -605,6 +609,7 @@ public_modules = [
     "scion_sdk.mcp.tool_declaration",
     "scion_sdk.mcp.descriptors",
     "scion_sdk.certify.release_cli",
+    "scion_sdk.testing.rollout",
     "scion_sdk.adapters.sandbox_provisioner",
     "scion_sdk.mcp.sandbox_tools",
     "scion_sdk.testing.sandbox_conformance",

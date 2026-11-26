@@ -9,6 +9,8 @@ from medulla.generated.connector_pack import PackEntryKind
 from scion_sdk.artifacts.common import json_object
 from scion_sdk.artifacts.source_contract import render_source_contract
 from scion_sdk.contracts import CapturedArtifact
+from scion_sdk.manifest.pack_declaration import ConnectorPackDeclaration
+from scion_sdk.manifest.pack_turtle import emit_pack_turtle
 from scion_sdk.manifest.resource_descriptor import (
     RESOURCES_URI,
     _check_captured_descriptor,
@@ -16,12 +18,34 @@ from scion_sdk.manifest.resource_descriptor import (
 from scion_sdk.ports.errors import MalformedArtifactError
 
 
+def _declared_contract_entry(
+    declaration: ConnectorPackDeclaration,
+) -> ConnectorPackEntryContent:
+    """The one ``contract://<connector>`` entry authored from the declaration (R067.5)."""
+    return ConnectorPackEntryContent(
+        kind=PackEntryKind.RESOURCE,
+        uri=f"contract://{declaration.connector}",
+        name="source-contract",
+        media_type="text/turtle",
+        body=emit_pack_turtle(declaration).encode("utf-8"),
+        output_schema=b'{"type":"string"}',
+    )
+
+
 def _source_contract_entries(
-    entries: Sequence[CapturedArtifact], connector: str
+    entries: Sequence[CapturedArtifact],
+    connector: str,
+    pack_declaration: ConnectorPackDeclaration | None = None,
 ) -> tuple[ConnectorPackEntryContent, ...]:
     declaration = next((entry for entry in entries if entry.uri == RESOURCES_URI), None)
     descriptors = json_object(declaration).get("descriptors", []) if declaration else []
     _validate_data_entries(entries, descriptors)
+    if pack_declaration is not None:
+        if pack_declaration.connector != connector:
+            raise MalformedArtifactError("the declaration names another connector")
+        if descriptors or any(e.uri == f"contract://{connector}" for e in entries):
+            raise MalformedArtifactError("a connector declares its contract once")
+        return (_declared_contract_entry(pack_declaration),)
     contract_entries: tuple[ConnectorPackEntryContent, ...] = ()
     if descriptors:
         contract_uri = f"contract://{connector}"

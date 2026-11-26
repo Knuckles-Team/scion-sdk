@@ -7,7 +7,6 @@ resolver refuses with ``EngineCapabilityUnavailable`` instead of answering.
 
 from __future__ import annotations
 
-import base64
 import importlib
 from datetime import datetime
 from typing import Any
@@ -22,6 +21,17 @@ def _seconds(value: str) -> int:
     return int(datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp())
 
 
+def _public_key(value: str) -> bytes:
+    """The engine serves ``public_key`` as lower-case hex of exactly 32 bytes."""
+    try:
+        key = bytes.fromhex(value)
+    except ValueError:
+        raise ValueError("wallet trust public_key is not hex") from None
+    if len(key) != 32 or value != value.lower():
+        raise ValueError("wallet trust public_key is not 32 lower-case hex bytes")
+    return key
+
+
 class EngineWalletKeyResolver:
     """Resolve a wallet key binding from the engine's trust record."""
 
@@ -32,14 +42,21 @@ class EngineWalletKeyResolver:
         """The current trust for ``binding``, or ``None`` for any foreign or absent record."""
         require_engine_capability("WalletKeyTrustGet")
         compute = importlib.import_module("medulla.generated.compute")
-        record = await compute.send_wallet_key_trust_get(
-            self._client,
-            {
-                "account_id": binding.account_id,
-                "network_id": binding.network_id,
-                "wallet_id": binding.wallet_id,
-            },
-        )
+        try:
+            record = await compute.send_wallet_key_trust_get(
+                self._client,
+                {
+                    "account_id": binding.account_id,
+                    "network_id": binding.network_id,
+                    "wallet_id": binding.wallet_id,
+                },
+            )
+        except Exception as error:
+            # The engine refuses an absent record with this stable code; an absent
+            # record answers exactly like a foreign one.
+            if getattr(error, "code", None) == "WALLET_KEY_TRUST_NOT_FOUND":
+                return None
+            raise
         if (
             record is None
             or record.tenant_id != binding.tenant_id
@@ -48,7 +65,7 @@ class EngineWalletKeyResolver:
             return None
         return WalletKeyTrust(
             binding=binding,
-            public_key=base64.b64decode(record.public_key),
+            public_key=_public_key(record.public_key),
             signer_ref=record.signer_ref,
             trust_revision=str(record.trust_revision),
             valid_from=_seconds(record.valid_from),

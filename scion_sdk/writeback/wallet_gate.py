@@ -17,7 +17,32 @@ from scion_sdk.writeback.wallet_proof import (
     WalletSignatureVerifier,
 )
 
-__all__ = ["EnvelopeProofGate"]
+__all__ = ["EnvelopeProofGate", "proof_evidence"]
+
+
+def proof_evidence(
+    binding: WalletProofBinding, result: WalletProofResult, *, verified_at_ms: int
+) -> dict[str, Any]:
+    """The reference-only evidence of one verified proof (SCION-GOVERNED-WRITEBACK-R001.5).
+
+    It holds digests and references. It never holds the signature, the proof body
+    or a key.
+    """
+    if result.outcome != "verified" or result.payload_digest is None:
+        raise ValueError("evidence exists only for a verified proof")
+    return {
+        "payload_digest": result.payload_digest,
+        "plan_digest": binding.plan_digest,
+        "change_set_digest": binding.change_set_digest,
+        "tenant": binding.tenant_id,
+        "actor": binding.actor_id,
+        "connector": binding.connector_id,
+        "operation": binding.operation_id,
+        "network": binding.network_id,
+        "signer_ref": result.signer_ref,
+        "trust_revision": result.trust_revision,
+        "verified_at_ms": verified_at_ms,
+    }
 
 
 class EnvelopeProofGate:
@@ -46,6 +71,7 @@ class EnvelopeProofGate:
         self._actor_id = actor_id
         self._resolver = resolver
         self._clock_ms = clock_ms or (lambda: time.time_ns() // 1_000_000)
+        self.evidence: dict[str, Any] | None = None
 
     async def verify(self, change_set: Any) -> WalletProofResult:
         """Return the verification fact for this exact change set."""
@@ -70,4 +96,8 @@ class EnvelopeProofGate:
             idempotency_key=change_set.idempotency_key,
         )
         verifier = WalletSignatureVerifier(self._resolver)
-        return await verifier.verify(proof, binding, now=self._clock_ms() // 1000)
+        now_ms = self._clock_ms()
+        result = await verifier.verify(proof, binding, now=now_ms // 1000)
+        if result.outcome == "verified":
+            self.evidence = proof_evidence(binding, result, verified_at_ms=now_ms)
+        return result
