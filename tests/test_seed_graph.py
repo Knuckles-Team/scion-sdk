@@ -188,3 +188,30 @@ async def test_seed_building_blocks_compose(tmp_path) -> None:  # type: ignore[n
     assert resource_descriptor_source(mcp, content) is None  # no ontology, no sources
     serve_change_subscriptions(mcp)
     await announce_resources_changed(mcp)
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R068.3")
+async def test_the_seed_waits_for_a_declared_tool_then_is_served(tmp_path) -> None:
+    from fastmcp import FastMCP
+
+    from scion_sdk.mcp.content import (
+        ConnectorContent,
+        install_pending_seed,
+        register_seed_resource,
+    )
+
+    registered: list[dict[str, str]] = []
+
+    def descriptors() -> list[dict[str, str]]:
+        if not registered:
+            raise ValueError("connector_sources declares unknown tool 'demo_tool'")
+        return registered
+
+    content = ConnectorContent("late-mcp", tmp_path, "1.0.0")
+    mcp: FastMCP = FastMCP("late")
+    assert register_seed_resource(mcp, content, descriptors) is False
+    assert install_pending_seed(mcp) is False  # the tool is still not registered
+    registered.append({"name": "widgets", "ontology_class": NS + "W"})
+    assert install_pending_seed(mcp) is True
+    assert await mcp.get_resource("seed://late-mcp/seed.ttl") is not None
+    assert install_pending_seed(mcp) is False  # already served

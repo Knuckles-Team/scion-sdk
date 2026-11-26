@@ -95,6 +95,10 @@ def _entry_content(entry: CapturedArtifact) -> ConnectorPackEntryContent:
             output_schema = _canonical_json_bytes(document["output_schema"])
     elif pack_kind is PackEntryKind.RESOURCE and uri == RESOURCES_URI:
         output_schema = declaration_content_schema()
+    elif pack_kind is PackEntryKind.RESOURCE and uri.startswith("seed://"):
+        output_schema = _canonical_json_bytes(
+            {"type": "string", "contentMediaType": "text/turtle"}
+        )
     elif pack_kind is PackEntryKind.RESOURCE and uri.startswith("data://"):
         from pydantic import TypeAdapter
 

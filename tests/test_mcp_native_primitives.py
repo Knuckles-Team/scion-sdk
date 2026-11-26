@@ -69,6 +69,7 @@ async def test_native_status_does_not_block_packaged_content_capture(
     assert pack.resource_uris == {
         "connector://resources",
         "ontology://demo-agent/demo.ttl",
+        "seed://demo-agent/seed.ttl",
         "shapes://demo-agent/demo.shapes.ttl",
         "skill://demo-reader/SKILL.md",
     }

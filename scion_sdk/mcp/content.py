@@ -53,6 +53,7 @@ __all__ = [
     "ContentRegistration",
     "contracts_resource",
     "contracts_resources",
+    "install_pending_seed",
     "ontology_resources",
     "refresh_seed_resource",
     "register_connector_content",
@@ -348,12 +349,34 @@ def _seed_resource(
 def register_seed_resource(
     mcp: Any, content: ConnectorContent, source: Callable[[], list[dict[str, Any]]]
 ) -> bool:
-    """Serve ``seed://<connector>/seed.ttl`` from the live descriptors (R068.3)."""
-    resource, digest = _seed_resource(content, source())
+    """Serve ``seed://<connector>/seed.ttl`` from the live descriptors (R068.3).
+
+    Content registers before the connector's tools. While a declared tool is not
+    registered yet the descriptors cannot be built, so the source is remembered and
+    ``install_pending_seed`` serves the seed once the tool surface is registered.
+    Returns whether the seed is served now.
+    """
+    _SEED_SOURCES[mcp] = (content, source)
+    return _install_seed(mcp)
+
+
+def _install_seed(mcp: Any) -> bool:
+    content, source = _SEED_SOURCES[mcp]
+    try:
+        descriptors = source()
+    except ValueError:  # a declared tool is not registered yet
+        return False
+    resource, digest = _seed_resource(content, descriptors)
     mcp.add_resource(resource)
     _SEED_DIGESTS[mcp] = digest
-    _SEED_SOURCES[mcp] = (content, source)
     return True
+
+
+def install_pending_seed(mcp: Any) -> bool:
+    """Serve the seed after the tool surface registers, when content deferred it."""
+    if mcp not in _SEED_SOURCES or mcp in _SEED_DIGESTS:
+        return False
+    return _install_seed(mcp)
 
 
 async def refresh_seed_resource(mcp: Any) -> bool:
