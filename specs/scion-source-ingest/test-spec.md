@@ -447,7 +447,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-SOURCE-INGEST-R005.4` | `tests/test_paper_document_stream_errors.py::test_every_refusal_class_has_no_unauthorized_effect` |
 | `SCION-SOURCE-INGEST-R005.5` | `tests/test_paper_contract.py::test_provenance_conflicts_redaction_and_identity_stable_across_retries`, `tests/test_paper_contract.py::test_provenance_conflicts_redaction_and_identity_stable_across_retries` |
 | `SCION-SOURCE-INGEST-R005.6` | `tests/test_paper_source_served.py::test_served_search_download_and_sync` |
-| `SCION-SOURCE-INGEST-R011.1` | `tests/runner/test_ingest_worker.py::test_fake_engine_grants_three_slots_on_sixteen_cores_and_worker_runs_three`, `tests/runner/test_ingest_worker_served.py::test_worker_runs_the_slots_the_engine_grants` |
+| `SCION-SOURCE-INGEST-R011.1` | `tests/runner/test_ingest_worker.py::test_fake_engine_grants_three_slots_on_sixteen_cores_and_worker_runs_three`, `tests/runner/test_ingest_worker_served.py::test_worker_runs_the_slots_the_engine_grants` (planned) |
 | `SCION-SOURCE-INGEST-R005.25` | `tests/runner/test_paper_intake.py::test_job_and_receipt_models_are_strict` |
 | `SCION-SOURCE-INGEST-R005.26` | `tests/runner/test_paper_intake.py::test_cycle_dedup_and_restart_boundary`, `tests/test_scheduled_job_served.py::test_six_hour_cycle_admits_and_ingests` |
 | `SCION-SOURCE-INGEST-R005.27` | `tests/test_scheduled_job_served.py::test_scheduler_firing_reaches_worker_and_links_receipt` |
