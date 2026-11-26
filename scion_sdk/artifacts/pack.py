@@ -15,6 +15,7 @@ from medulla.generated.connector_pack import PackEntryKind
 from scion_sdk.artifacts.common import json_object
 from scion_sdk.artifacts.ontology_imports import scope_ontology_imports
 from scion_sdk.artifacts.pack_sources import (
+    _check_contract_transports,
     _source_contract_entries,
     _validate_resource_descriptors,
 )
@@ -42,6 +43,7 @@ _RESOURCE_KINDS = {
     "model-profile": PackEntryKind.MODEL_PROFILE,
     "a2a-card": PackEntryKind.A2A_CARD,
     "data": PackEntryKind.RESOURCE,
+    "seed": PackEntryKind.RESOURCE,
 }
 _KINDS = {
     "tool": PackEntryKind.TOOL,
@@ -93,6 +95,10 @@ def _entry_content(entry: CapturedArtifact) -> ConnectorPackEntryContent:
             output_schema = _canonical_json_bytes(document["output_schema"])
     elif pack_kind is PackEntryKind.RESOURCE and uri == RESOURCES_URI:
         output_schema = declaration_content_schema()
+    elif pack_kind is PackEntryKind.RESOURCE and uri.startswith("seed://"):
+        output_schema = _canonical_json_bytes(
+            {"type": "string", "contentMediaType": "text/turtle"}
+        )
     elif pack_kind is PackEntryKind.RESOURCE and uri.startswith("data://"):
         from pydantic import TypeAdapter
 
@@ -158,6 +164,7 @@ async def build_content_pack(
     _validate_resource_descriptors(entries)
     entries = _scope_imports(entries)
     contract_entries = _source_contract_entries(entries, connector)
+    _check_contract_transports(contract_entries)
     server_entry = ConnectorPackEntryContent(
         kind=PackEntryKind.MCP_SERVER,
         uri=f"mcp-server://{connector}",

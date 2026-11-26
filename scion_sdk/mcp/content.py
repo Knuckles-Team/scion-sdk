@@ -24,16 +24,19 @@ less than the package declares is how provisioning drifts.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from weakref import WeakKeyDictionary
 
 from fastmcp.resources import FileResource, TextResource
 from fastmcp.server.providers.skills import SkillsDirectoryProvider
 from pydantic import AnyUrl
 
 from scion_sdk.manifest.prompt_source import prompt_document
-from scion_sdk.mcp._content_descriptors import _register_resource_descriptors
+from scion_sdk.manifest.seed_graph import SeedGraphDeclaration, SeedTriple
+from scion_sdk.mcp._content_descriptors import resource_descriptor_source
 from scion_sdk.mcp._content_prompts import (
     PROMPT_META_KEY,
     _register_prompt,
@@ -41,6 +44,7 @@ from scion_sdk.mcp._content_prompts import (
 from scion_sdk.mcp.prompt_pack_meta import ContentError
 
 __all__ = [
+    "DIGEST_META_KEY",
     "PROMPT_META_KEY",
     "RELEASE_URI",
     "SEED_RESOURCE_URI",
@@ -49,10 +53,14 @@ __all__ = [
     "ContentRegistration",
     "contracts_resource",
     "contracts_resources",
+    "install_pending_seed",
     "ontology_resources",
+    "refresh_seed_resource",
     "register_connector_content",
     "register_ontology_resources",
     "register_release_resource",
+    "register_seed_resource",
+    "seed_declaration",
 ]
 
 #: The signed release evidence resource (SCION-CONNECTOR-CONTROL-R650.1.1).
@@ -117,6 +125,7 @@ class ContentRegistration:
     prompts: int
     resources: int
     data_resources: int = 0
+    seed: bool = False
 
 
 def _register_skills(mcp: Any, skills_root: Path) -> int:
@@ -274,11 +283,118 @@ def register_connector_content(
     resources = _content_resources(content)
     for resource in resources:
         mcp.add_resource(resource)
-    descriptors = _register_resource_descriptors(mcp, content)
+    source = resource_descriptor_source(mcp, content)
+    seed = source is not None and register_seed_resource(mcp, content, source)
     register_release_resource(mcp, content)
     return ContentRegistration(
         skills=skill_count,
         prompts=len(prompt_paths),
         resources=len(resources),
-        data_resources=descriptors,
+        data_resources=0 if source is None else 1,
+        seed=seed,
     )
+
+
+#: Metadata key carrying a served contract resource's SHA-256 digest (R068.5).
+DIGEST_META_KEY = "scion/digest"
+_SEED_NS = "urn:scion:seed:"
+_SEED_DIGESTS: WeakKeyDictionary[Any, str] = WeakKeyDictionary()
+_SEED_SOURCES: WeakKeyDictionary[
+    Any, tuple[ConnectorContent, Callable[[], list[dict[str, Any]]]]
+] = WeakKeyDictionary()
+
+
+def seed_declaration(
+    content: ConnectorContent, descriptors: list[dict[str, Any]]
+) -> SeedGraphDeclaration:
+    """The seed of one connector: identity, object catalog and references only."""
+    instance = f"seed://{content.connector}/instance"
+    identity = (
+        SeedTriple(instance, f"{_SEED_NS}connector", content.connector, literal=True),
+        SeedTriple(
+            instance, f"{_SEED_NS}version", content.package_version, literal=True
+        ),
+    )
+    catalog: list[SeedTriple] = []
+    references: list[SeedTriple] = []
+    for descriptor in descriptors:
+        resource = f"seed://{content.connector}/resource/{descriptor['name']}"
+        catalog.append(SeedTriple(instance, f"{_SEED_NS}hasResource", resource))
+        if descriptor.get("ontology_class"):
+            references.append(
+                SeedTriple(
+                    resource, f"{_SEED_NS}class", str(descriptor["ontology_class"])
+                )
+            )
+    return SeedGraphDeclaration(instance, identity, tuple(catalog), tuple(references))
+
+
+def _seed_resource(
+    content: ConnectorContent, descriptors: list[dict[str, Any]]
+) -> tuple[TextResource, str]:
+    from scion_sdk.manifest.seed_graph import emit_seed_turtle
+
+    emitted = emit_seed_turtle(seed_declaration(content, descriptors))
+    uri = SEED_RESOURCE_URI.format(connector=content.connector)
+    resource = TextResource(
+        uri=AnyUrl(uri),
+        name=uri,
+        text=emitted.turtle,
+        mime_type="text/turtle",
+        meta={DIGEST_META_KEY: emitted.digest},
+    )
+    return resource, emitted.digest
+
+
+def register_seed_resource(
+    mcp: Any, content: ConnectorContent, source: Callable[[], list[dict[str, Any]]]
+) -> bool:
+    """Serve ``seed://<connector>/seed.ttl`` from the live descriptors (R068.3).
+
+    Content registers before the connector's tools. While a declared tool is not
+    registered yet the descriptors cannot be built, so the source is remembered and
+    ``install_pending_seed`` serves the seed once the tool surface is registered.
+    Returns whether the seed is served now.
+    """
+    _SEED_SOURCES[mcp] = (content, source)
+    return _install_seed(mcp)
+
+
+def _install_seed(mcp: Any) -> bool:
+    content, source = _SEED_SOURCES[mcp]
+    try:
+        descriptors = source()
+    except ValueError:  # a declared tool is not registered yet
+        return False
+    resource, digest = _seed_resource(content, descriptors)
+    mcp.add_resource(resource)
+    _SEED_DIGESTS[mcp] = digest
+    return True
+
+
+def install_pending_seed(mcp: Any) -> bool:
+    """Serve the seed after the tool surface registers, when content deferred it."""
+    if mcp not in _SEED_SOURCES or mcp in _SEED_DIGESTS:
+        return False
+    return _install_seed(mcp)
+
+
+async def refresh_seed_resource(mcp: Any) -> bool:
+    """Re-serve the seed; send one ``list_changed`` when its digest changed.
+
+    Raises:
+        LookupError: the server serves no seed resource.
+    """
+    from scion_sdk.mcp.change_events import announce_resources_changed
+
+    registered = _SEED_SOURCES.get(mcp)
+    if registered is None:
+        raise LookupError("this server serves no seed resource")
+    content, source = registered
+    resource, digest = _seed_resource(content, source())
+    if _SEED_DIGESTS.get(mcp) == digest:
+        return False
+    mcp.add_resource(resource)
+    _SEED_DIGESTS[mcp] = digest
+    await announce_resources_changed(mcp)
+    return True

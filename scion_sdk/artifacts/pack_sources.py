@@ -93,3 +93,19 @@ def _ontology_classes(entries: Sequence[CapturedArtifact]) -> frozenset[str]:
         if isinstance(subject, URIRef)
     )
     return classes
+
+
+def _check_contract_transports(
+    contract_entries: Sequence[ConnectorPackEntryContent],
+) -> None:
+    """Refuse a rendered contract whose protocol or pushdown the registry lacks."""
+    from scion_sdk.access_contract import parse_access_contracts
+    from scion_sdk.manifest.resource_descriptor import ResourceDeclarationError
+    from scion_sdk.transports.registry import check_declared_transports
+
+    for entry in contract_entries:
+        contracts = parse_access_contracts(bytes(entry.body).decode("utf-8"))
+        defects = check_declared_transports((), contracts)
+        if defects:
+            code, _, detail = defects[0].partition(": ")
+            raise ResourceDeclarationError(code, detail)

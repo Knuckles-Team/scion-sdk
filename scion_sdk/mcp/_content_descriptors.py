@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from scion_sdk.manifest.resource_derivation import derive_descriptors, scan_ontology
@@ -107,8 +108,14 @@ def _mapped_fields(descriptor: Any, mapping: Any) -> dict[str, Any]:
     return fields
 
 
-def _register_resource_descriptors(mcp: Any, content: ConnectorContent) -> int:
-    """Serve ``connector://resources`` with the derived data-resource descriptors."""
+def resource_descriptor_source(
+    mcp: Any, content: ConnectorContent
+) -> Callable[[], list[dict[str, Any]]] | None:
+    """Register ``connector://resources`` and return the live descriptor source.
+
+    ``None`` when the package declares no ontology and no sources. The returned
+    callable re-derives the descriptors, so a changed catalog is observable.
+    """
     from scion_sdk.ingest.live_declaration import (
         build_declaration,
         load_sources_module,
@@ -118,7 +125,7 @@ def _register_resource_descriptors(mcp: Any, content: ConnectorContent) -> int:
 
     declared = load_sources_module(content.package_root)
     if not _ontology_texts(content) and not declared:
-        return 0
+        return None
 
     def descriptors() -> list[dict[str, Any]]:
         terms = scan_ontology(_ontology_texts(content))
@@ -142,4 +149,4 @@ def _register_resource_descriptors(mcp: Any, content: ConnectorContent) -> int:
             mcp, content.package_root, items
         ),
     )
-    return 1
+    return descriptors
