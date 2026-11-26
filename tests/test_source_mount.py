@@ -38,6 +38,7 @@ async def _mount(
         ref="main",
         branch="work",
         prefixes=prefixes,
+        backend="overlay",
     )
     return mount, backend
 
@@ -177,3 +178,37 @@ async def test_mount_events_bind_receipts_without_secrets(tmp_path: Path) -> Non
     assert len(flush["changeset"]) == 64
     dumped = str(mount.events)
     assert str(tmp_path) not in dumped and "changed" not in dumped
+
+
+@pytest.mark.spec("SCION-SCM-R002.3")
+async def test_backend_selection_and_explicit_fuse_refusal(tmp_path: Path) -> None:
+    from scion_sdk.source._fuse_backend import FuseBackend
+    from scion_sdk.source._mount_models import select_backend
+
+    yes, no = (lambda: True), (lambda: False)
+    assert select_backend("auto", device_usable=yes, fuse_importable=yes) == "fuse"
+    assert select_backend("auto", device_usable=no, fuse_importable=yes) == "overlay"
+    assert select_backend("auto", device_usable=yes, fuse_importable=no) == "overlay"
+    assert (
+        select_backend("overlay", device_usable=yes, fuse_importable=yes) == "overlay"
+    )
+    assert select_backend("fuse", device_usable=yes, fuse_importable=yes) == "fuse"
+    for probes in ((no, yes), (yes, no)):
+        with pytest.raises(MountRefusedError) as caught:
+            select_backend("fuse", device_usable=probes[0], fuse_importable=probes[1])
+        assert caught.value.reason == "fuse_unavailable"
+    with pytest.raises(MountRefusedError):
+        select_backend("tmpfs")
+    mount, _ = await _mount(tmp_path)
+    assert mount.backend == "overlay" and mount.events[0]["backend"] == "overlay"
+    with pytest.raises(MountRefusedError, match="fuse_unavailable"):
+        mount.fuse()
+    backend = FuseBackend(mount)
+    assert [e.path for e in await backend.listdir("src")] == ["src/a.py", "src/b.py"]
+    if select_backend("auto") == "overlay":
+        with pytest.raises(MountRefusedError, match="fuse_unavailable"):
+            backend.operations()
+    backend.write("src/new.py", b"x")
+    assert await backend.read("src/new.py") == b"x"
+    backend.delete("src/new.py")
+    assert [p.operation for p in mount.pending] == ["delete"]

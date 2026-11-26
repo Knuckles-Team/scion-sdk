@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
+import os
 import posixpath
+from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
@@ -90,3 +93,39 @@ def _changeset_digest(pending: tuple[PendingEntry, ...]) -> str:
             separators=(",", ":"),
         ).encode()
     ).hexdigest()
+
+
+MountBackendName = Literal["overlay", "fuse"]
+_REQUESTS = ("auto", "overlay", "fuse")
+
+
+def _device_usable() -> bool:
+    return os.access("/dev/fuse", os.R_OK | os.W_OK)
+
+
+def _fuse_importable() -> bool:
+    return importlib.util.find_spec("pyfuse3") is not None
+
+
+def select_backend(
+    requested: str,
+    *,
+    device_usable: Callable[[], bool] = _device_usable,
+    fuse_importable: Callable[[], bool] = _fuse_importable,
+) -> MountBackendName:
+    """Resolve ``auto``, ``overlay`` or ``fuse`` to the backend that will run.
+
+    ``auto`` picks ``fuse`` only when ``/dev/fuse`` is readable and writable and
+    ``pyfuse3`` imports; otherwise ``overlay``. An explicit ``fuse`` without both
+    refuses with ``fuse_unavailable``.
+    """
+    if requested not in _REQUESTS:
+        raise MountRefusedError("unknown_backend")
+    can_fuse = device_usable() and fuse_importable()
+    if requested == "fuse":
+        if not can_fuse:
+            raise MountRefusedError("fuse_unavailable")
+        return "fuse"
+    if requested == "auto" and can_fuse:
+        return "fuse"
+    return "overlay"
