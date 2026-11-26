@@ -592,6 +592,8 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
     "scion_sdk.scm",
+    "scion_sdk.adapters.harness_sessions",
+    "scion_sdk.manifest.harness",
     "scion_sdk.finance.forecast",
     "scion_sdk.environment",
     "scion_sdk.desktop",

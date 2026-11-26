@@ -70,6 +70,7 @@ _TABLE: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("FASTMCP_SERVER_AUTH_JWT_ISSUER", "str", ("scion_sdk.mcp.parser",)),
     ("GITHUB_ENABLE_WRITE", "bool", ("scion_sdk.writeback_sinks.sinks.issue_tracker",)),
     ("GITLAB_ENABLE_WRITE", "bool", ("scion_sdk.writeback_sinks.sinks.issue_tracker",)),
+    ("HARNESS_MANIFEST_PATH", "str", ("scion_sdk.manifest.harness",)),
     (
         "HOMEASSISTANT_ENABLE_WRITE",
         "bool",
