@@ -23,6 +23,10 @@ ENGINE_CAPABILITIES: Mapping[str, tuple[str, str]] = {
     "InstanceProfile": ("medulla.generated.source_ingestion", "InstanceProfile"),
     "ProfileSubmission": ("medulla.generated.source_ingestion", "ProfileSubmission"),
     "SchemaDriftQuarantinedError.drift": ("medulla", "SchemaDriftQuarantinedError"),
+    "MeetingTranscriptRevision": (
+        "medulla.client",
+        "MedullaClient.meeting_transcript_revision",
+    ),
     "VerifySourceQueryApproval": (
         "medulla.client",
         "MedullaClient.verify_source_query_approval",

@@ -133,3 +133,24 @@ class StageCycleFailed(RuntimeError):
     def __init__(self, connector: str) -> None:
         self.connector = connector
         super().__init__(f"connector {connector!r}: not every stage completed")
+
+
+class PaperIntakeRefusal(RunnerConfigurationError):
+    """A scheduled paper-intake run was refused; ``code`` is one of the closed set."""
+
+    CODES = frozenset(
+        {
+            "JOB_OUT_OF_WINDOW",
+            "RELEVANCE_SCORES_MISSING",
+            "ADMISSION_UNAVAILABLE",
+            "ADMISSION_THRESHOLD_ABSENT",
+            "SCHEDULER_ACCESS_DENIED",
+            "CLOCK_MISALIGNED",
+        }
+    )
+
+    def __init__(self, code: str) -> None:
+        if code not in self.CODES:
+            raise ValueError(f"unknown paper intake refusal code: {code}")
+        self.code = code
+        super().__init__(code)

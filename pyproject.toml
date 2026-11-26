@@ -592,6 +592,13 @@ public_modules = [
     "scion_sdk.ontology.instance_profile",
     "scion_sdk.adapters.sql_source",
     "scion_sdk.engine_capability",
+    "scion_sdk.meeting",
+    "scion_sdk.meeting.client",
+    "scion_sdk.meeting.errors",
+    "scion_sdk.meeting.evidence",
+    "scion_sdk.meeting.models",
+    "scion_sdk.meeting.tools",
+    "scion_sdk.runner.paper_intake",
 ]
 
 # Inputs of the shared hooks (Knuckles-Team/pipelines .pre-commit-hooks.yaml).

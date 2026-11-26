@@ -40,3 +40,33 @@ async def test_stream_errors_are_closed_and_bounded(tmp_path, truncated, reason)
         os.close(fd)
     assert "private upstream detail" not in str(refused.value)
     assert (tmp_path / "partial").read_bytes() == b"ab"
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.4")
+def test_every_refusal_class_has_no_unauthorized_effect():
+    from typing import get_args
+
+    from scion_sdk.adapters.paper_models import Reason
+    from scion_sdk.adapters.paper_provider import ProviderFailure
+
+    assert set(get_args(Reason)) == {
+        "unauthorized",
+        "unknown_provider",
+        "invalid_query",
+        "provider_failed",
+        "rate_limited",
+        "deadline_exceeded",
+        "egress_denied",
+        "document_unavailable",
+        "unsupported_media",
+        "size_exceeded",
+        "integrity_failed",
+        "storage_denied",
+        "parse_failed",
+    }
+    # A provider failure is closed: an unknown reason cannot be raised or carried.
+    with pytest.raises(ValueError, match="unknown provider failure"):
+        ProviderFailure("anything_else")
+    # A refusal carries only its reason, never a source detail.
+    refusal = DocumentRefusal("size_exceeded")
+    assert str(refusal) == "size_exceeded" and refusal.reason == "size_exceeded"
