@@ -22,9 +22,9 @@ given a tenant to decide as; tests install fakes. The call shapes are in
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from contextvars import ContextVar
-from typing import Any
+from typing import Any, cast
 
 from scion_sdk.decide.options import (
     Option,
@@ -33,7 +33,7 @@ from scion_sdk.decide.options import (
     text_param,
     unique_sorted,
 )
-from scion_sdk.decide.outcome import Choice
+from scion_sdk.decide.outcome import Choice, Ranking
 from scion_sdk.decide.runner import DecisionRunner, Fallback
 
 _RUNNER: ContextVar[DecisionRunner | None] = ContextVar(
@@ -86,12 +86,28 @@ async def achoose(
     return await runner.achoose(question_id, options, fallback, **kwargs)
 
 
+def choose_many(
+    question_id: str,
+    options: Sequence[Option],
+    fallback: Callable[[], Sequence[str]],
+    **kwargs: Any,
+) -> Ranking:
+    """Rank ``options`` for ``question_id``; the fallback order answers on any gap."""
+    runner = current_runner()
+    ranker = getattr(runner, "choose_many", None)
+    if ranker is None:
+        return Ranking(tuple(fallback()), False, "no_runner")
+    return cast(Ranking, ranker(question_id, options, fallback, **kwargs))
+
+
 __all__ = [
     "Choice",
     "DecisionRunner",
     "Option",
+    "Ranking",
     "achoose",
     "choose",
+    "choose_many",
     "current_runner",
     "declared_source",
     "install_runner",

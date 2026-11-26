@@ -24,15 +24,17 @@ The contract every call site gets, exactly as before this module existed:
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, cast
 
 from scion_sdk.decide.options import Option, declared_source
 from scion_sdk.decide.outcome import (
     Choice,
+    Ranking,
     Reading,
     read_batch,
+    read_ranking,
     request_for,
     sampled,
 )
@@ -126,7 +128,7 @@ class MedullaDecisionRunner:
         except Exception as exc:
             logger.warning("decision %s not logged: %s", point.question_id, exc)
 
-    async def _consult(self, prepared: _Prepared) -> Reading:
+    async def _consult(self, prepared: _Prepared, read: Any = read_batch) -> Reading:
         """Ask EG and log its record; any failure is a reading, never a raise."""
         if prepared.point is None or prepared.request is None:
             return _UNBOUND
@@ -137,7 +139,7 @@ class MedullaDecisionRunner:
                 "decision %s unavailable: %s", prepared.point.question_id, exc
             )
             return _unavailable(exc)
-        reading = read_batch(batch, prepared.offered)
+        reading: Reading = read(batch, prepared.offered)
         await self._log(prepared.point, reading.record)
         return reading
 
@@ -189,3 +191,41 @@ class MedullaDecisionRunner:
         prepared = self._prepare(question_id, options, params, candidates)
         reading = await self._consult(prepared)
         return _settle(reading, fallback)
+
+    async def achoose_many(
+        self,
+        question_id: str,
+        options: Sequence[Option],
+        fallback: Callable[[], Sequence[str]],
+        **kwargs: Any,
+    ) -> Ranking:
+        """Rank ``options``: the ordered ids of a ``Rank`` answer, else ``fallback()``.
+
+        Evaluate-only. An unpublished question, a transport error, a timeout or
+        an abstention returns the fallback order with the reason.
+        """
+        params: Iterable[Mapping[str, Any]] = kwargs.get("params", ())
+        prepared = self._prepare(question_id, options, params, kwargs.get("candidates"))
+        reading = await self._consult(prepared, read_ranking)
+        if reading.option_id is None:
+            return Ranking(tuple(fallback()), False, reading.reason)
+        return Ranking(tuple(reading.option_id.split("\n")), True, reading.reason)
+
+    def choose_many(
+        self,
+        question_id: str,
+        options: Sequence[Option],
+        fallback: Callable[[], Sequence[str]],
+        **kwargs: Any,
+    ) -> Ranking:
+        """The sync form of :meth:`achoose_many`; a failed bridge is the fallback."""
+        try:
+            return cast(
+                Ranking,
+                self.transport.run(
+                    self.achoose_many(question_id, options, fallback, **kwargs)
+                ),
+            )
+        except Exception as exc:
+            logger.warning("decision transport unavailable: %s", exc)
+            return Ranking(tuple(fallback()), False, _unavailable(exc).reason)

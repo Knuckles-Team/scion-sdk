@@ -91,6 +91,9 @@ def build_server(
     _serve_hooks(mcp, args, resolved)
     for middleware in middlewares:
         mcp.add_middleware(middleware)
+    from scion_sdk.mcp.secret_redaction import install as install_secret_redaction
+
+    install_secret_redaction(mcp)
     return args, mcp
 
 

@@ -97,7 +97,10 @@ class ResourceArtifactKind:
         entries: list[CapturedArtifact] = []
         for resource in await session.list_resources():
             uri = str(getattr(resource, "uri", ""))
-            if _scheme(uri) == "skill" or uri == "connector://status":
+            if _scheme(uri) == "skill" or uri in {
+                "connector://status",
+                "connector://release",
+            }:
                 continue
             entries.append(
                 CapturedArtifact(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
 
 from mcp.types import (
@@ -192,3 +192,19 @@ async def ctx_confirm_destructive(
             ctx, action_description, confirmation_arguments
         )
     return await _confirm_legacy_destructive(ctx, action_description)
+
+
+def ctx_payment_approver(ctx: Any) -> Callable[[Any], Awaitable[bool]]:
+    """An approver for ``PaymentAuthorization`` that asks the caller through ``ctx``.
+
+    A payment is never approved without an accepted confirmation; an input
+    request in the modern era denies, since a payment cannot resume mid-call.
+    """
+
+    async def approve(challenge: Any) -> bool:
+        description = (
+            f"pay {challenge.amount} {challenge.currency} to {challenge.payee}"
+        )
+        return await ctx_confirm_destructive(ctx, description) is True
+
+    return approve
