@@ -246,3 +246,8 @@ old = "scion_sdk._surface_complete"
 new = "scion_sdk.testing.surface_draft"
 kind = "argument"
 argument = "complete"
+
+[[removed]]
+old = "scion_sdk.certify.rollout"
+new = "scion_sdk.testing.rollout"
+kind = "module"
