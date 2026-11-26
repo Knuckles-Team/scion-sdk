@@ -21,7 +21,6 @@ from scion_sdk.adapters.media_tags import (
     tag_record_id,
 )
 
-SPEC = "SCION-SOURCE-INGEST-R016"
 PRODUCER = MediaTagProducer(
     producer_id="vision",
     producer_revision="r1",
@@ -77,7 +76,7 @@ def _refusal(**kwargs):
     return raised.value
 
 
-@pytest.mark.spec(f"{SPEC}.1")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R016.1")
 def test_models_reject_unknown_modality_missing_evidence_and_bad_confidence():
     with pytest.raises(ValidationError):
         MediaTagProducer(
@@ -104,7 +103,7 @@ def test_models_reject_unknown_modality_missing_evidence_and_bad_confidence():
     assert MEDIA_TAG_MAX_PER_ITEM == 64
 
 
-@pytest.mark.spec(f"{SPEC}.2")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R016.2")
 def test_tags_are_sorted_bounded_deduplicated_and_stable():
     raws = [_raw("dog", 0.9), _raw("cat", 0.8), _raw("cat", 0.8), _raw("sky", 0.1)]
     first = _tag(raws)
@@ -116,7 +115,7 @@ def test_tags_are_sorted_bounded_deduplicated_and_stable():
     assert _tag([_raw("low", 0.0)])[0].confidence == 0.0  # no confidence threshold
 
 
-@pytest.mark.spec(f"{SPEC}.4")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R016.4")
 @pytest.mark.parametrize(
     ("code", "kwargs"),
     [
@@ -162,7 +161,7 @@ def test_each_refusal_is_closed_and_leaves_a_failure_record(code, kwargs):
     assert refusal.failure == MediaTagFailure(code=code, input_digest="a" * 64)
 
 
-@pytest.mark.spec(f"{SPEC}.5")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R016.5")
 def test_tags_bind_provenance_and_failures_carry_no_content():
     (tag,) = _tag([_raw("cat")])
     assert tag.provenance_digest == provenance_digest(

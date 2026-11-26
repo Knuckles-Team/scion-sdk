@@ -24,7 +24,6 @@ from scion_sdk.testing.sinks import _ingestion_receipt
 
 CHECKPOINT = SourceCheckpoint(stream="papers", position="p1", content_hash="a" * 64)
 REVISION = "b" * 64
-SPEC = "SCION-SOURCE-INGEST-R015"
 
 
 class RecordingSink:
@@ -102,7 +101,7 @@ def _run(order, sink, now=10):
     )
 
 
-@pytest.mark.spec(f"{SPEC}.1")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R015.1")
 def test_order_and_receipt_models_reject_invalid_bounds():
     with pytest.raises(ValidationError):
         _order(candidate_ids=())
@@ -116,7 +115,7 @@ def test_order_and_receipt_models_reject_invalid_bounds():
         _order(candidate_ids=tuple(f"p{i}" for i in range(1025)), cost_ceiling=2000)
 
 
-@pytest.mark.spec(f"{SPEC}.2")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R015.2")
 def test_execution_builds_one_delta_batch_with_reasoned_withdrawals():
     sink = RecordingSink()
     receipt = _run(_order(), sink)
@@ -131,7 +130,7 @@ def test_execution_builds_one_delta_batch_with_reasoned_withdrawals():
     assert receipt.withdrawn_ids == ("doi:1", "doi:2")
 
 
-@pytest.mark.spec(f"{SPEC}.4")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R015.4")
 @pytest.mark.parametrize(
     ("code", "order", "sink", "now"),
     [
@@ -160,7 +159,7 @@ def test_each_refusal_submits_nothing(code, order, sink, now):
     assert recording.batches == []
 
 
-@pytest.mark.spec(f"{SPEC}.4")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R015.4")
 def test_over_ceiling_and_empty_are_refused_before_submit():
     sink = RecordingSink()
     over = _order().model_copy(update={"cost_ceiling": 1})
@@ -174,7 +173,7 @@ def test_over_ceiling_and_empty_are_refused_before_submit():
     assert sink.batches == []
 
 
-@pytest.mark.spec(f"{SPEC}.5")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R015.5")
 def test_receipt_binds_order_and_engine_receipt_without_internals():
     receipt = _run(_order(), RecordingSink(drop={"doi:2"}))
     assert isinstance(receipt, PaperMaintenanceReceipt)
