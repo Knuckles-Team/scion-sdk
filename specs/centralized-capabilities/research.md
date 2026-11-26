@@ -49,6 +49,7 @@ Web-Algebra implements `GET`, `PUT`, `POST` and `PATCH` of RDF resources over HT
 | Capability | Spec row | State |
 |---|---|---|
 | Read and write RDF resources over HTTP with media-type negotiation | `SCION-CENTRALIZED-CAPABILITIES-R055` | New |
+| Reach host services and logs on every supported operating system through one interface | `SCION-CENTRALIZED-CAPABILITIES-R056` | New |
 | Query and update a remote SPARQL endpoint | `SCION-CENTRALIZED-CAPABILITIES-R052` | New |
 | Induce an ontology profile from the instance data of an endpoint | `SCION-CENTRALIZED-CAPABILITIES-R053` | New |
 | Entity reconciliation against a service that follows the W3C API | `SCION-CENTRALIZED-CAPABILITIES-R054` | New |
