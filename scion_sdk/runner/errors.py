@@ -7,6 +7,7 @@ from scion_sdk.schema_drift import SchemaDriftReport
 
 __all__ = [
     "CredentialResolutionError",
+    "ReleaseVerificationError",
     "RunnerConfigurationError",
     "SchemaDriftQuarantined",
     "SinkReceiptError",
@@ -23,6 +24,18 @@ class RunnerConfigurationError(ValueError):
 
 class CredentialResolutionError(PermissionError):
     """A connector's credential reference could not be resolved; no session opens."""
+
+
+class ReleaseVerificationError(RuntimeError):
+    """A connector's signed release failed verification; ``code`` is closed.
+
+    Codes: ``RELEASE_UNSIGNED``, ``RELEASE_KEY_UNTRUSTED``,
+    ``RELEASE_DIGEST_MISMATCH`` and ``RELEASE_SIGNATURE_INVALID``.
+    """
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(code)
 
 
 class SinkReceiptError(RuntimeError):

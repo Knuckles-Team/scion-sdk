@@ -130,6 +130,7 @@ settings:
   backoff_initial_seconds: 5    # per connector, doubling after each failure
   backoff_max_seconds: 600
   registry_refresh_seconds: 60  # how often the registry is re-read
+  release_lock: release.lock    # required: pinned release signer keys; every connector release is verified
 connectors:
   - connector: freshrss-agent
     endpoint:

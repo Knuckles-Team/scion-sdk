@@ -9,6 +9,7 @@ from scion_sdk.manifest.release_lock import (
 from scion_sdk.manifest.release_signature import (
     ReleaseSignature,
     ReleaseSigningError,
+    read_release_evidence,
     sign_release,
     verify_release,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "ReleaseSigningError",
     "create_release_key_lock",
     "load_release_key_lock",
+    "read_release_evidence",
     "release_identity_digest",
     "sign_release",
     "verify_release",

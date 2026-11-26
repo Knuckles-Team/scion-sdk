@@ -119,6 +119,7 @@ Documentation = "https://knuckles-team.github.io/scion-sdk/"
 [project.scripts]
 connector-sync = "scion_sdk.runner.cli:main"
 connector-certify = "scion_sdk.certify.cli:main"
+connector-release-sign = "scion_sdk.certify.release_cli:main"
 ingest-worker = "scion_sdk.runner.ingest_worker_cli:main"
 
 [project.entry-points.pytest11]
@@ -573,6 +574,10 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
     "scion_sdk.scm",
+    "scion_sdk.certify.release_cli",
+    "scion_sdk.adapters.sandbox_provisioner",
+    "scion_sdk.mcp.sandbox_tools",
+    "scion_sdk.testing.sandbox_conformance",
 ]
 
 # Inputs of the shared hooks (Knuckles-Team/pipelines .pre-commit-hooks.yaml).
