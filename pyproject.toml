@@ -697,6 +697,7 @@ units = [
     "finance",
     "ingest",
     "manifest",
+    "meeting",
     "raw_source",
     "desktop",
     "environment",
