@@ -157,6 +157,7 @@ _TABLE: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "int",
         ("scion_sdk.connector_lifecycle", "scion_sdk.runner.health_state"),
     ),
+    ("SCION_TOOL_DEADLINE_SECONDS", "int", ("scion_sdk.mcp.call_context",)),
     ("SCION_UPSTREAMS_CALL_TIMEOUT_S", "int", ("scion_sdk.mcp.upstreams.loader",)),
     ("SCION_UPSTREAMS_CIRCUIT_COOLDOWN_S", "int", ("scion_sdk.mcp.upstreams.loader",)),
     ("SCION_UPSTREAMS_CONNECT_TIMEOUT_S", "int", ("scion_sdk.mcp.upstreams.loader",)),
