@@ -1,6 +1,6 @@
 # Environment declaration seam contract
 
-Provider: scion-sdk SCION-CONNECTOR-CONTROL-R053
+Provider: scion-sdk SCION-CONNECTOR-CONTROL-R053.3
 Consumer: arbora ARBORA-HOST-R010
 Consumer: arbora ARBORA-HOST-R010.2
 Consumer: arbora ARBORA-HOST-R010.3
