@@ -15,6 +15,7 @@ from medulla.generated.source_ingestion import (
 )
 
 from scion_sdk.contracts import RecordPage, StreamDescriptor
+from scion_sdk.engine_capability import EngineCapabilityUnavailable
 from scion_sdk.ports.page_completion import _accept_adapter_page
 from scion_sdk.ports.repair_proposals import RepairProposalStore
 from scion_sdk.ports.session import McpSession
@@ -22,6 +23,7 @@ from scion_sdk.ports.sink import Sink
 from scion_sdk.ports.source_adapter import SourceAdapter
 from scion_sdk.runner._page_checks import _is_delta_noop, _receipt_binds_request
 from scion_sdk.runner.errors import (
+    EngineSchemaDriftQuarantined,
     SchemaDriftQuarantined,
     SinkReceiptError,
     StreamPaused,
@@ -122,10 +124,27 @@ async def commit_page(
     """Commit one exact generated request and verify its terminal receipt."""
     request = _source_request(page, target, expected_previous_checkpoint)
     _check_drift(page, target, request)
-    receipt = await target.sink.submit(request)
+    receipt = await _submit_held(target, request)
     if not _receipt_binds_request(request, receipt):
         raise SinkReceiptError("ingestion receipt does not acknowledge the request")
     return receipt
+
+
+async def _submit_held(
+    target: SyncTarget, request: SourceIngestionRequest
+) -> SourceIngestionReceipt:
+    """Submit; an engine drift quarantine holds the checkpoint and keeps its report."""
+    try:
+        return await target.sink.submit(request)
+    except Exception as error:
+        if getattr(error, "code", None) != "SCHEMA_DRIFT_QUARANTINED":
+            raise
+        drift = getattr(error, "drift", None)
+        if drift is None:
+            raise EngineCapabilityUnavailable(
+                "SchemaDriftQuarantinedError.drift"
+            ) from error
+        raise EngineSchemaDriftQuarantined(list(drift)) from error
 
 
 def _check_drift(
