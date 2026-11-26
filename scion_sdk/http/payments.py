@@ -206,8 +206,10 @@ class PaymentTransport(httpx.BaseTransport):
         challenge = _precheck(self._auth, request, response)
         if challenge is None:
             return response
-        assert self._auth.approve is not None
-        approved = self._auth.approve(challenge)
+        approve = self._auth.approve
+        if approve is None:
+            raise _refuse(self._auth, challenge, "no_context")
+        approved = approve(challenge)
         if inspect.isawaitable(approved):
             raise TypeError("an asynchronous approver needs an asynchronous client")
         if not approved:
@@ -236,8 +238,10 @@ class AsyncPaymentTransport(httpx.AsyncBaseTransport):
         challenge = _precheck(self._auth, request, response)
         if challenge is None:
             return response
-        assert self._auth.approve is not None
-        approved = self._auth.approve(challenge)
+        approve = self._auth.approve
+        if approve is None:
+            raise _refuse(self._auth, challenge, "no_context")
+        approved = approve(challenge)
         if inspect.isawaitable(approved):
             approved = await approved
         if not approved:
