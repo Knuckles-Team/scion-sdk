@@ -263,7 +263,8 @@ class UniversalConnector(_MongoIntrospection):
     def _sample(self, table: str, column: str) -> list[object]:
         limit = sample_rows()
         quoted_column = quote_sql_identifier(column, kind="column")
-        rows = self.read(
+        # Identifiers are validated and quoted; the limit is a bounded integer.
+        rows = self.read(  # nosec B608
             f"SELECT {quoted_column} FROM {quote_sql_identifier(table, kind='table')} "
             f"WHERE {quoted_column} IS NOT NULL LIMIT {limit}",
             max_rows=limit,
