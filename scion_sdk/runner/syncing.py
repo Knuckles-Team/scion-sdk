@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 from functools import partial
-from typing import Self
+from typing import Any, Self
 
+import anyio
 from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
@@ -27,6 +29,7 @@ from scion_sdk.runner.errors import (
     SinkReceiptError,
     StreamPaused,
 )
+from scion_sdk.runner.ingest_jobs import IngestJob, submit_jobs
 from scion_sdk.runner.logs import structured
 from scion_sdk.runner.stages import StageDescriptor, validate_stage_graph
 from scion_sdk.schema_drift import (
@@ -54,6 +57,10 @@ class SyncTarget:
     tenant: str | None = None
     repair_proposals: RepairProposalStore | None = None
     stages: tuple[StageDescriptor, ...] = ()
+    #: Jobs submitted through ``ingest_queue`` after the content sync (R907).
+    ingest_jobs: tuple[IngestJob, ...] = ()
+    ingest_queue: Any = None
+    sleep: Callable[[float], Awaitable[None]] = anyio.sleep
 
     def __post_init__(self) -> None:
         validate_stage_graph(self.stages, self.connector, self.tenant)
@@ -228,4 +235,6 @@ async def sync_stream(
         exhausted = page.exhausted
         pages, records = pages + 1, records + len(page.records)
         accepted += newly_accepted
+    if target.ingest_queue is not None and target.ingest_jobs:
+        await submit_jobs(target.ingest_queue, target.ingest_jobs, sleep=target.sleep)
     return SyncOutcome(stream, pages, records, accepted, exhausted, checkpoint)

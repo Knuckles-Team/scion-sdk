@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
 
 import anyio
 
@@ -13,6 +14,7 @@ from scion_sdk.ports.session import McpSession
 from scion_sdk.ports.source_adapter import SourceAdapter
 from scion_sdk.runner.credentialed_endpoint import resolve_endpoint
 from scion_sdk.runner.descriptors import ConnectorDescriptor
+from scion_sdk.runner.governance import GovernanceSchedule, sync_governance
 from scion_sdk.runner.health_reporting import (
     note_cycle_failure,
     note_cycle_success,
@@ -49,7 +51,9 @@ class ConnectorWorker:
         descriptor: ConnectorDescriptor,
         services: RunnerServices,
         limiter: anyio.CapacityLimiter,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
+        self._clock = clock or (lambda: datetime.now(UTC))
         self._descriptor = descriptor
         self._services = services
         self._limiter = limiter
@@ -58,6 +62,7 @@ class ConnectorWorker:
             settings.backoff_initial_seconds, settings.backoff_max_seconds
         )
         self._resource_uris: frozenset[str] = frozenset()
+        self._governance = GovernanceSchedule(descriptor.permission_sync_interval_s)
 
     async def run_once(self) -> bool:
         """Connect and run one full cycle; ``False`` when it failed (logged)."""
@@ -155,7 +160,20 @@ class ConnectorWorker:
                 await self._provision(session)
             for preset in sorted(plan.presets):
                 await self._sync(session, adapters[preset])
+            await self._govern()
         note_cycle_success(self._services.health, self._descriptor.connector)
+
+    async def _govern(self) -> None:
+        sources = self._services.governance or {}
+        source = sources.get(self._descriptor.connector)
+        if source is not None:
+            await sync_governance(
+                source,
+                self._services.sink,
+                self._clock(),
+                self._governance,
+                connector=self._descriptor.connector,
+            )
 
     async def _provision(self, session: McpSession) -> None:
         name, services = self._descriptor.connector, self._services

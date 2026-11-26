@@ -26,7 +26,13 @@ from typing import Any
 from urllib.parse import urlparse
 
 from scion_sdk.credentials.resolver import CredentialResolver
+from scion_sdk.identifiers import quote_sql_identifier
 from scion_sdk.ingest.model import ChangeSet, Entity
+from scion_sdk.ingest.sql_profile import (
+    PROFILE_SAMPLE_UNAVAILABLE,
+    build_column_profile,
+    sample_rows,
+)
 from scion_sdk.privacy import PersistencePrivacyGuard
 from scion_sdk.privacy_reference import persistence_reference
 from scion_sdk.source_connectors._universal_mongo import _MongoIntrospection
@@ -213,3 +219,53 @@ class UniversalConnector(_MongoIntrospection):
                 )
             )
         return ChangeSet(entities=tuple(entities), relationships=tuple(sink.edges))
+
+    def column_profiles(self) -> dict[tuple[str, str], Any]:
+        """One profile per column: ``(table, column)`` to ``SqlColumnProfile``.
+
+        A column whose sample query fails maps to ``None`` (sent without a
+        profile; the engine excludes it). A column without a type is refused
+        with ``PROFILE_INCOMPLETE``.
+        """
+        changes = self.introspect()
+        tables = {
+            e.id: e.properties["name"]
+            for e in changes.entities
+            if e.node_type == "Table"
+        }
+        columns = {e.id: e for e in changes.entities if e.node_type == "Column"}
+        owner = {
+            r.target: tables[r.source]
+            for r in changes.relationships
+            if r.relationship == "HAS_COLUMN" and r.source in tables
+        }
+        foreign = {
+            r.source for r in changes.relationships if r.relationship == "FOREIGN_KEY"
+        }
+        profiles: dict[tuple[str, str], Any] = {}
+        for column_id, entity in columns.items():
+            table, name = str(owner[column_id]), str(entity.properties["name"])
+            try:
+                values = self._sample(table, name)
+            except Exception:
+                profiles[(table, name)] = None
+                logger.warning(
+                    "column profile sample unavailable: %s", PROFILE_SAMPLE_UNAVAILABLE
+                )
+                continue
+            profiles[(table, name)] = build_column_profile(
+                data_type=str(entity.properties.get("data_type") or ""),
+                is_foreign_key=column_id in foreign,
+                values=values,
+            )
+        return profiles
+
+    def _sample(self, table: str, column: str) -> list[object]:
+        limit = sample_rows()
+        quoted_column = quote_sql_identifier(column, kind="column")
+        rows = self.read(
+            f"SELECT {quoted_column} FROM {quote_sql_identifier(table, kind='table')} "
+            f"WHERE {quoted_column} IS NOT NULL LIMIT {limit}",
+            max_rows=limit,
+        )
+        return [value for row in rows for value in row.values()]
