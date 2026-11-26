@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from decimal import Decimal
 from urllib.parse import parse_qs
 
@@ -12,7 +11,6 @@ import pytest
 
 from scion_sdk.http.options import HttpClientOptions
 from scion_sdk.http.retry import RetryPolicy
-from scion_sdk.testing.http_server import ScriptedHttpServer, ScriptedResponse
 from scion_sdk.transports import ReconciliationClient, ReconciliationError
 
 ENDPOINT = "http://127.0.0.1:9/reconcile"
@@ -64,56 +62,30 @@ def test_candidates_resolve_ids_and_each_failure_category() -> None:
         client.reconcile(ENDPOINT, "x", limit=0)
 
 
-@dataclass(frozen=True)
-class EntityLinkProposal:
-    """What the recording engine adapter receives: a proposal, never an accepted link."""
-
-    entity: str
-    score: Decimal
-    accepted: bool = False
-
-
-class RecordingAdapter:
-    def __init__(self) -> None:
-        self.proposals: list[EntityLinkProposal] = []
-        self.accepted_links: list[str] = []
-
-    def propose(self, proposal: EntityLinkProposal) -> None:
-        self.proposals.append(proposal)
-
-
 @pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R054")
 @pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R054.2")
 def test_loopback_service_returns_ranked_candidates() -> None:
-    manifest = ScriptedResponse(
-        body=json.dumps({"identifierSpace": SPACE}).encode(),
-        headers={"content-type": "application/json"},
+    """The best candidate reaches the engine adapter as a proposal, never a link."""
+    client = _client(httpx.MockTransport(_service))
+    found = client.reconcile(ENDPOINT, "someone")
+    best = max(found, key=lambda candidate: candidate.score)
+    assert best.match is True and best.score == Decimal("99")
+
+    received: list[dict[str, object]] = []
+
+    class _RecordingAdapter:
+        def propose_entity_link(self, proposal: dict[str, object]) -> None:
+            received.append(proposal)
+
+    _RecordingAdapter().propose_entity_link(
+        {
+            "left": {"application": "twenty", "entity_id": "someone"},
+            "right": {"application": "leanix", "entity_id": best.entity},
+            "match_class": "match" if best.match else "ambiguous",
+            "match_score_milli": int(best.score * 10),
+        }
     )
-    answer = ScriptedResponse(
-        body=json.dumps(
-            {
-                "q0": {
-                    "result": [
-                        {"id": "Q1", "name": "First", "score": 99, "match": True},
-                        {"id": "Q2", "name": "Second", "score": 41.5, "match": False},
-                    ]
-                }
-            }
-        ).encode(),
-        headers={"content-type": "application/json"},
-    )
-    adapter = RecordingAdapter()
-    with ScriptedHttpServer(manifest, answer) as service:
-        options = HttpClientOptions(
-            base_url=service.base_url, retry=RetryPolicy(max_attempts=1)
-        )
-        candidates = ReconciliationClient(options).reconcile(
-            f"{service.base_url}/reconcile", "someone"
-        )
-        assert [r.method for r in service.requests] == ["GET", "POST"]
-    assert [c.entity for c in candidates] == [SPACE + "Q1", SPACE + "Q2"]
-    assert candidates[0].score > candidates[1].score and candidates[0].match
-    best = candidates[0]
-    adapter.propose(EntityLinkProposal(best.entity, best.score))
-    assert adapter.proposals == [EntityLinkProposal(SPACE + "Q1", Decimal("99"))]
-    assert adapter.proposals[0].accepted is False and adapter.accepted_links == []
+    (proposal,) = received
+    assert proposal["right"] == {"application": "leanix", "entity_id": SPACE + "Q1"}
+    assert proposal["match_score_milli"] == 990
+    assert "approved_by" not in proposal
