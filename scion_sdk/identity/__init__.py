@@ -28,6 +28,7 @@ __all__ = [
     "ANONYMOUS_ACTOR",
     "SYSTEM_ACTOR",
     "ActorContext",
+    "ActorRequiredError",
     "ActorType",
     "AuthenticationRequiredError",
     "IdentityRequiredError",
@@ -89,6 +90,12 @@ class IdentityRequiredError(PermissionError):
     """An operation's identity requirement is not met by the resolved actor."""
 
     reason = "identity_required"
+
+
+class ActorRequiredError(IdentityRequiredError):
+    """A tool that requires an acting user was called without one (R902.4)."""
+
+    reason = "actor_required"
 
 
 class AuthenticationRequiredError(IdentityRequiredError):

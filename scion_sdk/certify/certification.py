@@ -89,6 +89,9 @@ class CertificationReport:
                     "live": verdict.live,
                     "output_schema_sha256": verdict.output_schema_sha256,
                     "defect": verdict.defect,
+                    "score": verdict.score,
+                    "question_count": verdict.question_count,
+                    "answered_count": verdict.answered_count,
                 }
                 for verdict in self.verdicts
             ],

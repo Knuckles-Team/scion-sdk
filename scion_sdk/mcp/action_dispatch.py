@@ -22,11 +22,17 @@ from typing import Any
 
 from mcp.types import InputRequiredResult
 
+from scion_sdk.mcp.call_context import current_tool_context
 from scion_sdk.mcp.concurrency import (
     fold_body_arguments,
     invoke_client_method,
 )
 from scion_sdk.mcp.context import confirmation_refusal, ctx_confirm_destructive
+from scion_sdk.mcp.tool_context import (
+    ObservationRefused,
+    ObservedResult,
+    attach_observation,
+)
 
 __all__ = [
     "DISCOVERY_ACTIONS",
@@ -220,8 +226,12 @@ async def dispatch_async(
     service: str = "",
     result_coercer: Callable[[Any], Any] | None = None,
     confirm: bool = False,
+    execution: Any = None,
 ) -> Any:
     """Resolve and execute ``action`` without blocking the MCP event loop.
+
+    A method that returns an ``ObservedResult`` has its envelope attached to the
+    result ``_meta`` under the bound ``execution`` context (R052.3).
 
     A destructive action requires an affirmative live-context confirmation.
     Modern connections may return an InputRequiredResult for the client round
@@ -229,6 +239,8 @@ async def dispatch_async(
     ``confirm=True`` is the caller's explicit confirmation of this call, for
     clients that cannot elicit.
     """
+    if execution is None:
+        execution = current_tool_context()
     canonical = resolve_action(
         action,
         public_actions(client),
@@ -248,6 +260,10 @@ async def dispatch_async(
     result = await invoke_client_method(
         getattr(client, canonical), **dict(kwargs or {})
     )
+    if isinstance(result, ObservedResult):
+        if execution is None:
+            raise ObservationRefused("observation_scope_mismatch")
+        result = attach_observation(result.value, result.envelope, execution)
     if result_coercer is None:
         return result
     coerced = result_coercer(result)

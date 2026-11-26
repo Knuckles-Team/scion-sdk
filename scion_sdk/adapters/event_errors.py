@@ -15,6 +15,7 @@ from scion_sdk.ports.errors import (
 )
 
 __all__ = [
+    "ChainLogRefused",
     "EventIdentityConflictError",
     "FeedBackpressureError",
     "FeedRetentionExpiredError",
@@ -49,3 +50,29 @@ class FeedRetentionExpiredError(SourceContractError):
     The checkpoint cannot resume from where it left off; the stream needs an
     explicit re-baseline, which is outside this adapter's authority.
     """
+
+
+class ChainLogRefused(MalformedSourceDataError):
+    """A chain log or RPC reply was refused; ``reason`` is a closed code.
+
+    The message carries the reason and the safe log identity only, never a raw
+    body, a credential or an endpoint.
+    """
+
+    REASONS = frozenset(
+        {
+            "LOG_UNDECODABLE",
+            "SIGNATURE_UNKNOWN",
+            "CHAIN_MISMATCH",
+            "CONTRACT_MISMATCH",
+            "RPC_REPLY_MALFORMED",
+            "BLOCK_HASH_INCONSISTENT",
+        }
+    )
+
+    def __init__(self, reason: str, identity: str = "") -> None:
+        if reason not in self.REASONS:
+            raise ValueError(f"unknown chain log refusal: {reason}")
+        self.reason = reason
+        self.identity = identity
+        super().__init__(f"{reason} {identity}".strip())

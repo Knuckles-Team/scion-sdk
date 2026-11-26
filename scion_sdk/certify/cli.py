@@ -90,6 +90,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--predecessor-bearer-token", default="", help="predecessor token reference"
     )
     parser.add_argument("--bearer-token", default="", help="reference for --url")
+    parser.add_argument(
+        "--auth",
+        choices=("", "pkce"),
+        default="",
+        help="pkce: authorize through the browser authorization-code flow",
+    )
     _add_oidc_arguments(parser)
     parser.add_argument("--env", action="append", default=[], metavar="NAME=REFERENCE")
     parser.add_argument("--placeholder", action="append", default=[], metavar="NAME")

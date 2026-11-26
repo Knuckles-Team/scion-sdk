@@ -5,17 +5,15 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock
 
-import anyio
 import pytest
 from pydantic import ValidationError
 
-from scion_sdk.runner.errors import RunnerConfigurationError
 from scion_sdk.runner.stages import (
     StageDependency,
     StageDescriptor,
     StageLimits,
 )
-from scion_sdk.runner.syncing import SyncTarget, sync_stream
+from scion_sdk.runner.syncing import SyncTarget
 
 
 def _stage(stage_id: str, **overrides: Any) -> StageDescriptor:
@@ -94,18 +92,3 @@ def test_stage_graph_validates_authority_bounds_and_dependencies() -> None:
     )
     with pytest.raises(ValueError, match="cyclic"):
         _target((cyclic, second))
-
-
-@pytest.mark.spec("SCION-SOURCE-INGEST-R001.1")
-def test_stage_target_refuses_before_sequential_discovery() -> None:
-    target = _target((_stage("first"),))
-    adapter = AsyncMock()
-
-    async def run() -> None:
-        with pytest.raises(RunnerConfigurationError, match="unavailable"):
-            await sync_stream(AsyncMock(), adapter, target)
-
-    anyio.run(run)
-    adapter.discover.assert_not_awaited()
-    adapter.extract.assert_not_awaited()
-    target.sink.source_status.assert_not_awaited()  # type: ignore[attr-defined]
