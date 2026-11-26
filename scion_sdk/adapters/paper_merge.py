@@ -7,20 +7,25 @@ from __future__ import annotations
 
 import json
 from datetime import date
-from typing import Any
+from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
 from scion_sdk.adapters.paper_identity import _groups, _identity_tokens
 from scion_sdk.adapters.paper_models import (
+    CitationEdge,
     DocumentOffer,
     FieldAlternative,
     FieldEvidence,
     PaperQuery,
     PaperRecord,
+    PaperRejection,
+    citation_edge_digest,
+    revision_digest,
+    unidentified_canonical_id,
 )
 from scion_sdk.adapters.paper_provider import ProviderPaper
 
-__all__ = ["merge_paper_records"]
+__all__ = ["PaperFactOutcome", "extract_paper_facts", "merge_paper_records"]
 
 
 def _json_value(value: Any) -> Any:
@@ -66,6 +71,9 @@ def _field(
 
 
 def _canonical(group: list[ProviderPaper]) -> str:
+    if any(item.unidentified for item in group):
+        first = next(item for item in group if item.unidentified)
+        return unidentified_canonical_id(first.title or "", first.authors)
     tokens = {token for item in group for token in _identity_tokens(item)}
     for prefix in ("doi:", "alias:", "provider:"):
         matches = sorted(token for token in tokens if token.startswith(prefix))
@@ -81,9 +89,14 @@ def _merge_group(group: list[ProviderPaper]) -> PaperRecord:
     }
     references = tuple(dict.fromkeys(record.reference for record in group))
     offers = _public_offers(group)
+    canonical_id = _canonical(group)
+    edges = _merge_edges(group)
     return PaperRecord(
-        canonical_id=_canonical(group),
+        canonical_id=canonical_id,
         revision=group[0].revision,
+        citation_edges=edges,
+        citation_edge_digest=citation_edge_digest(edges),
+        revision_digest=revision_digest(canonical_id, group[0].revision),
         title=fields["title"][0],
         authors=fields["authors"][0] or (),
         abstract=fields["abstract"][0],
@@ -96,6 +109,21 @@ def _merge_group(group: list[ProviderPaper]) -> PaperRecord:
         alternate_values={
             name: result[2] for name, result in fields.items() if result[2]
         },
+    )
+
+
+def _merge_edges(group: list[ProviderPaper]) -> tuple[CitationEdge, ...]:
+    """Union the provider edges by cited paper, keeping every source evidence."""
+    evidence: dict[str, list[FieldEvidence]] = {}
+    for record in group:
+        for edge in record.citation_edges:
+            sources = evidence.setdefault(edge.cited_canonical_id, [])
+            for item in edge.source_evidence:
+                if item not in sources:
+                    sources.append(item)
+    return tuple(
+        CitationEdge(cited_canonical_id=cited, source_evidence=tuple(sources))
+        for cited, sources in sorted(evidence.items())
     )
 
 
@@ -148,3 +176,54 @@ def merge_paper_records(
     return tuple(
         sorted(merged, key=lambda record: (record.canonical_id, record.revision or ""))
     )
+
+
+class PaperFactOutcome(NamedTuple):
+    """Merged papers plus per-paper rejections; one refusal never changes another."""
+
+    papers: tuple[PaperRecord, ...]
+    rejections: tuple[PaperRejection, ...]
+
+
+def _rejection(record: ProviderPaper, reason: str) -> PaperRejection:
+    return PaperRejection(
+        provider_id=record.reference.provider_id,
+        record_id=record.reference.record_id,
+        reason=reason,  # type: ignore[arg-type]
+    )
+
+
+def extract_paper_facts(
+    query: PaperQuery, records: tuple[ProviderPaper, ...]
+) -> PaperFactOutcome:
+    """Merge the batch; when it refuses, merge per paper and reject only the culprits.
+
+    A record that cannot stand alone is rejected as ``extraction_failed``; records
+    that share a canonical id yet cannot merge are all rejected as
+    ``conflicting_values``. Every other paper merges unchanged
+    (SCION-SOURCE-INGEST-R005.32, R005.34).
+    """
+    try:
+        return PaperFactOutcome(merge_paper_records(query, records), ())
+    except ValueError:
+        pass
+    rejections: list[PaperRejection] = []
+    singles: list[tuple[ProviderPaper, PaperRecord]] = []
+    for record in records:
+        try:
+            (paper,) = merge_paper_records(query, (record,))
+        except ValueError:
+            rejections.append(_rejection(record, "extraction_failed"))
+            continue
+        singles.append((record, paper))
+    owners: dict[str, list[ProviderPaper]] = {}
+    for record, paper in singles:
+        owners.setdefault(paper.canonical_id, []).append(record)
+    papers: list[PaperRecord] = []
+    for group in owners.values():
+        try:
+            papers.extend(merge_paper_records(query, tuple(group)))
+        except ValueError:
+            rejections.extend(_rejection(r, "conflicting_values") for r in group)
+    papers.sort(key=lambda paper: (paper.canonical_id, paper.revision or ""))
+    return PaperFactOutcome(tuple(papers), tuple(rejections))

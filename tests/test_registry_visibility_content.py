@@ -224,13 +224,14 @@ async def test_connector_content_is_served(package_root: Path) -> None:
         ),
     )
     assert registration == ContentRegistration(
-        skills=1, prompts=1, resources=2, data_resources=1
+        skills=1, prompts=1, resources=2, data_resources=1, seed=True
     )
     async with Client(mcp) as client:
         uris = {str(resource.uri) for resource in await client.list_resources()}
         prompt = await client.get_prompt("demo_agent")
     assert {
         "connector://resources",
+        "seed://demo-agent/seed.ttl",
         "ontology://demo-agent/demo.ttl",
         "shapes://demo-agent/demo.shapes.ttl",
         "skill://demo-reader/SKILL.md",

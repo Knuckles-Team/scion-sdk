@@ -172,3 +172,51 @@ def test_tags_bind_provenance_and_failures_carry_no_content():
     assert set(failure.model_dump()) == {"code", "input_digest"}
     with pytest.raises(ValidationError):
         MediaTagFailure(code="X", input_digest="a" * 64, detail="raw")  # type: ignore[call-arg]
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R016.3")
+def test_sync_maps_tags_with_media_access():
+    from fastmcp import FastMCP
+
+    from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
+    from scion_sdk.adapters.media_tags import media_tag_records
+    from scion_sdk.contracts import ExternalAccess
+    from scion_sdk.manifest.presets import ToolPreset
+    from scion_sdk.ports.session import TransportEndpoint
+    from scion_sdk.transports.mcp import McpTransport
+
+    access = ExternalAccess(user_emails=["a@example.test"], markings=["family"])
+    tags = _tag([_raw("dog", 0.9), _raw("cat", 0.8)])
+    server = FastMCP("media")
+
+    @server.tool()
+    def media_tags() -> dict[str, object]:
+        return {"records": media_tag_records(tags, access)}
+
+    preset = ToolPreset(
+        name="media-tags",
+        server="media",
+        tool="media_tags",
+        id_field="id",
+        records_path="records",
+        params_style="args",
+        params={},
+        pagination="none",
+    )
+    adapter = McpToolSourceAdapter(
+        preset, connector="media", mapping_reference="connector:media#mappings/MediaTag"
+    )
+
+    async def run():
+        async with McpTransport().session(TransportEndpoint(in_process=server)) as s:
+            await adapter.discover(s)
+            return await adapter.extract(s, None)
+
+    page = asyncio.run(run())
+    assert [r.mapping_reference for r in page.records] == [
+        "connector:media#mappings/MediaTag"
+    ] * 2
+    assert {r.record_id for r in page.records} == {tag_record_id(t) for t in tags}
+    for record in page.records:
+        assert record.payload["access"] == access.model_dump(mode="json")
+        assert record.payload["taxonomy_id"] == "tax"

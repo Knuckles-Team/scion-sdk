@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from scion_sdk.access_contract import AccessContractError, parse_access_contracts
 from scion_sdk.certify.checkout import (
     ConnectorCheckout,
     checkout_from_resources,
@@ -27,8 +29,10 @@ from scion_sdk.manifest.tool_schema import (
     ToolSchemaContractError,
     canonical_input_schema,
 )
+from scion_sdk.ontology_namespaces import ACCESS_NAMESPACE
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.ports.transport import Transport
+from scion_sdk.transports.registry import check_declared_transports, transport_matrix
 
 __all__ = ["CertificationReport", "UpstreamReport", "certify_connector"]
 
@@ -58,12 +62,15 @@ class CertificationReport:
     exact_name_check: bool | None = None
     exact_name_reason: str = ""
     upstreams: tuple[UpstreamReport, ...] = ()
+    transports: tuple[dict[str, Any], ...] = ()
+    transport_defects: tuple[str, ...] = ()
 
     @property
     def passed(self) -> bool:
         """Whether every declared preset tool is listed and valid."""
         return (
             self.listed
+            and not self.transport_defects
             and self.exact_name_check is not False
             and bool(self.verdicts)
             and all(verdict.status is ToolStatus.CERTIFIED for verdict in self.verdicts)
@@ -95,6 +102,8 @@ class CertificationReport:
                 }
                 for verdict in self.verdicts
             ],
+            "transports": [dict(row) for row in self.transports],
+            "transport_defects": list(self.transport_defects),
             "upstreams": [
                 {
                     "name": upstream.name,
@@ -136,8 +145,11 @@ async def certify_connector(
             listed=False,
             reason=f"{exc}; {UNLISTED_DEFECT}",
         )
+    transports, transport_defects = _declared_transports(listing)
     return CertificationReport(
         connector=checkout.connector,
+        transports=transports,
+        transport_defects=transport_defects,
         server=checkout.server,
         listed=True,
         server_name=listing.server_name,
@@ -147,6 +159,33 @@ async def certify_connector(
         exact_name_reason=exact[1],
         upstreams=upstreams,
     )
+
+
+def _declared_transports(
+    listing: ToolListing,
+) -> tuple[tuple[dict[str, Any], ...], tuple[str, ...]]:
+    """The transport matrix and defects of the declared descriptors and contracts."""
+    descriptors = _served_descriptors(listing.resources)
+    contracts: list[Any] = []
+    for body in listing.ontologies:
+        if ACCESS_NAMESPACE not in body:
+            continue
+        try:
+            contracts.extend(parse_access_contracts(body))
+        except AccessContractError as exc:
+            return (), (f"CONTRACT_INVALID: {exc}",)
+    defects = check_declared_transports(descriptors, contracts)
+    protocols = [str(d.get("access_kind", "mcp_tool")) for d in descriptors]
+    protocols += [c.access_kind for c in contracts]
+    return transport_matrix(protocols), defects
+
+
+def _served_descriptors(body: str) -> list[dict[str, Any]]:
+    try:
+        entries = json.loads(body).get("descriptors", [])
+    except (ValueError, AttributeError):
+        return []
+    return [d for d in entries if isinstance(d, dict)]
 
 
 async def _certification_inputs(
