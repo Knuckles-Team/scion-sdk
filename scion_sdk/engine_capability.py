@@ -23,6 +23,10 @@ ENGINE_CAPABILITIES: Mapping[str, tuple[str, str]] = {
     "InstanceProfile": ("medulla.generated.source_ingestion", "InstanceProfile"),
     "ProfileSubmission": ("medulla.generated.source_ingestion", "ProfileSubmission"),
     "SchemaDriftQuarantinedError.drift": ("medulla", "SchemaDriftQuarantinedError"),
+    "VerifySourceQueryApproval": (
+        "medulla.client",
+        "MedullaClient.verify_source_query_approval",
+    ),
 }
 
 
@@ -44,7 +48,12 @@ def engine_capability_present(method: str) -> bool:
         module = importlib.import_module(module_name)
     except ImportError:
         return False
-    return hasattr(module, attribute)
+    target: object = module
+    for part in attribute.split("."):
+        target = getattr(target, part, None)
+        if target is None:
+            return False
+    return True
 
 
 def require_engine_capability(method: str) -> None:

@@ -72,3 +72,20 @@ async def test_ordered_progress_serializes_and_bounds_delivery() -> None:
     with pytest.raises(TimeoutError, match="deadline"):
         await blocked.update(1)
     assert blocked.last is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R050.2")
+async def test_concurrent_updates_are_ordered() -> None:
+    sent = []
+
+    async def sender(token, progress):
+        await asyncio.sleep(0)
+        sent.append(progress.sequence)
+
+    progress = OrderedProgress(_context("token"), sender, lambda text: text)
+    await asyncio.gather(*(progress.update(i, total=10) for i in range(1, 6)))
+    assert sent == sorted(sent) and sent == list(range(1, len(sent) + 1))
+    assert (
+        await progress.update(5, total=10)
+    ) is None  # equal completion sends nothing

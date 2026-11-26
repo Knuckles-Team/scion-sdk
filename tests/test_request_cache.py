@@ -79,3 +79,20 @@ def test_deadline_is_rechecked_after_admission(monkeypatch) -> None:
         cache.put(RequestCacheKey("a" * 64, "d" * 64), "value")
     with pytest.raises(ValueError, match="closed"):
         cache.get(RequestCacheKey("a" * 64, "d" * 64))
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R050.2")
+def test_entries_expire_at_deadline() -> None:
+    context = _context("expiry")
+    cache = RequestCache(context, lambda value: True)
+    key = RequestCacheKey("a" * 64, "b" * 64)
+    cache.put(key, "value")
+    assert cache.get(key) == "value"
+    expired = RequestCache(
+        _context("expired").model_copy(
+            update={"deadline": datetime.now(UTC) - timedelta(seconds=1)}
+        ),
+        lambda value: True,
+    )
+    with pytest.raises(TimeoutError):
+        expired.get(key)
