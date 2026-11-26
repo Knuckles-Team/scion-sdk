@@ -217,6 +217,12 @@
 
 ## Unreleased
 
+### Changed
+
+- The SDK requires `medulla>=3.3.5,<4.0.0` and follows its client contracts. The in-memory
+  conformance sink builds `SourceIngestionReceipt` with `classes`, `governance`, `report`
+  and `stream_object_id`.
+
 ### Fixed
 
 - A destructive tool called by a client that did not advertise elicitation no longer

@@ -8,6 +8,11 @@ from datetime import UTC, date, datetime, time
 from decimal import Decimal, DecimalException, localcontext
 from typing import Any
 
+# The engine stores the source identity of a graph node under ontology-IRI keys.
+_CORE = "https://knuckles-team.github.io/ontology/core#"
+SOURCE_RECORD_ID = f"{_CORE}sourceRecordId"
+SOURCE_MAPPING_REFERENCE = f"{_CORE}sourceMappingReference"
+
 _STREAMS = {
     "macro_series_fed_balance_sheet": ("WALCL", "walcl"),
     "macro_series_treasury_general_account": ("WDTGAL", "wdtgal"),
@@ -79,7 +84,7 @@ def _source(node: dict[str, Any]) -> tuple[str, str]:
         or provenance.get("connector") != "bellwether-mcp"
         or provenance.get("tool") != "fred_series_observations"
         or provenance.get("server") != "bellwether-mcp"
-        or node.get("source_mapping_reference")
+        or node.get(SOURCE_MAPPING_REFERENCE)
         != "connector:bellwether-mcp#mappings/EconomicIndicator"
         or node.get("series_id") != series
     ):
@@ -88,7 +93,7 @@ def _source(node: dict[str, Any]) -> tuple[str, str]:
 
 
 def _reference(node: dict[str, Any], series: str, *, period: Any, vintage: Any) -> str:
-    record_id = node.get("source_record_id")
+    record_id = node.get(SOURCE_RECORD_ID)
     digest = node.get("source_raw_sha256")
     if record_id != f"{series}:{period}:{vintage}" or not isinstance(digest, str):
         raise ValueError("invalid liquidity observation identity")

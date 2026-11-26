@@ -11,14 +11,14 @@ from urllib.parse import unquote, urlsplit
 
 EXPECTED = {
     "distribution": "medulla",
-    "version": "3.2.0",
+    "version": "3.3.5",
     "source_remote": "https://github.com/Knuckles-Team/medulla.git",
-    "source_revision": "a4ce6478d9a64fb68c03fff2688504ee3e37572e",
-    "release_tag": "v3.2.0",
-    "wheel_filename": "medulla-3.2.0-cp39-abi3-manylinux_2_28_x86_64.whl",
-    "wheel_asset_id": "pypi:medulla==3.2.0",
-    "wheel_url": "https://files.pythonhosted.org/packages/22/7c/8d74d8a8ec3530787f9e31cca1f96e2d78b598d3e2aa00eb57c5668ed8ae/medulla-3.2.0-cp39-abi3-manylinux_2_28_x86_64.whl",
-    "wheel_sha256": "dcae94c38e2c6961af0345f4175ca0dbff3a6e33d7783fdb5e4d6222995ba1ba",
+    "source_revision": "360fce03bf0ad3527ddd716407843f1705090b4e",
+    "release_tag": "v3.3.5",
+    "wheel_filename": "medulla-3.3.5-cp39-abi3-manylinux_2_28_x86_64.whl",
+    "wheel_asset_id": "pypi:medulla==3.3.5",
+    "wheel_url": "https://files.pythonhosted.org/packages/32/79/7f3e6fef0f5318b259cdd3056a8b4d1a1ecfee6e67b2e9f75ab28bb30248/medulla-3.3.5-cp39-abi3-manylinux_2_28_x86_64.whl",
+    "wheel_sha256": "cd416a7c53e4615afe15bb4ffb42b3a68f3c0fd001b27baf938d9b9478a4c763",
     "native_member": "medulla/numeric.abi3.so",
 }
 

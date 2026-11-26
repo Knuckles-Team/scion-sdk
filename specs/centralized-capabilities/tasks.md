@@ -85,3 +85,4 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T079 [US1] SCION-CENTRALIZED-CAPABILITIES-R048 Service-token header pair auth strategy.
 - [ ] T080 [US1] SCION-CENTRALIZED-CAPABILITIES-R049 Site routing host header.
 - [ ] T081 [US1] SCION-CENTRALIZED-CAPABILITIES-R050 Named upstream instances per connector.
+- [ ] T082 [US1] SCION-CENTRALIZED-CAPABILITIES-R051 Migrate to the medulla 3.3.x client contracts. Size: S, 1 PR, 3 hours.

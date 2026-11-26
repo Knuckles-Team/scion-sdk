@@ -17,6 +17,8 @@ from medulla.generated.connector_pack import (
     PackProjectionStateNone,
 )
 from medulla.generated.source_ingestion import (
+    GovernanceReport,
+    IngestBatchReport,
     RawAdmissionReceipt,
     SourceIngestionDisposition,
     SourceIngestionMode,
@@ -81,6 +83,12 @@ def _ingestion_receipt(
         mode=batch.mode,
         batch_digest=digest,
         mappings=[],
+        classes=[],
+        governance=GovernanceReport(governed=0, marked=0, refused=0),
+        report=IngestBatchReport(
+            refused=0, unchanged=len(batch.records) - affected, written=affected
+        ),
+        stream_object_id=f"stream:{batch.provider_checkpoint.stream}",
         raw_admissions=admissions,
         relationship_raw_admissions=[],
         tombstones=[],

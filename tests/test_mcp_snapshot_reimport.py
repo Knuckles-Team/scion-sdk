@@ -11,6 +11,7 @@ from test_event_feeds import CONNECTOR
 from test_event_replay_checkpoint import _import_mapping
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
+from scion_sdk.finance.liquidity_records import SOURCE_RECORD_ID
 from scion_sdk.manifest.presets import ToolPreset
 from scion_sdk.ports.session import TransportEndpoint
 from scion_sdk.runner.syncing import SyncTarget, sync_stream
@@ -58,7 +59,7 @@ async def _exercise():
             row["n"] for row in rows if row["n"].get("source_stream") == "account"
         ]
         assert first.checkpoint != repeat.checkpoint != changed.checkpoint
-        assert [account["source_record_id"] for account in accounts] == ["account-1"]
+        assert [account[SOURCE_RECORD_ID] for account in accounts] == ["account-1"]
     finally:
         await client.close()
 
