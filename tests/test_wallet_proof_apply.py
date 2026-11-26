@@ -36,6 +36,7 @@ from scion_sdk.writeback.errors import (
     WalletProofRefusedError,
 )
 from scion_sdk.writeback.service import GovernedWriteBack
+from tests.test_wallet_proof_served import world as _world  # noqa: F401  (fixture)
 
 NOW = 1050
 
@@ -500,7 +501,7 @@ async def test_engine_resolver_maps_the_trust_record_under_the_callers_tenant(
     record = SimpleNamespace(
         tenant_id="tenant",
         key_id="key",
-        public_key=base64.b64encode(b"k" * 32).decode(),
+        public_key=(b"k" * 32).hex(),
         signer_ref="signer",
         trust_revision=3,
         valid_from="1970-01-01T00:15:00Z",
@@ -529,3 +530,53 @@ async def test_engine_resolver_maps_the_trust_record_under_the_callers_tenant(
     assert trust.revoked is False
     foreign = replace(binding, tenant_id="other")
     assert await EngineWalletKeyResolver(object()).resolve(foreign) is None
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.5")
+def test_evidence_is_joined_redacted_and_survives_restart(tmp_path, caplog, request):
+    import json
+
+    served_world = request.getfixturevalue("_world")
+
+    from scion_sdk.writeback.wallet_gate import proof_evidence
+    from scion_sdk.writeback_sinks.governed import PROOF_EVIDENCE_FILE
+    from scion_sdk.writeback_sinks.wallet_prepare import PREPARATION_KEY
+    from tests.test_wallet_proof_served import _prepared, _run, _Sink
+
+    ops = _prepared(served_world)
+    sink = _Sink()
+    with caplog.at_level("DEBUG"):
+        outcome = _run(sink, ops, tmp_path)
+    preparation = ops[PREPARATION_KEY]
+    path = tmp_path / preparation.change_set_id / PROOF_EVIDENCE_FILE
+    # "Restart": the evidence is read from the durable ledger, not from process state.
+    text = path.read_text(encoding="utf-8")
+    record = json.loads(text)
+    assert set(record) == {
+        "payload_digest",
+        "plan_digest",
+        "change_set_digest",
+        "tenant",
+        "actor",
+        "connector",
+        "operation",
+        "network",
+        "signer_ref",
+        "trust_revision",
+        "verified_at_ms",
+    }
+    assert record["change_set_digest"] == preparation.change_set_digest
+    assert record["plan_digest"] == preparation.plan_digest
+    assert record["tenant"] == "tenant" and record["operation"] == "pay"
+    assert outcome.attempt is not None
+    signature = ops["wallet_envelope"].proof.signature
+    assert signature not in text and signature not in caplog.text
+    assert "public_key" not in text and "signature" not in text
+    with pytest.raises(ValueError):
+        from scion_sdk.writeback.wallet_proof import WalletProofResult
+
+        proof_evidence(
+            _binding(outcome.change_set),
+            WalletProofResult(outcome="refused", reason="expired"),
+            verified_at_ms=1,
+        )

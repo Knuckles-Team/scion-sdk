@@ -30,10 +30,18 @@ _TTL_MS = 300_000
 _SCHEMA_VERSION = 1
 
 
+def _without_proof(envelope: Any) -> Any:
+    """The envelope as data without its proof: the proof signs the change set, so
+    the change set cannot contain it (SCION-GOVERNED-WRITEBACK-R001.3)."""
+    dump = getattr(envelope, "model_dump", None)
+    document = dump(mode="json") if dump is not None else dict(envelope)
+    return {key: value for key, value in document.items() if key != "proof"}
+
+
 def _json_ops(ops: dict[str, Any]) -> dict[str, Any]:
     """Project ``ops`` to canonical JSON, dropping private keys and clients."""
     public = {
-        key: value
+        key: _without_proof(value) if key == "wallet_envelope" else value
         for key, value in ops.items()
         if not key.startswith("_") and key != "client"
     }
@@ -115,12 +123,20 @@ def _base_version(ops: dict[str, Any]) -> str:
 
 
 def build_change_set(
-    grant: SinkGrant, ops: dict[str, Any], *, now_ms: int | None = None
+    grant: SinkGrant,
+    ops: dict[str, Any],
+    *,
+    now_ms: int | None = None,
+    change_set_id: str | None = None,
 ) -> SourceChangeSet:
-    """Build the canonical SDK change set for one sink invocation."""
+    """Build the canonical SDK change set for one sink invocation.
+
+    ``change_set_id`` and ``now_ms`` are fixed only by a wallet preparation, so the
+    signer can sign the exact change set that execution then rebuilds.
+    """
     patch = {PATCH_FIELD: _json_ops(ops)}
     input_digest = _digest(patch)
-    change_set_id = uuid.uuid4().hex
+    change_set_id = change_set_id or uuid.uuid4().hex
     issued_ms = time.time_ns() // 1_000_000 if now_ms is None else now_ms
     draft = _write_back().SourceChangeSet(
         actor=_ACTOR,
