@@ -37,6 +37,8 @@ from scion_sdk.runner.static_registry import (
     load_runner_config,
 )
 
+_SETTINGS = {"settings": {"release_lock": "release.lock"}}
+
 
 def _connector(**endpoint: Any) -> dict[str, Any]:
     return {
@@ -53,7 +55,10 @@ def _write(path: Path, document: object) -> Path:
 async def test_config_anchors_paths_and_lists_connectors(tmp_path: Path) -> None:
     config = _write(
         tmp_path / "runner.yml",
-        {"settings": {"max_concurrency": 2}, "connectors": [_connector()]},
+        {
+            "settings": {"max_concurrency": 2, "release_lock": "release.lock"},
+            "connectors": [_connector()],
+        },
     )
     loaded = load_runner_config(config)
     assert isinstance(loaded, RunnerConfig)
@@ -69,12 +74,15 @@ async def test_config_anchors_paths_and_lists_connectors(tmp_path: Path) -> None
 def test_config_rejects_literal_secrets_without_echoing_them(tmp_path: Path) -> None:
     literal = "example-literal-value-9f2c"
     endpoint = {"url": "https://freshrss.example.invalid/mcp", "bearer_token": literal}
-    config = _write(tmp_path / "literal.yml", {"connectors": [_connector(**endpoint)]})
+    config = _write(
+        tmp_path / "literal.yml", {**_SETTINGS, "connectors": [_connector(**endpoint)]}
+    )
     with pytest.raises(RunnerConfigurationError) as caught:
         load_runner_config(config)
     assert literal not in str(caught.value) and caught.value.__cause__ is None
     duplicate = _write(
-        tmp_path / "duplicate.yml", {"connectors": [_connector(), _connector()]}
+        tmp_path / "duplicate.yml",
+        {**_SETTINGS, "connectors": [_connector(), _connector()]},
     )
     (tmp_path / "broken.yml").write_text("connectors: [unclosed")
     (tmp_path / "large.yml").write_text("#" * (1024 * 1024 + 1))

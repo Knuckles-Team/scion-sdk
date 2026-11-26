@@ -85,7 +85,11 @@ class _Resolution:
             return self.store.write(self.secret(present["ref"]), kind=kind)
         if "pem" in present:
             return self.store.write(str(present["pem"]), kind=kind)
-        return existing_path(present["path"]) if "path" in present else None
+        if "path" not in present:
+            return None
+        if prefix == "ca_bundle":
+            return _bundle_path(present["path"])
+        return existing_path(present["path"])
 
     def optional_secret(self, key: str) -> str | None:
         reference, value = self.document.get(f"{key}_ref"), self.document.get(key)
@@ -94,6 +98,17 @@ class _Resolution:
         if reference:
             return self.secret(reference)
         return str(value) if value else None
+
+
+def _bundle_path(value: object) -> Path:
+    """The enterprise root bundle: a missing, unreadable or empty file refuses."""
+    try:
+        path = existing_path(value)
+        if path.stat().st_size == 0 or not path.read_bytes():
+            raise OSError("empty bundle")
+    except (TransportSecurityError, OSError):
+        raise TransportSecurityError("tls_bundle_unavailable") from None
+    return path
 
 
 def _as_bool(value: object, *, default: bool) -> bool:

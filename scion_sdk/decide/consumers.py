@@ -16,11 +16,11 @@ proposal still goes through the governed write-back port
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from scion_sdk import decide
-from scion_sdk.decide.options import Option, text_param
+from scion_sdk.decide.options import Option, RankCandidate, text_param
 
 NO_WRITE = "no_write"
 
@@ -64,4 +64,33 @@ def propose_writeback(
     return chosen, proposals.get(chosen)
 
 
-__all__ = ["NO_WRITE", "bounded_choice", "propose_writeback"]
+def ranked_choice(
+    question_id: str,
+    candidates: Sequence[RankCandidate],
+    fallback: Callable[[], Sequence[str]],
+    *,
+    query: str,
+    connector: str | None = None,
+) -> list[str]:
+    """Ask Medulla for an order of ``candidates``; ``fallback()`` on any gap.
+
+    Only the question id, the query text and the candidates travel, as options
+    with text parameters; never a score, a rank or a threshold. The answer is
+    Medulla's ordered ids restricted to ``candidates``, then every candidate
+    it did not name in fallback order. Evaluate-only: it authorizes no effect.
+    """
+    known = {c.id for c in candidates}
+    params = [text_param("query", query)]
+    if connector is not None:
+        params.append(text_param("connector", connector))
+    ranking = decide.choose_many(
+        question_id, [c.option() for c in candidates], fallback, params=params
+    )
+    base = [i for i in fallback() if i in known]
+    if not ranking.decided:
+        return list(fallback())
+    named = [i for i in dict.fromkeys(ranking.ordered) if i in known]
+    return named + [i for i in base if i not in named]
+
+
+__all__ = ["NO_WRITE", "bounded_choice", "propose_writeback", "ranked_choice"]

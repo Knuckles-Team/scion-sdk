@@ -212,7 +212,7 @@ def test_resolution_rejects_unsafe_profiles(
             "tls_material_source_ambiguous",
         ),
         ({"ca_bundle_pem": "not a certificate"}, "tls_material_invalid"),
-        ({"ca_bundle_path": str(tmp_path / "missing.pem")}, "tls_material_unavailable"),
+        ({"ca_bundle_path": str(tmp_path / "missing.pem")}, "tls_bundle_unavailable"),
         (
             {"client_cert_pem": certificates.server_cert_pem},
             "tls_client_certificate_incomplete",

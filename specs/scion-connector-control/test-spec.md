@@ -147,12 +147,12 @@ These future tests have not run. The producer, gate, and writer attachments are 
 
 <!-- spec-definition-patch:sdk-consolidated-primary-20261012-tests -->
 ## Consolidated SDK future acceptance
-- **CC-81 / SCION-CONNECTOR-CONTROL-R051.1:** Validate all identity fields and actual instance IDs. Proposed: `tests/test_sandbox_provisioned_served.py::test_request_result_identity_round_trip`.
-- **CC-82 / SCION-CONNECTOR-CONTROL-R051.2:** A replay returns the reconciled allocation without duplication. Proposed: `tests/test_sandbox_provisioned_served.py::test_uncertain_allocation_reconciles_before_retry`.
-- **CC-83 / SCION-CONNECTOR-CONTROL-R051.3:** Exercise the served route, adapter, and result consumer. Proposed: `tests/test_sandbox_provisioned_served.py::test_agents_run_reaches_sdk_provisioner`.
-- **CC-84 / SCION-CONNECTOR-CONTROL-R051.4:** Negative cases observe zero unsupported or unauthorized allocations. Proposed: `tests/test_sandbox_provisioned_served.py::test_denied_profiles_have_zero_provider_calls`.
-- **CC-85 / SCION-CONNECTOR-CONTROL-R051.5:** Independent readback matches the bound allocation receipt. Proposed: `tests/test_sandbox_provisioned_served.py::test_receipt_matches_independent_readback`.
-- **CC-86 / SCION-CONNECTOR-CONTROL-R051.6:** The served acceptance proves actual allocation and zero duplicate effects. Proposed: `tests/test_sandbox_provisioned_served.py::test_served_replay_has_no_duplicate_effect`.
+- **CC-81 / SCION-CONNECTOR-CONTROL-R051.1:** Validate all identity fields and actual instance IDs. Proposed: `tests/test_sandbox_port.py::test_models_round_trip_and_reject_blank_identity`.
+- **CC-82 / SCION-CONNECTOR-CONTROL-R051.2:** A replay returns the reconciled allocation without duplication. Proposed: `tests/test_sandbox_port.py::test_replay_returns_reconciled_allocation`.
+- **CC-83 / SCION-CONNECTOR-CONTROL-R051.3:** Exercise the served route, adapter, and result consumer. Proposed: `tests/test_sandbox_provisioner_served.py::test_registered_tool_reaches_provisioner`.
+- **CC-84 / SCION-CONNECTOR-CONTROL-R051.4:** Negative cases observe zero unsupported or unauthorized allocations. Proposed: `tests/test_sandbox_port.py::test_refusals_make_zero_provider_calls`.
+- **CC-85 / SCION-CONNECTOR-CONTROL-R051.5:** Independent readback matches the bound allocation receipt. Proposed: `tests/test_sandbox_port.py::test_receipt_binds_digests_without_secrets`.
+- **CC-86 / SCION-CONNECTOR-CONTROL-R051.6:** The served acceptance proves actual allocation and zero duplicate effects. Proposed: `tests/test_sandbox_provisioner_served.py::test_agents_run_allocates_once_and_reads_back`.
 - **CC-87 / SCION-CONNECTOR-CONTROL-R052.1:** Reject absent or malformed provenance and unbounded payloads. Proposed: `tests/test_visual_observation_served.py::test_rejects_unbound_or_unbounded_envelopes`.
 - **CC-88 / SCION-CONNECTOR-CONTROL-R052.2:** The next step reads the committed same-run observation only. Proposed: `tests/test_visual_observation_served.py::test_next_step_reads_committed_same_run_reference`.
 - **CC-89 / SCION-CONNECTOR-CONTROL-R052.3:** A served two-step test observes matching IDs at result, state, and consumer. Proposed: `tests/test_visual_observation_served.py::test_tools_call_forwards_observation_to_eg_and_au`.

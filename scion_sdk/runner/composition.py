@@ -21,6 +21,7 @@ from scion_sdk.discovery import (
     load_extension,
     sdk_reference_extensions,
 )
+from scion_sdk.manifest.release_lock import load_release_key_lock
 from scion_sdk.ports.artifact_kind import ArtifactKind
 from scion_sdk.ports.sink import Sink
 from scion_sdk.ports.transport import Transport
@@ -178,8 +179,12 @@ def default_services(
     Raises:
         ExtensionActivationError: an extension is not certified by ``policy``.
         ExtensionDiscoveryError: an extension is missing or of the wrong port.
+        ReleaseSigningError: the release lock is missing, unreadable or malformed.
     """
-    del state_dir  # Stable composition parameter; EG owns all durable checkpoints.
+    del state_dir
+    release_keys = load_release_key_lock(
+        settings.release_lock
+    )  # Stable composition parameter; EG owns all durable checkpoints.
     chosen = policy or sdk_reference_extensions()
     transport = extension_instance(TRANSPORT_GROUP, "mcp", policy=chosen)
     sink = extension_instance(
@@ -206,6 +211,7 @@ def default_services(
         kinds=kinds,
         endpoints=CredentialEndpoints(default_credential_resolver()),
         settings=settings,
+        release_keys=release_keys,
         health=RunnerHealth(sink=sink, liveness_window_seconds=window),
         decide_runner=runner,
         source_adapter_policy=chosen,

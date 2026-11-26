@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass
 
@@ -24,12 +25,14 @@ from scion_sdk.runner.event_adapters import (
     _build_event_adapters,
     _ordinary_names,
 )
+from scion_sdk.runner.stages import StageDescriptor
 
 __all__ = [
     "CyclePlan",
     "change_plan",
     "full_plan",
     "load_sync_adapters",
+    "stage_descriptors",
 ]
 
 _LIST_KINDS = frozenset({"tools", "prompts", "resources"})
@@ -41,6 +44,7 @@ class CyclePlan:
 
     provision: bool
     presets: frozenset[str]
+    stages: tuple[StageDescriptor, ...] = ()
 
 
 def _raise_problems(descriptor: ConnectorDescriptor, problems: list[str]) -> None:
@@ -178,9 +182,39 @@ def _build_sync_adapters(
     }
 
 
+def stage_descriptors(descriptor: ConnectorDescriptor) -> tuple[StageDescriptor, ...]:
+    """The descriptor's declared stages as validated, admitted stage descriptors."""
+    limits = descriptor.stage_limits
+    if limits is None:
+        return ()
+    return tuple(
+        StageDescriptor(
+            stage_id=declared.stage_id,
+            tenant=descriptor.tenant,
+            connector=descriptor.connector,
+            source=declared.preset,
+            stream=declared.stream,
+            manifest_digest="sha256:"
+            + hashlib.sha256(declared.model_dump_json().encode()).hexdigest(),
+            dependencies=declared.dependencies,
+            admitted_limits=limits,
+        )
+        for declared in descriptor.stages
+    )
+
+
 def full_plan(descriptor: ConnectorDescriptor, presets: Iterable[str]) -> CyclePlan:
-    """Provision (when enabled) and sync every preset: the first and scheduled cycles."""
-    return CyclePlan(descriptor.provision, frozenset(presets))
+    """Provision (when enabled) and sync every preset: the first and scheduled cycles.
+
+    Presets named by a declared stage run through the stage executor.
+    """
+    stages = stage_descriptors(descriptor)
+    staged = {stage.source for stage in stages}
+    return CyclePlan(
+        descriptor.provision,
+        frozenset(presets) - staged,
+        stages,
+    )
 
 
 def change_plan(
