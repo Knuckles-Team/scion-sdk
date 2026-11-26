@@ -578,6 +578,8 @@ public_modules = [
     "scion_sdk.adapters.sandbox_provisioner",
     "scion_sdk.mcp.sandbox_tools",
     "scion_sdk.testing.sandbox_conformance",
+    "scion_sdk.ontology.instance_profile",
+    "scion_sdk.engine_capability",
 ]
 
 # Inputs of the shared hooks (Knuckles-Team/pipelines .pre-commit-hooks.yaml).
@@ -599,6 +601,7 @@ units = [
     "config_mounts",
     "connector_hooks",
     "connector_identity",
+    "engine_capability",
     "connector_lifecycle",
     "contract_fields",
     "contracts",
@@ -669,6 +672,7 @@ units = [
     "finance",
     "ingest",
     "manifest",
+    "ontology",
     "source_connectors",
     "streaming",
     "taxonomy",

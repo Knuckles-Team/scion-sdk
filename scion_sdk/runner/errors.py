@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+from typing import Any
+
 from scion_sdk.ports.errors import SourceContractError
 from scion_sdk.schema_drift import SchemaDriftReport
 
 __all__ = [
     "CredentialResolutionError",
+    "EngineSchemaDriftQuarantined",
     "ReleaseVerificationError",
     "RunnerConfigurationError",
     "SchemaDriftQuarantined",
@@ -51,6 +56,35 @@ class SchemaDriftQuarantined(SourceContractError):
         super().__init__(
             f"source page quarantined: {report.classification.value}; {reasons}"
         )
+
+
+class EngineSchemaDriftQuarantined(SchemaDriftQuarantined):
+    """The engine gate quarantined a page (``SCHEMA_DRIFT_QUARANTINED``).
+
+    The checkpoint is held. ``drift`` is the engine's per-stream report, kept
+    unchanged, and ``drift_digest`` is the SHA-256 of its canonical JSON for the
+    run record (SCION-SOURCE-INGEST-R007.1). The engine is the authority; the SDK
+    classifier never overrides it.
+    """
+
+    def __init__(self, drift: list[Any]) -> None:
+        self.report = None  # type: ignore[assignment]
+        self.drift = drift
+        self.drift_digest = _digest(drift)
+        SourceContractError.__init__(
+            self, f"engine quarantined the page; drift digest {self.drift_digest}"
+        )
+
+
+def _digest(drift: list[Any]) -> str:
+    body = [
+        item.model_dump(mode="json", by_alias=True)
+        if hasattr(item, "model_dump")
+        else item
+        for item in drift
+    ]
+    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
 
 
 class StreamPaused(SourceContractError):
