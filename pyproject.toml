@@ -409,6 +409,8 @@ public_modules = [
     "scion_sdk.manifest.live_contract",
     "scion_sdk.manifest.model",
     "scion_sdk.manifest.pack_declaration",
+    "scion_sdk.manifest.pack_preflight",
+    "scion_sdk.manifest.views",
     "scion_sdk.source",
     "scion_sdk.source.client",
     "scion_sdk.source.mcp_transport",

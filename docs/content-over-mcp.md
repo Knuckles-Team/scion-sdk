@@ -76,6 +76,6 @@ tool. The server serves the assembled declaration as the JSON resource
 resources and data-resource descriptors. The runner and `connector-certify`
 read that resource and nothing else.
 
-Fingerprints use the `agent-connector-sdk:mcp-tool-contract-compat:v2`
+Fingerprints use the `scion-sdk:mcp-tool-contract-compat`
 algorithm, which binds the canonical input and output schemas. The SDK reads
 the fingerprint from the live `tools/list` response; no file pins it.

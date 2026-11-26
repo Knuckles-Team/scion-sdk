@@ -34,7 +34,6 @@ from scion_sdk.manifest.tool_schema import (
     canonical_input_schema,
     canonical_output_schema,
     compatibility_fingerprint,
-    legacy_empty_schema_fingerprint,
     read_field,
 )
 
@@ -49,7 +48,7 @@ __all__ = [
 #: Domain-separated marker hashed in place of a declared output schema when a
 #: tool declares none at all, so the digest is canonical and nonempty without
 #: colliding with the digest of any real (possibly empty) declared schema.
-_NO_OUTPUT_SCHEMA_DOMAIN = b"agent-connector-sdk:mcp-tool-output-schema:missing:v1\x00"
+_NO_OUTPUT_SCHEMA_DOMAIN = b"scion-sdk:mcp-tool-output-schema:missing\x00"
 
 
 class EmptyToolSchemaError(ToolSchemaContractError):
@@ -63,10 +62,7 @@ def tool_name(tool: Any) -> str:
 
 def is_empty_schema_pin(tool: str, pin: str) -> bool:
     """Whether ``pin`` is the fingerprint of an empty input schema for ``tool``."""
-    return pin.strip().lower() in {
-        compatibility_fingerprint(tool, {}),
-        legacy_empty_schema_fingerprint(tool),
-    }
+    return pin.strip().lower() == compatibility_fingerprint(tool, {})
 
 
 def tool_fingerprint(tool: Any) -> str:

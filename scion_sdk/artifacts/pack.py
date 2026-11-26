@@ -20,6 +20,7 @@ from scion_sdk.artifacts.pack_sources import (
     _validate_resource_descriptors,
 )
 from scion_sdk.contracts import CapturedArtifact, ServerIdentity
+from scion_sdk.manifest.pack_declaration import ConnectorPackDeclaration
 from scion_sdk.manifest.resource_descriptor import (
     RESOURCES_URI,
 )
@@ -151,7 +152,11 @@ def _require_unique_uris(entries: Sequence[CapturedArtifact]) -> None:
 
 
 async def build_content_pack(
-    session: McpSession, *, connector: str, kinds: Sequence[ArtifactKind]
+    session: McpSession,
+    *,
+    connector: str,
+    kinds: Sequence[ArtifactKind],
+    declaration: ConnectorPackDeclaration | None = None,
 ) -> CapturedConnectorPack:
     """Read, validate, and archive every MCP-served entry exactly once.
 
@@ -163,8 +168,9 @@ async def build_content_pack(
     _require_unique_uris(entries)
     _validate_resource_descriptors(entries)
     entries = _scope_imports(entries)
-    contract_entries = _source_contract_entries(entries, connector)
-    _check_contract_transports(contract_entries)
+    contract_entries = _source_contract_entries(entries, connector, declaration)
+    if declaration is None:
+        _check_contract_transports(contract_entries)
     server_entry = ConnectorPackEntryContent(
         kind=PackEntryKind.MCP_SERVER,
         uri=f"mcp-server://{connector}",
@@ -188,7 +194,7 @@ async def build_content_pack(
 
 
 async def build_connector_content_pack(
-    content: ConnectorContent,
+    content: ConnectorContent, declaration: ConnectorPackDeclaration | None = None
 ) -> CapturedConnectorPack:
     """Capture one declared provider into its own generated archive.
 
@@ -221,5 +227,5 @@ async def build_connector_content_pack(
     )
     async with McpTransport().session(endpoint) as session:
         return await build_content_pack(
-            session, connector=content.connector, kinds=kinds
+            session, connector=content.connector, kinds=kinds, declaration=declaration
         )

@@ -45,7 +45,6 @@ from scion_sdk.manifest.tool_schema import (
     canonical_input_schema,
     canonical_output_schema,
     compatibility_fingerprint,
-    legacy_empty_schema_fingerprint,
     read_field,
     schema_fingerprint,
 )
@@ -74,7 +73,7 @@ def test_fingerprints_are_deterministic_and_refuse_empty_schemas() -> None:
     with pytest.raises(EmptyToolSchemaError):
         tool_fingerprint(empty)
     assert is_empty_schema_pin("e", compatibility_fingerprint("e", {}))
-    assert is_empty_schema_pin("e", legacy_empty_schema_fingerprint("e"))
+    assert COMPATIBILITY_FINGERPRINT_ALGORITHM == "scion-sdk:mcp-tool-contract-compat"
     with pytest.raises(ToolSchemaContractError):
         tool_fingerprint(SimpleNamespace(name="", inputSchema={"type": "object"}))
 
