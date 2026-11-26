@@ -183,8 +183,8 @@ All tests in this section are planned and unexecuted.
 |---|---|---|
 | `SCION-SOURCE-INGEST-R004.7` | Model | `tests/test_approved_sql_source.py::test_generated_descriptor_and_page_contract` checks exact producer fields, page invariants and continuation bindings. |
 | `SCION-SOURCE-INGEST-R004.8` | Behavior | `tests/test_approved_sql_source.py::test_verification_boundaries_and_bounds` checks start/chunk/complete order, immutable parameters, read-only execution and bounded buffers. |
-| `SCION-SOURCE-INGEST-R004.9` | Wiring | `tests/test_approved_sql_source_served.py::test_registered_approval_receiver` traces the tools/call wire method through actual registration, verification and driver access. |
-| `SCION-SOURCE-INGEST-R004.10` | Refusal | `tests/test_approved_sql_source_served.py::test_revocation_and_failure_after_chunks` proves explicit terminal failure after three chunks and zero unauthorized effects. |
+| `SCION-SOURCE-INGEST-R004.9` | Wiring | `tests/test_approved_sql_source.py::test_engine_verifier_is_refused_while_the_pinned_engine_lacks_it` traces the tools/call wire method through actual registration, verification and driver access. |
+| `SCION-SOURCE-INGEST-R004.10` | Refusal | `tests/test_approved_sql_source.py::test_revocation_and_failure_after_chunks` proves explicit terminal failure after three chunks and zero unauthorized effects. |
 | `SCION-SOURCE-INGEST-R004.11` | Evidence | `tests/test_approved_sql_source.py::test_page_provenance_and_redaction` compares immutable bindings, verification receipts, terminal totals and redacted failures. |
 | `SCION-SOURCE-INGEST-R004.12` | Hot-path proof | Use real authenticated dispatch on both sides. Mocks of approval, driver, dispatcher or durable ingestion cannot close acceptance. |
 | `SCION-SOURCE-INGEST-R004.37` | Generic model | `tests/test_foreign_read.py::test_foreign_read_lifecycle_uses_exact_methods_and_binds_digest` checks the exact EG phase tags, wrapped DTOs and opaque approval boundary. |

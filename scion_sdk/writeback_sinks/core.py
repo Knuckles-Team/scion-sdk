@@ -95,6 +95,9 @@ class WritebackContext:
     #: stamps wall-clock storage/event/valid_from, matching every caller's
     #: pre-existing behavior byte-for-byte.
     as_of: str | None = None
+    #: authenticated caller identity; a wallet-proof sink binds proofs to it
+    tenant_id: str = ""
+    actor_id: str = ""
 
     def resolver(self, domain: str) -> Callable[[str], str | None]:
         return resolve_external_id(self.backend, domain)

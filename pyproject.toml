@@ -34,6 +34,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+fuse = [
+    "pyfuse3>=3.4.0,<4",
+]
 requests = [
     "requests>=2.34.0,<3",
 ]
@@ -290,7 +293,11 @@ public_modules = [
     "scion_sdk.adapters.paper_quota",
     "scion_sdk.adapters.paper_search",
     "scion_sdk.adapters.paper_tool",
+    "scion_sdk.adapters.paper_maintenance",
+    "scion_sdk.adapters.media_tags",
     "scion_sdk.adapters.workspace_reader",
+    "scion_sdk.raw_source",
+    "scion_sdk.testing.raw_source",
     "scion_sdk.adapters.workspace_models",
     "scion_sdk.adapters.document_sources",
     "scion_sdk.vendor_extractors.enterprise_contract",
@@ -576,6 +583,7 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
     "scion_sdk.scm",
+    "scion_sdk.finance.forecast",
     "scion_sdk.environment",
     "scion_sdk.desktop",
     "scion_sdk.observation",
@@ -590,6 +598,7 @@ public_modules = [
     "scion_sdk.mcp.tool_context",
     "scion_sdk.mcp.visual_observation",
     "scion_sdk.ontology.instance_profile",
+    "scion_sdk.adapters.sql_source",
     "scion_sdk.engine_capability",
 ]
 
@@ -683,6 +692,7 @@ units = [
     "finance",
     "ingest",
     "manifest",
+    "raw_source",
     "desktop",
     "environment",
     "observation",
