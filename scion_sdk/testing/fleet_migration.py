@@ -675,8 +675,8 @@ async def run_loader_parity(
                     )
         counts: list[tuple[str, int, int]] = []
         for call in calls:
-            mapping = mappings.get(call.source_operation_id)
-            if mapping is None:
+            bound = mappings.get(call.source_operation_id)
+            if bound is None:
                 problems.append(
                     ParityProblem("unknown_loader", call.source_operation_id)
                 )
@@ -686,7 +686,7 @@ async def run_loader_parity(
                 call.source_operation_id, dict(call.arguments), raise_on_error=False
             )
             new_result = await new.call_tool(
-                mapping.target_operation_id, dict(call.arguments), raise_on_error=False
+                bound.target_operation_id, dict(call.arguments), raise_on_error=False
             )
             used_old = source.backend_calls() - before_old
             used_new = replacement.backend_calls() - before_new
