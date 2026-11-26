@@ -41,3 +41,24 @@ Decision: the exchange writes one change set through the existing ingest facade.
 Rationale: the core ontology already holds a content-identity key, `contentSha256`, on `MediaFile`. It also holds an action class and the input and derivation relations. A new class duplicates them.
 
 Rejected: an engine blob upload of every output. The bytes already live in the sinks, and a second copy doubles the storage.
+
+## Comparison with a Linked Data operation algebra and a knowledge platform (rows R051 to R054)
+
+Web-Algebra implements `GET`, `PUT`, `POST` and `PATCH` of RDF resources over HTTP. It also implements the SPARQL forms `SELECT`, `CONSTRUCT` and `DESCRIBE`, and schema extraction from an endpoint. Its reconciliation call targets a service that follows the W3C Entity Reconciliation Service API. It signs requests to its companion hub with a client certificate. TrustGraph has an embedding client, document decoders and tool services that register external tools.
+
+| Capability | Spec row | State |
+|---|---|---|
+| Read and write RDF resources over HTTP with media-type negotiation | `SCION-CENTRALIZED-CAPABILITIES-R051` | New |
+| Query and update a remote SPARQL endpoint | `SCION-CENTRALIZED-CAPABILITIES-R052` | New |
+| Induce an ontology profile from the instance data of an endpoint | `SCION-CENTRALIZED-CAPABILITIES-R053` | New |
+| Entity reconciliation against a service that follows the W3C API | `SCION-CENTRALIZED-CAPABILITIES-R054` | New |
+| Client certificate for outbound calls | `SCION-CENTRALIZED-CAPABILITIES-R008` (TLS profiles) | Covered |
+| Governed HTTP, egress guard, retry, redaction | `SCION-CENTRALIZED-CAPABILITIES-R001`, `R002`, `R006` | Covered |
+| GraphQL, MCP and A2A client transports | `SCION-CENTRALIZED-CAPABILITIES-R014`, `R016`, `R017` | Covered |
+| Embedding client | `SCION-CENTRALIZED-CAPABILITIES-R025` | Covered |
+| Document decoders and OCR in the ingest runner | `SCION-SOURCE-INGEST-R908` | Covered |
+| External tool services registered with the platform | `SCION-CENTRALIZED-CAPABILITIES-R015`, `R028`, `R029` (tool surface, declaration, certification) | Covered |
+| Ontology pack generation from typed declarations | `SCION-CENTRALIZED-CAPABILITIES-R027` | Covered |
+| Hub-specific operations for one product (container, view, chart blocks) | none | Not adopted in the SDK. A connector repository for that product must own them (`CONN-<REPO>-`), and none exists. |
+
+Decisions. The clients raise categories without server text, because the project's errors surface raw server responses. The default result cap of the SPARQL client is the value that Arbora already uses for its endpoint (`ARBORA-OPS-R857.1`). The profile thresholds are the starting defaults of `MEDULLA-INGEST-WORKER-R002.8`.

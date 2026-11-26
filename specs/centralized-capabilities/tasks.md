@@ -85,3 +85,18 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T079 [US1] SCION-CENTRALIZED-CAPABILITIES-R048 Service-token header pair auth strategy.
 - [ ] T080 [US1] SCION-CENTRALIZED-CAPABILITIES-R049 Site routing host header.
 - [ ] T081 [US1] SCION-CENTRALIZED-CAPABILITIES-R050 Named upstream instances per connector.
+- [ ] T082 [US1] SCION-CENTRALIZED-CAPABILITIES-R051 Linked Data resource client (rollup).
+- [ ] T083 [US1] SCION-CENTRALIZED-CAPABILITIES-R051.1 Behavior: four verbs over RDF media types.
+- [ ] T084 [US1] SCION-CENTRALIZED-CAPABILITIES-R051.2 Refusal: typed failures without server text.
+- [ ] T085 [US1] SCION-CENTRALIZED-CAPABILITIES-R051.3 Wiring: the client is a public transport.
+- [ ] T086 [US1] SCION-CENTRALIZED-CAPABILITIES-R051.4 Hot-path proof: a connector reads and updates a resource.
+- [ ] T087 [US1] SCION-CENTRALIZED-CAPABILITIES-R052 SPARQL endpoint client (rollup).
+- [ ] T088 [US1] SCION-CENTRALIZED-CAPABILITIES-R052.1 Behavior: query forms, update and typed failures.
+- [ ] T089 [US1] SCION-CENTRALIZED-CAPABILITIES-R052.2 Wiring: public export and index row.
+- [ ] T090 [US1] SCION-CENTRALIZED-CAPABILITIES-R052.3 Hot-path proof: a connector queries and updates an endpoint.
+- [ ] T091 [US1] SCION-CENTRALIZED-CAPABILITIES-R053 Instance profile of a SPARQL endpoint (rollup).
+- [ ] T092 [US1] SCION-CENTRALIZED-CAPABILITIES-R053.1 Behavior and wiring: three bounded queries.
+- [ ] T093 [US1] SCION-CENTRALIZED-CAPABILITIES-R053.2 Hot-path proof: endpoint to admitted draft.
+- [ ] T094 [US1] SCION-CENTRALIZED-CAPABILITIES-R054 Entity reconciliation client (rollup).
+- [ ] T095 [US1] SCION-CENTRALIZED-CAPABILITIES-R054.1 Behavior, refusal and wiring: candidates for one name.
+- [ ] T096 [US1] SCION-CENTRALIZED-CAPABILITIES-R054.2 Hot-path proof: reconcile one name end to end.
