@@ -42,14 +42,21 @@ class EngineWalletKeyResolver:
         """The current trust for ``binding``, or ``None`` for any foreign or absent record."""
         require_engine_capability("WalletKeyTrustGet")
         compute = importlib.import_module("medulla.generated.compute")
-        record = await compute.send_wallet_key_trust_get(
-            self._client,
-            {
-                "account_id": binding.account_id,
-                "network_id": binding.network_id,
-                "wallet_id": binding.wallet_id,
-            },
-        )
+        try:
+            record = await compute.send_wallet_key_trust_get(
+                self._client,
+                {
+                    "account_id": binding.account_id,
+                    "network_id": binding.network_id,
+                    "wallet_id": binding.wallet_id,
+                },
+            )
+        except Exception as error:
+            # The engine refuses an absent record with this stable code; an absent
+            # record answers exactly like a foreign one.
+            if getattr(error, "code", None) == "WALLET_KEY_TRUST_NOT_FOUND":
+                return None
+            raise
         if (
             record is None
             or record.tenant_id != binding.tenant_id
