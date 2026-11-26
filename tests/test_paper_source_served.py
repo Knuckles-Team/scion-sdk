@@ -158,6 +158,7 @@ async def _exercise(url, root):
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.2")
+@pytest.mark.spec("SCION-SOURCE-INGEST-R005.3")
 @pytest.mark.spec("SCION-SOURCE-INGEST-R005.6")
 def test_served_search_download_and_sync(live_ingest, tmp_path):  # noqa: F811
     page = ScriptedResponse(body=_feed("0001.0001"), headers=_JSON)
