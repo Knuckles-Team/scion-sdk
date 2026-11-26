@@ -41,6 +41,12 @@ def _with_contract_facts(
 def _tool_entry(tool: Any, server: ServerIdentity) -> CapturedArtifact:
     body = _tool_body(tool)
     facts = facts_from_declaration(tool)
+    if facts.readable_form is not None:
+        body["readable_form"] = {
+            "template_id": facts.readable_form.template_id,
+            "max_chars": facts.readable_form.max_chars,
+            "question_set_ref": facts.readable_form.question_set_ref,
+        }
     name = body["name"]
     return CapturedArtifact(
         kind=ToolArtifactKind.kind,

@@ -75,6 +75,38 @@ def request_for(
     }
 
 
+@dataclass(frozen=True, slots=True)
+class Ranking:
+    """An ordered answer to a ``Rank`` question, or the fallback order and why."""
+
+    ordered: tuple[str, ...]
+    decided: bool
+    reason: str
+
+
+def read_ranking(batch: Any, offered: frozenset[str]) -> Reading:
+    """Read a ``Rank`` answer: the ordered ``Advisory.scores`` ids that were offered.
+
+    ``Reading.option_id`` carries the ids joined by a newline; ``None`` means
+    the caller's fallback order answers.
+    """
+    record = _record_of(batch)
+    outcome = record.get("outcome") if record is not None else None
+    if record is None or not isinstance(outcome, Mapping):
+        return Reading(None, "unavailable: empty decision batch", None, {})
+    scores = outcome.get("scores") or []
+    ids = [
+        str(s["option_id"])
+        for s in scores
+        if isinstance(s, Mapping) and str(s.get("option_id")) in offered
+    ]
+    if not ids:
+        return Reading(None, f"abstained: {_reasons(outcome)}", record, {})
+    return Reading(
+        "\n".join(dict.fromkeys(ids)), str(outcome.get("outcome")), record, {}
+    )
+
+
 def _record_of(batch: Any) -> Mapping[str, Any] | None:
     records = batch.get("records") if isinstance(batch, Mapping) else None
     if not records or not isinstance(records[0], Mapping):
@@ -134,4 +166,12 @@ def sampled(point: DecisionPoint, record: Mapping[str, Any]) -> bool:
         return False
 
 
-__all__ = ["Choice", "Reading", "read_batch", "request_for", "sampled"]
+__all__ = [
+    "Choice",
+    "Ranking",
+    "Reading",
+    "read_batch",
+    "read_ranking",
+    "request_for",
+    "sampled",
+]

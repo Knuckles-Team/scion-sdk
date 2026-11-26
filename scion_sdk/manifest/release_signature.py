@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -29,7 +30,13 @@ if TYPE_CHECKING:
 
     from scion_sdk.manifest.sources import IngestSourceDeclaration
 
-__all__ = ["ReleaseSignature", "ReleaseSigningError", "sign_release", "verify_release"]
+__all__ = [
+    "ReleaseSignature",
+    "ReleaseSigningError",
+    "read_release_evidence",
+    "sign_release",
+    "verify_release",
+]
 
 _KEY_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
 _B64URL = re.compile(r"[A-Za-z0-9_-]+\Z")
@@ -46,6 +53,24 @@ class ReleaseSignature:
     key_id: str
     digest: str
     signature: str
+
+
+def read_release_evidence(text: str) -> ReleaseSignature:
+    """Parse the ``release.json`` body; unknown or missing keys refuse."""
+    try:
+        document = json.loads(text)
+    except ValueError:
+        raise ReleaseSigningError("release evidence is not JSON") from None
+    if not isinstance(document, dict) or set(document) != {
+        "key_id",
+        "digest",
+        "signature",
+    }:
+        raise ReleaseSigningError("release evidence has unexpected keys")
+    values = [document[name] for name in ("key_id", "digest", "signature")]
+    if not all(isinstance(value, str) for value in values):
+        raise ReleaseSigningError("release evidence values must be strings")
+    return ReleaseSignature(*values)
 
 
 def _encode(raw: bytes) -> str:

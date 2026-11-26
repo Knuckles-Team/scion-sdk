@@ -231,3 +231,102 @@ def test_batch_roots_selects_by_first_letter_and_keeps_expected(tmp_path: Path) 
     (tmp_path / "apple.txt").write_text("file", encoding="utf-8")
     roots = batch_roots(tmp_path, BATCH_LETTERS["R009"], expected=["bravo-mcp"])
     assert [root.name for root in roots] == ["alpha-mcp", "bravo-mcp", "echo-api"]
+
+
+def _git_init(root: Path) -> str:
+    import subprocess
+
+    env = {
+        "GIT_AUTHOR_NAME": "t",
+        "GIT_AUTHOR_EMAIL": "t@example.test",
+        "GIT_COMMITTER_NAME": "t",
+        "GIT_COMMITTER_EMAIL": "t@example.test",
+        "PATH": __import__("os").environ["PATH"],
+    }
+    run = lambda *a: subprocess.run(  # noqa: E731
+        ["git", "-C", str(root), *a],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    run("init", "-q")
+    run("add", "-A")
+    run("commit", "-q", "-m", "x")
+    return run("rev-parse", "HEAD").stdout.strip()
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R014.27")
+def test_census_receipt_names_revisions_and_flags_unresolved(tmp_path: Path) -> None:
+    from scion_sdk.testing.fleet_migration import CensusReceipt, fleet_census_receipt
+
+    _write(tmp_path / "clean_pkg" / "server.py", "import scion_sdk\n")
+    _write(tmp_path / "legacy_pkg" / "a.py", "import meristem.core.config\n")
+    head = _git_init(tmp_path / "clean_pkg")
+    _git_init(tmp_path / "legacy_pkg")
+    receipts = {
+        r.package: r
+        for r in fleet_census_receipt(
+            [tmp_path / "clean_pkg", tmp_path / "legacy_pkg", tmp_path / "ghost"]
+        )
+    }
+    assert isinstance(receipts["clean_pkg"], CensusReceipt)
+    assert receipts["clean_pkg"].clean and receipts["clean_pkg"].revision == head
+    assert receipts["clean_pkg"].scanned_files == 1
+    assert not receipts["legacy_pkg"].clean
+    assert not receipts["ghost"].clean and receipts["ghost"].revision == ""
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R020.1")
+def test_loader_inventory_complete_and_parity_rejects_differences(
+    tmp_path: Path,
+) -> None:
+    from scion_sdk.testing.fleet_migration import (
+        JsonTagLoaderEntry,
+        LoaderInventoryItem,
+        OperationMapping,
+        loader_parity_problems,
+        scan_json_tag_loaders,
+    )
+
+    root = tmp_path / "pkg"
+    _write(root / "tags.json", '{"tools": []}')
+    _write(
+        root / "loader.py",
+        'import json\nDATA = json.loads(open("tags.json").read())\n',
+    )
+    _write(root / "plain.py", 'NAME = "tags.json"\n')
+    (found,) = scan_json_tag_loaders([root])
+    assert type(found).__name__ == LoaderInventoryItem.__name__
+    assert (found.loader_path, found.json_path) == ("loader.py", "tags.json")
+    assert len(found.json_digest) == 64
+    inventory = [(found.package, found.loader_path)]
+    assert loader_parity_problems([], inventory) == [
+        "loader not inventoried: pkg:loader.py"
+    ]
+    mapping = OperationMapping(
+        "a", "a", "i", "i", "o", "o", frozenset({"t"}), frozenset({"t"})
+    )
+    entry = JsonTagLoaderEntry(
+        "pkg",
+        "rev",
+        "loader.py",
+        "tags.json",
+        found.json_digest,
+        "operation",
+        (mapping,),
+    )
+    assert loader_parity_problems([entry], inventory) == []
+    drifted = OperationMapping("a", "a", "i", "j", "o", "o")
+    bad = JsonTagLoaderEntry(
+        "pkg",
+        "rev",
+        "loader.py",
+        "tags.json",
+        found.json_digest,
+        "operation",
+        (drifted,),
+    )
+    assert any(
+        "input schema differs" in p for p in loader_parity_problems([bad], inventory)
+    )

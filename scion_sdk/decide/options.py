@@ -47,6 +47,27 @@ class Option:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class RankCandidate:
+    """One candidate of a ranking question: the text medulla ranks, no score."""
+
+    id: str
+    name: str
+    description: str = ""
+    kind: str = ""
+
+    def option(self) -> Option:
+        """The declared option; ``name``, ``description`` and ``kind`` travel as texts."""
+        return Option(
+            self.id,
+            texts={
+                "name": self.name,
+                "description": self.description,
+                "kind": self.kind,
+            },
+        )
+
+
 def unique_sorted(options: Iterable[Option]) -> list[Option]:
     """Options sorted by id; a repeated id keeps its first declaration."""
     seen: dict[str, Option] = {}
@@ -71,6 +92,7 @@ def text_param(name: str, value: str) -> dict[str, Any]:
 __all__ = [
     "Q32_ONE",
     "Option",
+    "RankCandidate",
     "declared_source",
     "q32",
     "text_param",

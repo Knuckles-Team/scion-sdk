@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
+from scion_sdk.artifacts.readable_form import ReadableScore, score_readable_answers
 from scion_sdk.certify.checkout import ConnectorCheckout
 from scion_sdk.certify.read_only_check import (
     ReadOnlyOutcome,
@@ -48,6 +49,9 @@ class ToolVerdict:
     live: str = ""
     output_schema_sha256: str = ""
     defect: str = ""
+    score: float | None = None
+    question_count: int = 0
+    answered_count: int = 0
 
 
 def _unavailable(checkout: ConnectorCheckout, tool: str, defect: str) -> ToolVerdict:
@@ -59,12 +63,31 @@ def _unavailable(checkout: ConnectorCheckout, tool: str, defect: str) -> ToolVer
     )
 
 
-def _has_readable_form(tool: Any) -> bool:
+def _readable_form(tool: Any) -> Mapping[str, Any] | None:
     meta = read_field(tool, "_meta", "meta", attr_names=("meta", "_meta"))
     if not isinstance(meta, Mapping):
-        return False
+        return None
     annotations = meta.get("eg.annotations")
-    return isinstance(annotations, Mapping) and "readable_form" in annotations
+    if not isinstance(annotations, Mapping):
+        return None
+    form = annotations.get("readable_form")
+    return form if isinstance(form, Mapping) else None
+
+
+def _has_readable_form(tool: Any) -> bool:
+    return _readable_form(tool) is not None
+
+
+def _readable_score(tool: Any) -> ReadableScore | None:
+    """Count the form's externally graded answers; ``None`` when none are graded."""
+    form = _readable_form(tool)
+    answers = form.get("graded_answers") if form is not None else None
+    if not isinstance(answers, Sequence) or isinstance(answers, str) or not answers:
+        return None
+    try:
+        return score_readable_answers(list(answers))
+    except ValueError:
+        return None
 
 
 def _unscored(checkout: ConnectorCheckout, tool: str) -> ToolVerdict:
@@ -92,7 +115,8 @@ def _verdict(
     if len(matches) != 1:
         state = "does not list" if not matches else "lists more than once"
         return _unavailable(checkout, tool, f"the server {state} tool {tool!r}")
-    if _has_readable_form(matches[0]):
+    graded = _readable_score(matches[0])
+    if _has_readable_form(matches[0]) and graded is None:
         return _unscored(checkout, tool)
     try:
         contract = validate_preset_tool_contract(
@@ -110,6 +134,9 @@ def _verdict(
         status=ToolStatus.CERTIFIED,
         live=contract.compatibility_sha256,
         output_schema_sha256=output_schema_digest(matches[0]),
+        score=graded.score if graded else None,
+        question_count=graded.question_count if graded else 0,
+        answered_count=graded.answered_count if graded else 0,
     )
     return _gate_read_only(facts, fixture, verdict)
 
@@ -158,7 +185,10 @@ def _extra_verdicts(
 ) -> list[ToolVerdict]:
     verdicts: list[ToolVerdict] = []
     for name in sorted(by_name.keys() - set(checkout.tools)):
-        if any(_has_readable_form(tool) for tool in by_name[name]):
+        if any(
+            _has_readable_form(tool) and _readable_score(tool) is None
+            for tool in by_name[name]
+        ):
             verdicts.append(_unscored(checkout, name))
         elif any(_read_only_hint(tool) for tool in by_name[name]):
             verdicts.append(
