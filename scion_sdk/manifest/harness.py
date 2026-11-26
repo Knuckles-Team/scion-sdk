@@ -16,7 +16,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from scion_sdk.config import setting
-from scion_sdk.paths._platform import platform_config_file
+from scion_sdk.paths import platform_config_file
 
 __all__ = [
     "HARNESS_MANIFEST_FILE",
