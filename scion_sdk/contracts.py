@@ -27,9 +27,12 @@ from scion_sdk.schema_drift import EvolutionPolicy, SchemaContract
 __all__ = [
     "CONNECTOR_UNCONFIGURED_MARKING",
     "SEAM_SCHEMA_VERSION",
+    "CapabilityContract",
+    "CapabilityContractError",
     "CapabilityDescriptor",
     "CapturedArtifact",
     "ExternalAccess",
+    "FrontendContribution",
     "ReconciliationReport",
     "RecordPage",
     "ServerIdentity",
@@ -55,6 +58,40 @@ class CapabilityDescriptor(_Frozen):
     incremental: bool = False
     certified_for_ingestion: bool = False
     credential_references: tuple[str, ...] = ()
+
+
+class CapabilityContractError(RuntimeError):
+    """A capability or contribution is refused; ``code`` is closed."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(code)
+
+
+class CapabilityContract(_Frozen):
+    """One contract for a tool and a skill resource (R913)."""
+
+    id: str = Field(min_length=1)
+    kind: str
+    input_schema: dict[str, object] = Field(default_factory=dict)
+    output_schema: dict[str, object] = Field(default_factory=dict)
+    read_model: str | None = None
+
+    def model_post_init(self, _context: object, /) -> None:
+        if self.kind not in ("tool", "skill_resource"):
+            raise CapabilityContractError("CAPABILITY_KIND_UNKNOWN")
+
+
+class FrontendContribution(_Frozen):
+    """A frontend contribution of a capability; it names its read model (R913)."""
+
+    id: str = Field(min_length=1)
+    capability_id: str = Field(min_length=1)
+    read_model: str | None = None
+
+    def model_post_init(self, _context: object, /) -> None:
+        if not self.read_model:
+            raise CapabilityContractError("CONTRIBUTION_READ_MODEL_MISSING")
 
 
 class StreamDescriptor(_Frozen):

@@ -28,15 +28,45 @@ binding reaches the client as a typed refusal, never as an internal error.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from mcp.shared.exceptions import MCPError
 
-from scion_sdk.identity import IdentityRequiredError, use_actor
+from scion_sdk.identity import (
+    ActorRequiredError,
+    ActorType,
+    IdentityRequiredError,
+    current_actor,
+    use_actor,
+)
 from scion_sdk.identity.transport import request_actor
 
-__all__ = ["ActorBindingMiddleware"]
+__all__ = ["ACTOR_REQUIRED_META", "ActorBindingMiddleware", "actor_required"]
+
+_logger = logging.getLogger(__name__)
+
+#: ``_meta`` key a tool sets to require an acting user; ``tools/list`` carries it.
+ACTOR_REQUIRED_META = "team.knuckles/requires_actor"
+
+
+def actor_required(tool: Any) -> bool:
+    """True when ``tool`` declares that it needs an acting user (default false)."""
+    meta = getattr(tool, "meta", None) or {}
+    return bool(meta.get(ACTOR_REQUIRED_META) is True)
+
+
+def _audience() -> str:
+    token = get_access_token()
+    claims = getattr(token, "claims", None)
+    if not isinstance(claims, dict):
+        return ""
+    audience = claims.get("aud")
+    values = audience if isinstance(audience, list) else [audience]
+    return ",".join(str(v) for v in values if v)
+
 
 #: JSON-RPC server error code for an identity refusal (the code FastMCP uses
 #: for a permission denial).
@@ -80,3 +110,28 @@ class ActorBindingMiddleware(Middleware):
     async def on_request(self, context: MiddlewareContext[Any], call_next: Any) -> Any:
         with use_actor(request_actor(no_auth=self.no_auth)):
             return await _call_typed(context, call_next)
+
+    async def on_call_tool(
+        self, context: MiddlewareContext[Any], call_next: Any
+    ) -> Any:
+        """Refuse a flagged tool unless an authenticated human actor is bound."""
+        fc = context.fastmcp_context
+        tool = await fc.fastmcp.get_tool(context.message.name) if fc else None
+        if not actor_required(tool):
+            return await call_next(context)
+        actor = current_actor()
+        allowed = actor.authenticated and actor.actor_type is ActorType.HUMAN
+        _logger.info(
+            "actor_required_call",
+            extra={
+                "event": "actor_required_call",
+                "tool": context.message.name,
+                "actor_id": actor.actor_id,
+                "tenant_id": actor.tenant_id,
+                "audience": _audience(),
+                "outcome": "allowed" if allowed else "refused",
+            },
+        )
+        if not allowed:
+            raise ActorRequiredError("this tool requires an acting user")
+        return await call_next(context)
