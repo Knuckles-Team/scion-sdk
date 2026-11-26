@@ -20,6 +20,7 @@ from scion_sdk.mcp.upstreams.health import (
     compose_readiness,
 )
 from scion_sdk.mcp.upstreams.model import (
+    UPSTREAM_CIRCUIT_OPEN,
     UPSTREAM_SPAWN_FAILED,
     UpstreamError,
     UpstreamStatus,
@@ -59,8 +60,8 @@ async def test_inactive_is_not_failure_and_strategy_controls_readiness(
         response = http.get("/ready")
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "ready"
-    assert all(entry["state"] == "inactive" for entry in body["upstreams"])
+    assert body["lifecycle_state"] == "Ready"
+    assert all(entry["state"] == "Unconfigured" for entry in body["upstreams"])
 
     # One upstream exits: warn keeps serving and shows it unavailable.
     server, registry = _ready_server(tmp_path, "warn", flaky=True)
@@ -72,8 +73,8 @@ async def test_inactive_is_not_failure_and_strategy_controls_readiness(
         response = http.get("/ready")
     assert response.status_code == 200
     states = {entry["namespace"]: entry for entry in response.json()["upstreams"]}
-    assert states["alpha"]["state"] == "ready"
-    assert states["beta"]["state"] == "unavailable"
+    assert states["alpha"]["state"] == "Ready"
+    assert states["beta"]["state"] == "Backoff"
     # The status carries refusal codes only, never upstream error text.
     for entry in states.values():
         if entry["last_error_code"] is not None:
@@ -91,7 +92,7 @@ async def test_inactive_is_not_failure_and_strategy_controls_readiness(
     with TestClient(server.http_app()) as http:
         response = http.get("/ready")
     assert response.status_code == 503
-    assert registry.status("beta").state == "unavailable"
+    assert registry.status("beta").state == "Backoff"
 
     # The registry's own resource carries the same block, keyed by the wire URI.
     async with Client(server, mode="legacy") as client:
@@ -129,6 +130,51 @@ async def test_inactive_is_not_failure_and_strategy_controls_readiness(
     )
     await failing_prober.probe_due()
     status = active_registry.status("alpha")
-    assert status.state == "unavailable"
+    assert status.state == "Backoff"
     assert status.last_error_code == "UPSTREAM_SPAWN_FAILED"
     assert "kaboom" not in json.dumps(status.model_dump())
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917.6")
+async def test_each_upstream_has_its_own_lifecycle_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clean_upstream_env(monkeypatch)
+    data, out = tmp_path / "data", tmp_path / "out"
+    for directory in (data, out):
+        directory.mkdir(parents=True, exist_ok=True)
+    live = fixture_decl("alpha", data=data, out=out)
+    off = fixture_decl("beta", data=data, out=out).model_copy(update={"enabled": False})
+    registry = UpstreamRegistry(
+        (live, off), activation_setting="lazy", error_strategy="warn"
+    )
+    alpha, beta = registry.status("alpha"), registry.status("beta")
+    assert (alpha.state, alpha.reason) == ("Unconfigured", "not_activated")
+    assert (beta.state, beta.reason) == ("Unconfigured", "disabled_by_operator")
+
+    # Failures are per upstream: a lost namespace is Backoff, a closed breaker Degraded.
+    await registry.note_failure(live, UPSTREAM_SPAWN_FAILED)
+    assert registry.status("alpha").state == "Backoff"
+    assert registry.status("beta").state == "Unconfigured"
+    await registry.note_listed(live, ())
+    assert registry.status("alpha").state == "Ready"
+    await registry.note_failure(live, UPSTREAM_CIRCUIT_OPEN)
+    tripped = registry.status("alpha")
+    assert (tripped.state, tripped.reason) == ("Degraded", "circuit_open")
+    assert registry.has_fatal()
+    await registry.note_listed(live, ())
+    assert registry.status("alpha").state == "Ready" and not registry.has_fatal()
+    # The old vocabulary is gone.
+    legacy = {"disabled", "inactive", "starting", "ready", "drifted", "circuit_open"}
+    assert registry.status("alpha").state not in legacy
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R917.6")
+async def test_first_tools_list_moves_warming_to_ready() -> None:
+    decl = fixture_decl("alpha", data=Path("/nonexistent"), out=Path("/nonexistent"))
+    registry = UpstreamRegistry(
+        (decl,), activation_setting="active", error_strategy="warn"
+    )
+    await registry.note_listed(decl, ())
+    status = registry.status("alpha")
+    assert status.state == "Ready" and status.consecutive_failures == 0

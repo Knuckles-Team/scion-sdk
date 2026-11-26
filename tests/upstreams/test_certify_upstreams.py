@@ -69,7 +69,7 @@ async def test_certify_excludes_proxied_tools_from_pins(
     # Both upstreams are named, with their declared expectations.
     assert [upstream.name for upstream in report.upstreams] == ["alpha", "beta"]
     assert all(isinstance(upstream, UpstreamReport) for upstream in report.upstreams)
-    assert all(upstream.state == "inactive" for upstream in report.upstreams)
+    assert all(upstream.state == "Unconfigured" for upstream in report.upstreams)
     assert report.upstreams[0].expected_fingerprint == "fp-alpha"
     assert report.upstreams[1].fingerprint is None  # never listed while inactive
     document = report.document()
@@ -100,14 +100,14 @@ async def test_certify_excludes_proxied_tools_from_pins(
                         "name": "alpha",
                         "namespace": "alpha",
                         "kind": "stdio",
-                        "state": "inactive",
+                        "state": "Unconfigured",
                         "tool_count": 0,
                     }
                 ]
             }
         )
     )
-    assert reports[0].name == "alpha" and reports[0].state == "inactive"
+    assert reports[0].name == "alpha" and reports[0].state == "Unconfigured"
     assert upstream_reports("") == ()
     with pytest.raises(ToolListingError):
         upstream_reports("not json")
