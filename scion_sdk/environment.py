@@ -50,6 +50,7 @@ _TABLE: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("CONNECTOR_JWT_AUDIENCE", "str", ("scion_sdk.mcp.served_security",)),
     ("CONNECTOR_LIMITS_MAX_CONNECTIONS", "int", ("scion_sdk.config",)),
     ("CONNECTOR_LIMITS_MAX_KEEPALIVE_CONNECTIONS", "int", ("scion_sdk.config",)),
+    ("CONNECTOR_PATH_ORDER_TIMEOUT_MS", "int", ("scion_sdk.adapters.platform_order",)),
     ("CONNECTOR_PRINCIPAL_GRANTS", "str", ("scion_sdk.identity.transport",)),
     ("CONNECTOR_REQUIRED_SCOPES", "str", ("scion_sdk.mcp.served_security",)),
     ("CONNECTOR_TRANSPORT_ALLOW_PLAINTEXT", "bool", ("scion_sdk.config",)),
