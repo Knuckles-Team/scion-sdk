@@ -196,3 +196,16 @@ def test_transports_pay_directly_and_sync_refuses_an_async_approver() -> None:
         AsyncPaymentTransport(httpx.MockTransport(_fake([]).handler), auth),
         httpx.AsyncBaseTransport,
     )  # type: ignore[attr-defined]
+
+
+def test_a_402_that_is_not_a_challenge_passes_through() -> None:
+    options = HttpClientOptions(
+        base_url="http://127.0.0.1:9",
+        retry=RetryPolicy(max_attempts=1),
+        payment=_auth([]),
+    )
+    client = build_http_client(
+        options,
+        transport=httpx.MockTransport(lambda _r: httpx.Response(402, text="no")),
+    )
+    assert client.get("/x").status_code == 402

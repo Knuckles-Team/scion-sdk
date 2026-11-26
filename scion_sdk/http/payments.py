@@ -170,6 +170,8 @@ def _precheck(
 ) -> PaymentChallenge | None:
     """The challenge to pay, ``None`` for a 402 that is not a challenge."""
     challenge = _challenge(request, response)
+    if challenge is None:
+        return None
     if challenge.scheme != _SUPPORTED_SCHEME:
         raise _refuse(auth, challenge, "unsupported_scheme")
     if not auth.gate.decide(challenge, auth.budget()).allowed:
