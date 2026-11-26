@@ -22,6 +22,7 @@ from typing import Any
 
 from mcp.types import InputRequiredResult
 
+from scion_sdk.mcp.call_context import current_tool_context
 from scion_sdk.mcp.concurrency import (
     fold_body_arguments,
     invoke_client_method,
@@ -238,6 +239,8 @@ async def dispatch_async(
     ``confirm=True`` is the caller's explicit confirmation of this call, for
     clients that cannot elicit.
     """
+    if execution is None:
+        execution = current_tool_context()
     canonical = resolve_action(
         action,
         public_actions(client),

@@ -137,7 +137,8 @@ class CredentialProvider:
     def _refusal(
         self, reference: SecretReference, binding: CredentialAccessBinding
     ) -> str | None:
-        assert self.authority is not None
+        if self.authority is None:
+            return "authority_unavailable"
         if binding.connector != self.connector:
             return "binding_mismatch"
         if binding.expires_at_ms <= self.clock_ms():
