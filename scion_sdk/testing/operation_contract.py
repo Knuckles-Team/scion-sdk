@@ -65,14 +65,14 @@ def operation_contract_problems(
 ) -> tuple[str, ...]:
     """Problems with ``turtle`` and ``records`` against ``contract``; empty means sound.
 
-    Codes: ``unparseable``, ``no_contract``, ``ambiguous_contract``, ``wrong_operation``,
+    Codes: ``unparsable``, ``no_contract``, ``ambiguous_contract``, ``wrong_operation``,
     ``wrong_key_field``, ``unbound_field:<f>``, ``unpinned_field:<f>`` and
     ``record_missing_field:<f>`` (also ``no_records`` for an empty response).
     """
     try:
         parsed = parse_access_contracts(turtle)
     except AccessContractError:
-        return ("unparseable",)
+        return ("unparsable",)
     found = [c for c in parsed if _local(c.class_iri) == contract.class_name]
     if not found:
         return ("no_contract",)

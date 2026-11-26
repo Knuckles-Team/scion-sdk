@@ -83,7 +83,7 @@ def _negative_cases(
         "no_records",
     )
     assert operation_contract_problems("not turtle at all", contract, records) == (
-        "unparseable",
+        "unparsable",
     )
     other = SUPPLIER if contract is not SUPPLIER else DEPLOYMENT
     assert operation_contract_problems(_turtle(other), contract, records) == (
