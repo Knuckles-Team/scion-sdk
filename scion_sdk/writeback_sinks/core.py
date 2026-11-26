@@ -89,17 +89,15 @@ class WritebackContext:
 
     backend: Any = None
     engine: Any = None
-    #: The authenticated caller, read by a sink that ``requires_wallet_proof``.
-    tenant_id: str = ""
-    actor_id: str = ""
-    #: A ``WalletKeyResolver``; the engine trust record is used when ``None``.
-    wallet_resolver: Any = None
     #: bitemporal valid-time (ISO-8601) this writeback pass asserts its writes
     #: are valid as of — CONCEPT:MERISTEM-KG.temporal.bi-temporal-memory-layers.
     #: ``None`` (the default) means "now": :meth:`stamp_valid_time` then
     #: stamps wall-clock storage/event/valid_from, matching every caller's
     #: pre-existing behavior byte-for-byte.
     as_of: str | None = None
+    #: authenticated caller identity; a wallet-proof sink binds proofs to it
+    tenant_id: str = ""
+    actor_id: str = ""
 
     def resolver(self, domain: str) -> Callable[[str], str | None]:
         return resolve_external_id(self.backend, domain)

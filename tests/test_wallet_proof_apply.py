@@ -406,113 +406,126 @@ async def test_replay_conflict_maps_idempotency_conflict():
 
 
 class _WalletSink:
-    domain = "wallet"
-    enable_flag = "WALLET_ENABLE_WRITE"
+    domain = "walletfake"
+    enable_flag = "WALLETFAKE_ENABLE_WRITE"
     requires_wallet_proof = True
 
-    def __init__(self) -> None:
-        self.calls = 0
+    def __init__(self):
+        self.calls = []
 
     def run(self, ctx, ops, *, dry_run):
-        from scion_sdk.writeback_sinks.core import WritebackResult
+        from scion_sdk.writeback_sinks import core
 
-        self.calls += 1
-        return WritebackResult(target=self.domain)
-
-
-def _wallet_grant():
-    from scion_sdk.writeback_sinks.governed import SinkGrant
-
-    return SinkGrant(
-        target="wallet",
-        enable_flag="WALLET_ENABLE_WRITE",
-        write_enabled=True,
-        approved=True,
-    )
+        self.calls.append(dry_run)
+        return core.WritebackResult(target=self.domain)
 
 
-def test_wallet_sink_without_an_envelope_refuses_before_any_call(tmp_path):
-    from scion_sdk.writeback_sinks.core import WritebackContext
-    from scion_sdk.writeback_sinks.governed import execute_governed
-
-    sink = _WalletSink()
-    with pytest.raises(WalletProofRefusedError) as error:
-        execute_governed(
-            sink,
-            WritebackContext(tenant_id="t", actor_id="actor"),
-            {"payload": 1},
-            grant=_wallet_grant(),
-            dry_run=False,
-            root=tmp_path,
-        )
-    assert error.value.reason == "missing_signature"
-    assert sink.calls == 0
-
-
-def test_wallet_sink_with_an_unsigned_envelope_refuses_before_any_call(tmp_path):
-    from scion_sdk.writeback_sinks.core import WritebackContext
-    from scion_sdk.writeback_sinks.governed import execute_governed
-
+def _wallet_ops(with_proof):
+    fixture = make_writeback_fixture()
     intent = WalletBusinessIntent(
         operation_id="pay",
         account_id="account",
         wallet_id="wallet",
         network_id="network",
         key_id="key",
+        params={"amount": 100},
     )
+    plan = wallet_plan_digest(intent)
+    proof = _signed(fixture.change_set, plan)[0] if with_proof else None
     envelope = WalletExecutionEnvelope(
         intent=intent,
         confirmation=WalletConfirmation(
-            confirmed_by="actor",
-            confirmed_at_ms=1,
-            plan_digest=wallet_plan_digest(intent),
+            confirmed_by="actor", confirmed_at_ms=1_050_000, plan_digest=plan
         ),
+        proof=proof,
     )
+    return {"creations": [{"name": "a"}], "wallet_envelope": envelope}
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.3")
+def test_run_writeback_passes_the_gate_for_a_wallet_sink(tmp_path):
+    from scion_sdk.engine_capability import (
+        EngineCapabilityUnavailable,
+        engine_capability_present,
+    )
+    from scion_sdk.writeback_sinks import core
+    from scion_sdk.writeback_sinks.governed import (
+        SinkGrant,
+        _proof_gate,
+        execute_governed,
+    )
+
     sink = _WalletSink()
-    with pytest.raises(WalletProofRefusedError) as error:
-        execute_governed(
-            sink,
-            WritebackContext(tenant_id="t", actor_id="actor"),
-            {"wallet_envelope": envelope},
-            grant=_wallet_grant(),
-            dry_run=False,
-            root=tmp_path,
-        )
-    assert error.value.reason == "missing_signature"
-    assert sink.calls == 0
+    grant = SinkGrant(
+        target=sink.domain, enable_flag=sink.enable_flag, write_enabled=True
+    )
+    ctx = core.WritebackContext(tenant_id="tenant", actor_id="actor")
+
+    class _Plain:
+        domain, enable_flag = "plainfake", "PLAINFAKE_ENABLE_WRITE"
+
+    assert _proof_gate(_Plain(), ctx, {"wallet_envelope": object()}) is None
+    assert isinstance(
+        _proof_gate(sink, ctx, _wallet_ops(with_proof=True)), EnvelopeProofGate
+    )
+
+    bare = {"creations": [{"name": "a"}]}
+    with pytest.raises(WalletProofRefusedError) as missing:
+        execute_governed(sink, ctx, bare, grant=grant, dry_run=False, root=tmp_path)
+    assert missing.value.reason == "missing_signature"
+
+    if not engine_capability_present("WalletKeyTrustGet"):
+        with pytest.raises(EngineCapabilityUnavailable) as caught:
+            execute_governed(
+                sink,
+                ctx,
+                _wallet_ops(with_proof=True),
+                grant=grant,
+                dry_run=False,
+                root=tmp_path,
+            )
+        assert caught.value.method == "WalletKeyTrustGet"
+    assert sink.calls == []
 
 
-class _TrustClient:
-    """A structural double of the engine transport answering WalletKeyTrustGet."""
+async def test_engine_resolver_maps_the_trust_record_under_the_callers_tenant(
+    monkeypatch,
+):
+    import importlib
+    from types import SimpleNamespace
 
-    def __init__(self, record):
-        self.record = record
-        self.sent = []
-
-    async def _send(self, method, params, graph, *, idempotency_key):
-        self.sent.append((method, params))
-        return self.record
-
-
-async def test_engine_resolver_reads_the_trust_record_for_the_callers_tenant():
     from scion_sdk.writeback.wallet_trust import EngineWalletKeyResolver
 
-    binding = _binding(make_writeback_fixture().change_set)
-    record = {
-        "account_id": "account",
-        "key_id": "key",
-        "network_id": "network",
-        "public_key": "ab" * 32,
-        "signer_ref": "signer",
-        "tenant_id": binding.tenant_id,
-        "trust_revision": 3,
-        "valid_from": "2026-01-01T00:00:00+00:00",
-        "wallet_id": "wallet",
-    }
-    client = _TrustClient(record)
-    trust = await EngineWalletKeyResolver(client).resolve(binding)
+    compute = importlib.import_module("medulla.generated.compute")
+    record = SimpleNamespace(
+        tenant_id="tenant",
+        key_id="key",
+        public_key=base64.b64encode(b"k" * 32).decode(),
+        signer_ref="signer",
+        trust_revision=3,
+        valid_from="1970-01-01T00:15:00Z",
+        valid_until=None,
+        revoked=None,
+    )
+
+    async def fake(client, params):
+        assert params == {
+            "account_id": "account",
+            "network_id": "network",
+            "wallet_id": "wallet",
+        }
+        return record
+
+    monkeypatch.setattr(compute, "send_wallet_key_trust_get", fake, raising=False)
+    fixture = make_writeback_fixture()
+    binding = replace(_binding(fixture.change_set), tenant_id="tenant")
+    trust = await EngineWalletKeyResolver(object()).resolve(binding)
     assert trust is not None
-    assert trust.trust_revision == "3" and trust.revoked is False
-    assert client.sent[0][0] == "WalletKeyTrustGet"
-    other = _TrustClient({**record, "tenant_id": "someone-else"})
-    assert await EngineWalletKeyResolver(other).resolve(binding) is None
+    assert (trust.signer_ref, trust.trust_revision, trust.valid_from) == (
+        "signer",
+        "3",
+        900,
+    )
+    assert trust.revoked is False
+    foreign = replace(binding, tenant_id="other")
+    assert await EngineWalletKeyResolver(object()).resolve(foreign) is None

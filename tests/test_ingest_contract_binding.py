@@ -81,6 +81,7 @@ def test_binding_carries_contract_iri() -> None:
         _binding(contract_iri="contract:other")
 
 
+@pytest.mark.spec("SCION-SOURCE-INGEST-R017.2")
 def test_nested_values_become_relationships() -> None:
     request = build_request(_binding(), _changes(), previous=None)
     by_id = {r.record_id: r for r in request.records}
