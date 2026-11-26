@@ -27,6 +27,7 @@ from scion_sdk.connector_identity import (
 )
 
 if TYPE_CHECKING:
+    from scion_sdk.ingest.model import ContractSource
     from scion_sdk.mcp.upstreams.model import UpstreamDecl
 
 
@@ -71,6 +72,9 @@ class Connector:
         upstreams: Upstream MCP servers proxied behind this connector's own
             server (SCION-CONNECTOR-CONTROL-R914); the SDK namespaces, pools
             and health-checks them. Empty (and no overlay file) pays nothing.
+        ingest_contract: The accepted ingest contract the connector's
+            artifact lineage records under; exchange lineage refuses at
+            startup without it.
     """
 
     instructions: str = ""
@@ -92,6 +96,7 @@ class Connector:
     readiness: ReadinessProbe | None = None
     content_root: str | None = None
     upstreams: tuple[UpstreamDecl, ...] = ()
+    ingest_contract: ContractSource | None = None
 
     def __post_init__(self) -> None:
         if (self.api is None) != (self.get_client is None):

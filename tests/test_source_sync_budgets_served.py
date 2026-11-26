@@ -6,6 +6,7 @@ import asyncio
 
 import pytest
 from fastmcp import Client, FastMCP
+from ingest_fakes import CONTRACT
 from live_engine import live_ingest, scoped_client  # noqa: F401
 from test_source_sync_served import _ClientSession
 
@@ -50,6 +51,7 @@ async def _exercise(ingest):
                 session=_ClientSession(client),
                 ingest=ingest,
                 checkpoints=KvSourceCheckpoints(engine),
+                contract=CONTRACT,
                 budget=SyncBudget(max_seconds=0.05),
             )
             report = await runner.sync(spec)

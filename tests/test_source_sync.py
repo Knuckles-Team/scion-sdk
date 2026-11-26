@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 from fastmcp import Client, FastMCP
+from ingest_fakes import CONTRACT
 
 from scion_sdk.ingest.live_declaration import source_meta
 from scion_sdk.ingest.source_sync import (
@@ -114,6 +115,7 @@ def _runner(session: _Session, ingest: _Ingest, checkpoints: _Checkpoints, **kw:
         session=session,
         ingest=ingest,
         checkpoints=checkpoints,
+        contract=CONTRACT,
         sleep=no_sleep,
         **kw,
     )

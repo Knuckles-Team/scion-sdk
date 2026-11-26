@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 from fastmcp import FastMCP
+from ingest_fakes import CONTRACT
 from pydantic import ValidationError
 
 from scion_sdk.adapters.mcp_tool import McpToolSourceAdapter
@@ -97,6 +98,7 @@ def _runner(session: _Session, ingest: _Ingest, **kw: Any) -> SourceSyncRunner:
         session=session,
         ingest=ingest,
         checkpoints=_Checkpoints(),
+        contract=CONTRACT,
         sleep=no_sleep,
         **kw,
     )

@@ -24,8 +24,8 @@ import anyio
 
 from scion_sdk.ingest import source_budget as _budget
 from scion_sdk.ingest.model import (
+    ContractSource,
     Entity,
-    IngestBinding,
 )
 from scion_sdk.ingest.source_calls import _SourceCalls
 from scion_sdk.manifest.sources import IngestSourceSpec
@@ -85,6 +85,7 @@ class SourceSyncRunner(_budget._SourceBudgetMixin, _SourceCalls):
         session: SourceSession,
         ingest: Any,
         checkpoints: Any,
+        contract: ContractSource,
         budget: SyncBudget | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[Any]] = anyio.sleep,
@@ -94,6 +95,7 @@ class SourceSyncRunner(_budget._SourceBudgetMixin, _SourceCalls):
         self._session = session
         self._ingest = ingest
         self._checkpoints = checkpoints
+        self._contract = contract
         self._budget = budget or SyncBudget()
         self._clock = clock
         self._sleep = sleep
@@ -254,9 +256,9 @@ class SourceSyncRunner(_budget._SourceBudgetMixin, _SourceCalls):
         if not run.pending:
             return
         spec = run.spec
-        binding = IngestBinding(
-            connector=self._connector,
-            stream=spec.source_id,
+        binding = self._contract.bind(
+            self._connector,
+            spec.source_id,
             server=self._server,
             tool=_budget._binding_tool(run, tool),
         )

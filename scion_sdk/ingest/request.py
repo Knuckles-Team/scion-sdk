@@ -139,11 +139,9 @@ def expand_nested(
 ) -> tuple[tuple[Entity, ...], tuple[Relationship, ...]]:
     """Turn nested dictionary values into declared entities and relationships.
 
-    Only under a contract binding. A nested value without a declared mapping
-    raises ``UndeclaredNestedValueError``; nothing is flattened silently.
+    A nested value without a declared mapping raises
+    ``UndeclaredNestedValueError``; nothing is flattened silently.
     """
-    if not binding.contract_iri:
-        return entities, ()
     out: list[Entity] = []
     edges: list[Relationship] = []
     for entity in entities:

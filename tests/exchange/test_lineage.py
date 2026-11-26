@@ -1,6 +1,7 @@
 """SCION-CENTRALIZED-CAPABILITIES-R043.6: lineage records for published artifacts."""
 
 import pytest
+from ingest_fakes import CONTRACT
 
 from scion_sdk.exchange.lineage import StagedInput, record_lineage
 from scion_sdk.exchange.publish import (
@@ -39,7 +40,9 @@ async def test_lineage_change_set_links_outputs_inputs_and_run():
     context = PublishContext("photocraft", "doc_save", "user-1")
     ingest = _Ingest()
     assert (
-        await record_lineage(report, inputs, context, connector="demo", ingest=ingest)
+        await record_lineage(
+            report, inputs, context, connector="demo", contract=CONTRACT, ingest=ingest
+        )
         is None
     )
     binding, change_set = ingest.calls[0]
@@ -59,7 +62,12 @@ async def test_lineage_change_set_links_outputs_inputs_and_run():
     assert action.node_type == "Action" and action.properties["caller"] == "user-1"
     assert (
         await record_lineage(
-            report, inputs, context, connector="demo", ingest=_Ingest(fail=True)
+            report,
+            inputs,
+            context,
+            connector="demo",
+            contract=CONTRACT,
+            ingest=_Ingest(fail=True),
         )
         == "EXCHANGE_LINEAGE_FAILED"
     )

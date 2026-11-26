@@ -24,8 +24,14 @@ from scion_sdk.exchange.inputs import ExchangeInputError
 from scion_sdk.exchange.run import ExchangeCall, exchange_call
 from scion_sdk.exchange.sinks import SinkBackends
 from scion_sdk.exchange.staging import ExchangeRunError, input_tree, output_tree
+from scion_sdk.ingest.model import ContractSource
 from scion_sdk.mcp.upstreams.elicitation import ForwardingProxyTool
-from scion_sdk.mcp.upstreams.model import SandboxRoots, UpstreamDecl
+from scion_sdk.mcp.upstreams.model import (
+    UPSTREAM_DECL_INVALID,
+    SandboxRoots,
+    UpstreamDecl,
+    UpstreamDeclError,
+)
 
 __all__ = [
     "ExchangeProxyTool",
@@ -44,21 +50,34 @@ class ExchangeRuntime:
     settings: ExchangeSettings
     backends: SinkBackends
     connector: str
+    contract: ContractSource | None = None
 
 
 def load_exchange_runtime(
-    declarations: Sequence[UpstreamDecl], connector: str
+    declarations: Sequence[UpstreamDecl],
+    connector: str,
+    contract: ContractSource | None = None,
 ) -> ExchangeRuntime | None:
-    """The runtime when any declaration is bound and settings exist, else ``None``."""
+    """The runtime when any declaration is bound and settings exist, else ``None``.
+
+    Raises:
+        UpstreamDeclError: lineage is on and the connector names no ingest
+            contract to record it under.
+    """
     if not any(decl.exchange is not None for decl in declarations):
         return None
     settings = read_exchange_settings()
     if settings is None:
         _logger.warning("upstream exchange bindings are inert: exchange not_configured")
         return None
+    if settings.lineage and contract is None:
+        raise UpstreamDeclError(
+            UPSTREAM_DECL_INVALID,
+            "exchange lineage needs the connector's ingest contract",
+        )
     for tree in (input_tree(settings.staging_root), output_tree(settings.staging_root)):
         tree.mkdir(mode=0o700, parents=True, exist_ok=True)
-    return ExchangeRuntime(settings, SinkBackends(settings), connector)
+    return ExchangeRuntime(settings, SinkBackends(settings), connector, contract)
 
 
 def bind_exchange_roots(
@@ -133,6 +152,7 @@ class ExchangeProxyTool(ForwardingProxyTool):
             namespace=decl.effective_namespace,
             tool=tool,
             connector=self._exchange_runtime.connector,
+            contract=self._exchange_runtime.contract,
             path_args=path_args,
             caller=_caller(),
         )

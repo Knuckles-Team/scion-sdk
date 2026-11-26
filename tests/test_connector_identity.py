@@ -6,6 +6,7 @@ from importlib.metadata import EntryPoint
 from pathlib import Path
 
 import pytest
+from ingest_fakes import CONTRACT
 
 from scion_sdk import connector_identity as identity
 from scion_sdk.connector_identity import (
@@ -66,7 +67,7 @@ def test_binding_and_content_take_the_declared_name(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(
         identity, "entry_points", _points(("searxng-mcp", "searxng_mcp"))
     )
-    binding = IngestBinding.for_package("searxng_mcp.kg_ingest", stream="searxng")
+    binding = IngestBinding.for_package("searxng_mcp.kg_ingest", "searxng", CONTRACT)
     content = ConnectorContent.for_package("searxng_mcp", tmp_path, "1.0.0")
     assert binding.connector == content.connector == "searxng-mcp"
 

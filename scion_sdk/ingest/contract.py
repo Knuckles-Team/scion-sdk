@@ -54,8 +54,6 @@ class ContractEvidence:
 
 async def require_accepted(transport: object, binding: IngestBinding) -> None:
     """Refuse with ``contract_not_accepted`` unless the digests agree."""
-    if not binding.contract_iri:
-        return
     if not isinstance(transport, ContractTransport):
         raise ContractNotAcceptedError(
             "contract_not_accepted: the transport cannot read the accepted contract"

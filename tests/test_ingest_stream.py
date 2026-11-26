@@ -7,6 +7,7 @@ from typing import Any
 
 import anyio
 import pytest
+from ingest_fakes import bind
 
 from scion_sdk.ingest import (
     ChangeSet,
@@ -21,7 +22,7 @@ from scion_sdk.ingest import (
     open_client,
 )
 
-BINDING = IngestBinding(connector="demo-mcp", stream="demo")
+BINDING = bind("demo-mcp", "demo")
 
 
 class _Ingest:
@@ -172,7 +173,7 @@ class _Refusing(_Ingest):
         raise self.error
 
 
-DOCS = IngestBinding(connector="demo-mcp", stream="demo-documents")
+DOCS = bind("demo-mcp", "demo-documents")
 
 
 @pytest.mark.spec("SCION-SOURCE-INGEST-R004.32")
@@ -245,7 +246,7 @@ def test_batch_media_and_raw_submit_share_one_path() -> None:
     assert sink.submitted[-1].media[0].name == "a.png"
     with pytest.raises(IngestError):
         _run(stream.media(b"", "image/png", ingest=sink))
-    other = IngestBinding(connector="demo-mcp", stream="other")
+    other = bind("demo-mcp", "other")
     _run(stream.submit(ChangeSet(), binding=other, ingest=sink))
     assert sink.bindings[-1] is other
 

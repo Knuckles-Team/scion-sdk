@@ -93,3 +93,25 @@ async def test_bound_upstream_rewrites_paths_stages_inputs_and_publishes(
         "src": "exchange://files/in/a.png",
         "paths": [],
     }
+
+
+@pytest.mark.spec("SCION-SOURCE-INGEST-R017.7")
+def test_exchange_lineage_without_an_ingest_contract_is_refused(tmp_path, monkeypatch):
+    from ingest_fakes import CONTRACT
+
+    from scion_sdk.mcp.upstreams.model import UpstreamDeclError
+
+    configure(tmp_path, monkeypatch)
+    monkeypatch.setenv("SCION_EXCHANGE_LINEAGE", "true")
+    decl = UpstreamDecl(
+        name="alpha",
+        command="app-cli",
+        sandbox=SandboxRoots(
+            read=("/data",), write=("/work",), read_flag="--r", write_flag="--w"
+        ),
+        exchange=ExchangeBinding(),
+    )
+    with pytest.raises(UpstreamDeclError, match="ingest contract"):
+        load_exchange_runtime([decl], "democonn")
+    runtime = load_exchange_runtime([decl], "democonn", CONTRACT)
+    assert runtime is not None and runtime.contract is CONTRACT

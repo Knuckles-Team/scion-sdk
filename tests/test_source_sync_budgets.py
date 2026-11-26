@@ -6,6 +6,7 @@ import asyncio
 from typing import Any
 
 import pytest
+from ingest_fakes import CONTRACT
 from test_source_sync import ITEMS, _Checkpoints, _Ingest, _runner, _Session, _spec
 
 from scion_sdk.ingest.backoff import Backoff
@@ -108,6 +109,7 @@ async def test_retry_sleep_respects_remaining_source_deadline() -> None:
         session=session,
         ingest=ingest,
         checkpoints=checkpoints,
+        contract=CONTRACT,
         budget=SyncBudget(max_seconds=0.05, backoff_initial_seconds=1.0),
     )
     report = await runner.sync(_spec())

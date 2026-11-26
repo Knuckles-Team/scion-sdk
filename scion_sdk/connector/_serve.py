@@ -125,7 +125,9 @@ def _attach_upstreams(mcp: FastMCP[Any], connector: Any, args: Any) -> Any:
         return None
     from scion_sdk.mcp.upstreams.loader import attach_upstreams
 
-    return attach_upstreams(mcp, connector.upstreams)
+    return attach_upstreams(
+        mcp, connector.upstreams, contract=connector.ingest_contract
+    )
 
 
 def _calling_package() -> str:
