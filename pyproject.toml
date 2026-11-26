@@ -243,7 +243,7 @@ testpaths = ["tests"]
 # however pytest is launched (the shared gates job runs it without `python -m`).
 pythonpath = ["."]
 timeout = 120
-addopts = "-p no:cacheprovider"
+addopts = "-p no:cacheprovider -rfE"
 markers = [
     "spec: binds a test to a spec requirement ID",
 ]

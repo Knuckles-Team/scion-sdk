@@ -292,11 +292,24 @@ async def test_denied_and_terminal_failure_do_not_fallback():
 @pytest.mark.spec("SCION-SOURCE-INGEST-R012.2")
 @pytest.mark.spec("SCION-SOURCE-INGEST-R012.4")
 @pytest.mark.asyncio
-async def test_governed_http_backends_fallback_and_stop_on_denial():
+async def test_governed_http_backends_fallback_and_stop_on_denial(monkeypatch):
+    import anyio
+    import anyio.to_process
+
     from scion_sdk.testing.http_server import (
         ScriptedHttpServer,
         ScriptedResponse,
     )
+
+    # Reason: schema and page validation normally start a worker process whose
+    # spawn time counts against the 10 s backend timeout; on a loaded runner that
+    # startup alone exceeded it and the fallback reported a timeout instead of
+    # the scripted 503/403 outcomes. Validation runs inline here, so every wait
+    # left is a loopback exchange with the scripted server.
+    async def validate_inline(fn, *args, **kwargs):
+        return fn(*args)
+
+    monkeypatch.setattr(anyio.to_process, "run_sync", validate_inline)
 
     with (
         ScriptedHttpServer(
