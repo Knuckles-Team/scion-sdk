@@ -108,13 +108,17 @@ def _validate_row(owner_cell: str, module_cell: str, owners: set[str]) -> None:
 # spec: SCION-CENTRALIZED-CAPABILITIES-R040
 # spec: SCION-CENTRALIZED-CAPABILITIES-R042
 # spec: SCION-CENTRALIZED-CAPABILITIES-R043
+# spec: SCION-CENTRALIZED-CAPABILITIES-R052.2
+# spec: SCION-CENTRALIZED-CAPABILITIES-R054
+# spec: SCION-CENTRALIZED-CAPABILITIES-R055.3
 @pytest.mark.parametrize(
-    "number", [*range(1, 41), 42, 43], ids=lambda number: f"R{number:03d}"
+    "number", [*range(1, 41), 42, 43, 52, 54, 55], ids=lambda number: f"R{number:03d}"
 )
 def test_index_row_modules_and_owners_exist(number: int) -> None:
     rows = _index_rows(INDEX.read_text())
     expected = {
-        f"SCION-CENTRALIZED-CAPABILITIES-R{i:03d}" for i in [*range(1, 41), 42, 43]
+        f"SCION-CENTRALIZED-CAPABILITIES-R{i:03d}"
+        for i in [*range(1, 41), 42, 43, 52, 54, 55]
     }
     assert set(rows) == expected
     _validate_row(*rows[f"SCION-CENTRALIZED-CAPABILITIES-R{number:03d}"], _owner_ids())
