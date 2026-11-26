@@ -12,12 +12,13 @@ by cursor. The engine commit is the only write path.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace
-from typing import Any, Final
+from dataclasses import dataclass
+from typing import Any, Final, Protocol
 
 from medulla.generated.source_ingestion import (
     SourceCheckpoint,
     SourceIngestionMode,
+    SourceIngestionReceipt,
     SourceRecord,
     SourceRecordProvenance,
 )
@@ -25,10 +26,9 @@ from medulla.generated.source_ingestion import (
 from scion_sdk.contracts import RecordPage
 from scion_sdk.ports.errors import MalformedSourceDataError
 from scion_sdk.ports.session import McpSession
-from scion_sdk.runner.syncing import SyncTarget, commit_page
 from scion_sdk.schema_contract import SchemaContract
 
-__all__ = ["StreamRefusal", "StreamRunOutcome", "StreamSourceAdapter"]
+__all__ = ["StreamRefusal", "StreamRunOutcome", "StreamSourceAdapter", "StreamTarget"]
 
 #: The engine's batch bound for the ``records`` kind.
 MAX_PAGE_MESSAGES: Final = 1024
@@ -67,6 +67,28 @@ class StreamRunOutcome:
     checkpoint: SourceCheckpoint | None
 
 
+class StreamTarget(Protocol):
+    """Where a stream page is committed: the runner's ``SyncTarget`` fits it.
+
+    The adapter sits below the runner, so it names the commit it needs and
+    does not import the runner.
+    """
+
+    connector: str
+    sink: Any
+    schema_contract: SchemaContract | None
+
+    def with_schema_contract(self, contract: SchemaContract) -> StreamTarget:
+        """The same target under ``contract``."""
+        ...
+
+    async def commit(
+        self, page: RecordPage, *, expected_previous_checkpoint: SourceCheckpoint | None
+    ) -> SourceIngestionReceipt:
+        """Commit ``page`` and return the verified terminal receipt."""
+        ...
+
+
 class StreamSourceAdapter:
     """Poll a broker through MCP tools and commit offsets after engine acceptance."""
 
@@ -98,11 +120,11 @@ class StreamSourceAdapter:
         self._commit_tool = commit_tool
 
     async def run_once(
-        self, session: McpSession, target: SyncTarget
+        self, session: McpSession, target: StreamTarget
     ) -> StreamRunOutcome:
         """Poll one page, commit it to the engine, then commit broker offsets."""
         if target.schema_contract is None:
-            target = replace(target, schema_contract=_RECORD_CONTRACT)
+            target = target.with_schema_contract(_RECORD_CONTRACT)
         status = await target.sink.source_status(target.connector, self._stream)
         previous = status.accepted_checkpoint
         raw = await self._poll(session, previous)
@@ -110,9 +132,7 @@ class StreamSourceAdapter:
             return StreamRunOutcome(0, 0, {}, previous)
         page = self._page(raw, previous)
         try:
-            receipt = await commit_page(
-                page, target, expected_previous_checkpoint=previous
-            )
+            receipt = await target.commit(page, expected_previous_checkpoint=previous)
         except Exception:
             raise StreamRefusal("page_rejected") from None
         offsets = _page_offsets(raw, receipt.accepted_checkpoint)

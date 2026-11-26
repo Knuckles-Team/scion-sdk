@@ -23,6 +23,7 @@ from scion_sdk.adapters.stream import (
     StreamRefusal,
     StreamRunOutcome,
     StreamSourceAdapter,
+    StreamTarget,
 )
 from scion_sdk.runner.syncing import SyncTarget
 from scion_sdk.testing.sinks import InMemorySink
@@ -104,7 +105,7 @@ def _log() -> None:
     LOG = []
 
 
-def _target(sink: InMemorySink) -> SyncTarget:
+def _target(sink: InMemorySink) -> StreamTarget:
     return SyncTarget("kafka-mcp", sink, max_pages=1)
 
 

@@ -58,6 +58,21 @@ class SyncTarget:
     def __post_init__(self) -> None:
         validate_stage_graph(self.stages, self.connector, self.tenant)
 
+    def with_schema_contract(self, contract: SchemaContract) -> SyncTarget:
+        """The same target under ``contract``."""
+        return replace(self, schema_contract=contract)
+
+    async def commit(
+        self,
+        page: RecordPage,
+        *,
+        expected_previous_checkpoint: SourceCheckpoint | None,
+    ) -> SourceIngestionReceipt:
+        """Commit ``page`` and verify its terminal receipt."""
+        return await commit_page(
+            page, self, expected_previous_checkpoint=expected_previous_checkpoint
+        )
+
     @classmethod
     def configured(
         cls,
