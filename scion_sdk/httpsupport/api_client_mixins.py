@@ -16,7 +16,7 @@ class _ResponseDecoding:
     error_map: dict[int, type[Exception]]
     default_error: type[Exception]
     max_retries_429: int
-    _auth: Any
+    auth_secrets: Callable[[], list[str]]
     _last_rate_limit: RateLimitSnapshot | None
 
     @property
@@ -59,7 +59,7 @@ class _ResponseDecoding:
                 f"(remaining={limits.remaining if limits else None}, "
                 f"reset={limits.reset if limits else None})"
             )
-        message = _redact(message, self._auth.secrets())
+        message = _redact(message, self.auth_secrets())
         return self.error_map.get(response.status_code, self.default_error)(message)
 
 

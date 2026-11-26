@@ -82,8 +82,8 @@ class PaperQuery(_Model):
     continuation: Mapping[str, PaperContinuation] = Field(
         default_factory=lambda: MappingProxyType({}), max_length=256
     )
-    page_bound: int = Field(default=100, ge=1, le=2**31 - 1)
-    deadline_seconds: float = Field(default=60.0, gt=0, allow_inf_nan=False)
+    page_bound: int = Field(default=100, ge=1, le=1000)
+    deadline_seconds: float = Field(default=60.0, ge=1, le=600, allow_inf_nan=False)
 
     def query_digest(self) -> str:
         """Hash the exact tenant, query, provider order and schema snapshot."""

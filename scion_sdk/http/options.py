@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import math
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
@@ -56,12 +57,36 @@ def _plaintext_problem(base_url: str, allow_plaintext: bool) -> str | None:
     return "plaintext http requires allow_plaintext"
 
 
+#: A bare host name with an optional port: no scheme, path, userinfo, whitespace
+#: or line breaks.
+_ROUTE_HOST = re.compile(
+    r"(?P<host>[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+    r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)"
+    r"(?::(?P<port>\d{1,5}))?"
+)
+
+
+def _route_host_problem(route_host: str | None) -> str | None:
+    if route_host is None:
+        return None
+    match = _ROUTE_HOST.fullmatch(route_host)
+    if match is None:
+        return "route_host must be a bare host name with an optional port"
+    port = match.group("port")
+    if port is not None and not 0 < int(port) <= 65535:
+        return "route_host port must be between 1 and 65535"
+    return None
+
+
 @dataclass(frozen=True)
 class HttpClientOptions:
     """How a governed client reaches one API.
 
     Attributes:
         base_url: The API root; relative request URLs resolve against it.
+        route_host: The upstream site name sent as the ``Host`` header while the
+            client dials, pins and verifies the ``base_url`` host. A bare host
+            name with an optional port; ``None`` keeps the base host.
         timeout: Seconds, or an ``httpx.Timeout`` whose four values are all finite.
         retry: The retry policy.
         tls: The TLS profile; the platform trust store when omitted.
@@ -85,6 +110,7 @@ class HttpClientOptions:
     """
 
     base_url: str
+    route_host: str | None = None
     timeout: float | httpx.Timeout = DEFAULT_TIMEOUT_SECONDS
     retry: RetryPolicy = field(default_factory=RetryPolicy)
     tls: ResolvedTLSProfile | None = None
@@ -101,6 +127,7 @@ class HttpClientOptions:
         credential_headers = any(is_sensitive_name(name) for name in self.headers)
         problems = (
             _base_url_problem(self.base_url),
+            _route_host_problem(self.route_host),
             _timeout_problem(self.timeout),
             "credential headers are not allowed; use auth"
             if credential_headers

@@ -1,4 +1,4 @@
-"""SCION-CENTRALIZED-CAPABILITIES-R048: the SDK follows the medulla 3.3.x client contracts."""
+"""SCION-CENTRALIZED-CAPABILITIES-R051: the SDK follows the medulla 3.3.x client contracts."""
 
 from __future__ import annotations
 
@@ -19,11 +19,11 @@ from test_contracts_and_sink import _batch, _record
 from scion_sdk.testing.sinks import InMemorySink
 
 ROOT = Path(__file__).resolve().parents[1]
-FLOOR = Version("3.3.4")
+FLOOR = Version("3.3.5")
 REQUIRED_RECEIPT_FIELDS = {"classes", "governance", "report", "stream_object_id"}
 
 
-@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R048")
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R051")
 def test_engine_floor_is_the_3_3_client_and_the_install_meets_it() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text("utf-8"))["project"]
     engine = [
@@ -37,7 +37,7 @@ def test_engine_floor_is_the_3_3_client_and_the_install_meets_it() -> None:
     assert Version(version("medulla")) >= FLOOR
 
 
-@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R048")
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R051")
 async def test_in_memory_sink_receipts_carry_every_required_3_3_field() -> None:
     required = {
         name

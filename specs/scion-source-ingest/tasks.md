@@ -8,7 +8,7 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T001 [US1] SCION-SOURCE-INGEST-R002 SDK drift classifier handles incompatible schema changes.
 - [x] T002 [US1] SCION-SOURCE-INGEST-R003 SDK records and pauses on proposed schema repairs.
 - [x] T003 [US1] SCION-SOURCE-INGEST-R005.1 Model.
-- [ ] T004 [US1] SCION-SOURCE-INGEST-R005.2 Paper providers: search, merge, quota and complete download.
+- [x] T004 [US1] SCION-SOURCE-INGEST-R005.2 Paper providers: search, merge, quota and complete download.
 - [ ] T005 [US1] SCION-SOURCE-INGEST-R005.3 Register paper operations in a served connector.
 - [x] T006 [US1] SCION-SOURCE-INGEST-R005.4 Paper refusals.
 - [x] T007 [US1] SCION-SOURCE-INGEST-R005.5 Paper evidence and redaction.

@@ -13,6 +13,10 @@ strategy here instead of a hand-rolled ``_build_headers`` per repo:
   request, so refresh logic stays in the manager.
 * :class:`BasicAuth` — RFC 7617 ``Authorization: Basic`` credentials.
 * :class:`QueryApiKeyAuth` — an API key carried as a query parameter.
+* :class:`HeaderPairAuth` — one or more service-token headers for connectors
+  behind a zero-trust access proxy (``header_auth_from_settings``); composes
+  with :class:`TokenAuth` or :class:`BasicAuth` so the proxy token and the
+  application credential travel together.
 * The :class:`AuthHeaderInjector` base — no credentials (anonymous), and the
   extension point for bespoke schemes.
 
@@ -24,15 +28,39 @@ its :class:`~scion_sdk.httpsupport.LogRedactor`, and may define an
 
 from __future__ import annotations
 
+import json
 from base64 import b64encode
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+
+from scion_sdk.config import setting
+from scion_sdk.credentials.references import (
+    SecretReferenceError,
+    parse_secret_reference,
+)
+from scion_sdk.credentials.resolution import resolve_secret_reference
+from scion_sdk.credentials.resolver import CredentialResolver
 
 __all__ = [
     "AuthHeaderInjector",
     "BasicAuth",
+    "HeaderPairAuth",
     "QueryApiKeyAuth",
     "TokenAuth",
+    "header_auth_from_settings",
 ]
+
+#: Header names the application credential and the transport own; a
+#: service-token header may never write one of them (case-insensitive).
+_RESERVED_HEADER_NAMES = frozenset(
+    {
+        "authorization",
+        "connection",
+        "content-length",
+        "cookie",
+        "host",
+        "transfer-encoding",
+    }
+)
 
 
 class AuthHeaderInjector:
@@ -135,3 +163,85 @@ class QueryApiKeyAuth(AuthHeaderInjector):
 
     def secrets(self) -> list[str]:
         return [self._key]
+
+
+class HeaderPairAuth(AuthHeaderInjector):
+    """Service-token headers for a zero-trust access proxy.
+
+    A connector behind an access proxy sends one or more service-token
+    headers on every request, alongside the application credential. Names
+    the application credential or the transport owns (``Authorization``,
+    ``Host``, ``Cookie``, ``Content-Length``, ``Transfer-Encoding``,
+    ``Connection``, matched case-insensitively) are refused, as are names
+    and values that hold a line break. Error text names the header only;
+    the value is a secret and feeds the client's log redaction.
+
+    Args:
+        headers: Header name to resolved value.
+    """
+
+    def __init__(self, headers: Mapping[str, str]) -> None:
+        self._pairs = {
+            name: self._checked(name, value) for name, value in headers.items()
+        }
+
+    @staticmethod
+    def _checked(name: object, value: object) -> str:
+        if not isinstance(name, str) or not name:
+            raise ValueError("service-token header name is empty")
+        if "\r" in name or "\n" in name:
+            raise ValueError(f"service-token header name {name!r} holds a line break")
+        if name.lower() in _RESERVED_HEADER_NAMES:
+            raise ValueError(f"service-token header name {name!r} is reserved")
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"service-token header {name!r} holds no value")
+        if "\r" in value or "\n" in value:
+            raise ValueError(f"service-token header {name!r} holds a line break")
+        return value
+
+    def headers(self) -> dict[str, str]:
+        return dict(self._pairs)
+
+    def secrets(self) -> list[str]:
+        return list(self._pairs.values())
+
+    def __repr__(self) -> str:
+        return f"HeaderPairAuth(names={sorted(self._pairs)!r})"
+
+
+def header_auth_from_settings(
+    prefix: str, *, resolver: CredentialResolver | None = None
+) -> HeaderPairAuth:
+    """Service-token headers from the ``<PREFIX>_ACCESS_HEADERS`` setting.
+
+    The setting is a JSON object mapping header name to value, where a value
+    is either a literal or a secret reference (``env://`` or ``openbao://``)
+    resolved through ``resolver`` (the environment, plus OpenBao when
+    configured). An unset or empty setting yields no headers.
+
+    Raises:
+        ValueError: the setting is not a string-to-string JSON object.
+    """
+    raw = setting(f"{prefix}_ACCESS_HEADERS", "")
+    if not raw:
+        return HeaderPairAuth({})
+    try:
+        mapping = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ValueError(f"{prefix}_ACCESS_HEADERS must be a JSON object") from error
+    if not isinstance(mapping, dict) or not all(
+        isinstance(name, str) and isinstance(value, str)
+        for name, value in mapping.items()
+    ):
+        raise ValueError(
+            f"{prefix}_ACCESS_HEADERS must map header names to string values"
+        )
+    resolved: dict[str, str] = {}
+    for name, value in mapping.items():
+        try:
+            parse_secret_reference(value)
+        except SecretReferenceError:
+            resolved[name] = value
+        else:
+            resolved[name] = resolve_secret_reference(value, resolver)
+    return HeaderPairAuth(resolved)

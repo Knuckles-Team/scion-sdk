@@ -154,6 +154,7 @@ def test_release_publishes_only_for_a_tag_or_dispatch() -> None:
         "build",
         "consumer-gate",
         "publish-pypi",
+        "post-publish-import-check",
         "github-release",
     }
     release = workflow["jobs"]["github-release"]
@@ -163,6 +164,16 @@ def test_release_publishes_only_for_a_tag_or_dispatch() -> None:
     notes = release["steps"][0]["run"]
     assert "https://pypi.org/project/scion-sdk/$version/" in notes
     assert "--latest" in notes
+    # SCION-CENTRALIZED-CAPABILITIES-R046.3: the published distribution is
+    # proven against the removed-path table, on a tag, after the upload.
+    import_check = workflow["jobs"]["post-publish-import-check"]
+    assert import_check["needs"] == ["publish-pypi"]
+    assert import_check["if"] == "startsWith(github.ref, 'refs/tags/v')"
+    assert import_check["permissions"] == {"contents": "read"}
+    check_commands = [c for c in _runs(import_check) if "check_published_imports" in c]
+    assert len(check_commands) == 1
+    assert '"scion-sdk==$version"' in check_commands[0]
+    assert "uv venv" in check_commands[0]
     assert workflow["jobs"]["build"]["uses"] == "./.github/workflows/build.yml"
     assert "[skip ci]" not in RELEASE.read_text(encoding="utf-8")
 

@@ -10,8 +10,10 @@ client instead of calling :func:`scion_sdk.http.build_http_client`:
 * :class:`BaseApiClient` joins relative endpoints under ``base_url``, returns
   the envelope ``{"status_code", "data", "rate_limit"}``, captures rate-limit
   headers, backs off a bounded number of times on HTTP 429, maps error
-  statuses to the SDK exception types, and redacts the strategy's secrets from
-  every raised message. TLS comes from the SDK runtime TLS profile for
+  statuses to the SDK exception types, and redacts the strategies' secrets
+  from every raised message. It accepts one auth strategy or an ordered
+  sequence of them (for example a proxy's service-token pair alongside the
+  application credential). TLS comes from the SDK runtime TLS profile for
   ``tls_service``; ``verify``/``cert``/``proxy``/``trust_env`` overrides are
   refused.
 """
@@ -19,6 +21,7 @@ client instead of calling :func:`scion_sdk.http.build_http_client`:
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from typing import Any
 
 import httpx
@@ -29,6 +32,7 @@ from scion_sdk.exceptions import (
     ParameterError,
     UnauthorizedError,
 )
+from scion_sdk.http.options import _route_host_problem
 from scion_sdk.httpsupport.api_client_mixins import _ResponseDecoding, _VerbMethods
 from scion_sdk.httpsupport.api_client_rate import (
     RateLimitSnapshot,
@@ -72,12 +76,34 @@ class DestructiveOperationError(PermissionError):
     """A destructive operation was attempted while gated off."""
 
 
+def _auth_strategies(
+    auth: AuthHeaderInjector | Sequence[AuthHeaderInjector] | None,
+) -> list[AuthHeaderInjector]:
+    """Normalize the ``auth`` argument to an ordered, non-empty strategy list."""
+    if auth is None:
+        return [AuthHeaderInjector()]
+    if isinstance(auth, AuthHeaderInjector):
+        return [auth]
+    strategies = list(auth)
+    if not strategies or not all(
+        isinstance(strategy, AuthHeaderInjector) for strategy in strategies
+    ):
+        raise ValueError(
+            "auth must be an AuthHeaderInjector or a sequence of strategies"
+        )
+    return strategies
+
+
 class BaseApiClient(_ResponseDecoding, _VerbMethods):
     """Synchronous connector API client base (see the module docstring).
 
     Args:
         base_url: Root URL relative endpoints join under.
-        auth: An :class:`AuthHeaderInjector` strategy; ``None`` is anonymous.
+        route_host: Upstream site name sent as the ``Host`` header while the
+            client dials the ``base_url`` host; ``None`` keeps the base host.
+        auth: An :class:`AuthHeaderInjector` strategy or an ordered sequence
+            of strategies (a proxy's service-token pair and the application
+            credential travel together); ``None`` is anonymous.
         headers: Extra default headers merged over :meth:`default_headers`.
         tls_service: Settings prefix of the runtime TLS profile.
         tls_profile: Optional named profile in the TLS catalog.
@@ -96,7 +122,8 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
         self,
         base_url: str,
         *,
-        auth: AuthHeaderInjector | None = None,
+        auth: AuthHeaderInjector | Sequence[AuthHeaderInjector] | None = None,
+        route_host: str | None = None,
         headers: dict[str, str] | None = None,
         tls_service: str = "fleet-http",
         tls_profile: str | None = None,
@@ -113,6 +140,9 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
     ) -> None:
         if {"verify", "cert", "proxy", "trust_env"}.intersection(httpx_kwargs):
             raise ValueError("transport security must use a TLS profile")
+        route_problem = _route_host_problem(route_host)
+        if route_problem is not None:
+            raise ValueError(route_problem)
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.max_retries_429 = max_retries_429
@@ -121,8 +151,9 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
         self.include_response_headers = include_response_headers
         self.error_map = {**DEFAULT_ERROR_MAP, **(error_map or {})}
         self.default_error = default_error
-        self._auth = auth or AuthHeaderInjector()
+        self._auth_strategies = _auth_strategies(auth)
         self._extra_headers = dict(headers or {})
+        self._route_host = route_host
         self._last_rate_limit: RateLimitSnapshot | None = None
         if transport is not None:
             httpx_kwargs["transport"] = transport
@@ -157,24 +188,39 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
         content_type: str | None,
         accept: str | None,
     ) -> dict[str, str]:
+        auth_headers: dict[str, str] = {}
+        for strategy in self._auth_strategies:
+            auth_headers.update(strategy.headers())
         merged = {
             **self.default_headers(),
             **self._extra_headers,
-            **self._auth.headers(),
+            **auth_headers,
             **(headers or {}),
         }
         if content_type:
             merged["Content-Type"] = content_type
         if accept:
             merged["Accept"] = accept
+        if self._route_host is not None:
+            # A deployment-level site name; it names the upstream site for the
+            # wire while dial, pin and SNI keep using the base_url host.
+            merged["Host"] = self._route_host
         return merged
 
     def _merged_params(self, params: dict[str, Any] | None) -> dict[str, Any] | None:
-        merged = {
-            **{k: v for k, v in (params or {}).items() if v is not None},
-            **self._auth.params(),
+        merged: dict[str, Any] = {
+            k: v for k, v in (params or {}).items() if v is not None
         }
+        for strategy in self._auth_strategies:
+            merged.update(strategy.params())
         return merged or None
+
+    def auth_secrets(self) -> list[str]:
+        """Secret values of every auth strategy, for message redaction."""
+        secrets: list[str] = []
+        for strategy in self._auth_strategies:
+            secrets.extend(strategy.secrets())
+        return secrets
 
     def _send(
         self,
@@ -213,11 +259,15 @@ class BaseApiClient(_ResponseDecoding, _VerbMethods):
                 if delay > 0:
                     time.sleep(delay)
                 continue
-            invalidate = getattr(self._auth, "invalidate", None)
-            if response.status_code == 401 and not refreshed and callable(invalidate):
-                invalidate()
-                refreshed = True
-                continue
+            if response.status_code == 401 and not refreshed:
+                for strategy in self._auth_strategies:
+                    invalidate = getattr(strategy, "invalidate", None)
+                    if callable(invalidate):
+                        invalidate()
+                        refreshed = True
+                        break
+                if refreshed:
+                    continue
             return response
 
     def request(

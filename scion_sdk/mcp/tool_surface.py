@@ -28,6 +28,8 @@ from pathlib import Path
 from typing import Any
 
 from scion_sdk.config import setting
+from scion_sdk.config.instances import ConnectorInstances
+from scion_sdk.connector_identity import operation_prefix
 from scion_sdk.mcp._tool_surface_actions import _operation_methods, _settle_action_tools
 from scion_sdk.mcp._tool_surface_base import (
     ACTION_DISPATCH_TAG,
@@ -123,25 +125,6 @@ def _register_condensed(mcp: Any, entries: list[CondensedEntry]) -> list[str]:
     return registered_tags
 
 
-_SERVICE_SUFFIXES = ("-mcp", "-agent", "-api", "-server")
-
-
-def operation_prefix(service: str, tool_prefix: str | None = None) -> str:
-    """The operation-tool name prefix: ``tool_prefix``, else the service name.
-
-    The service name drops a trailing ``-mcp``/``-agent``/``-api``/``-server``
-    and becomes snake_case, so ``home-assistant-agent`` -> ``home_assistant``.
-    """
-    if tool_prefix:
-        return tool_prefix
-    name = service
-    for suffix in _SERVICE_SUFFIXES:
-        if name.endswith(suffix) and len(name) > len(suffix):
-            name = name[: -len(suffix)]
-            break
-    return re.sub(r"\W+", "_", name).strip("_").lower()
-
-
 def _register_operations(
     mcp: Any,
     *,
@@ -151,6 +134,7 @@ def _register_operations(
     manifest: list[dict[str, Any]] | None,
     verbose_targets: list[dict[str, Any]] | None,
     result_coercer: Callable[[Any], Any] | None,
+    instances: ConnectorInstances | None = None,
 ) -> list[str]:
     targets: list[dict[str, Any]] = []
     if client_cls is not None and get_client is not None:
@@ -169,6 +153,7 @@ def _register_operations(
             prefix=str(target.get("prefix") or prefix),
             manifest=target.get("manifest"),
             result_coercer=target.get("result_coercer", result_coercer),
+            instances=instances,
         )
     return names
 
@@ -190,6 +175,7 @@ def register_tool_surface(
     action_dispatch: bool = False,
     result_coercer: Callable[[Any], Any] | None = None,
     package_root: Path | None = None,
+    instances: ConnectorInstances | None = None,
 ) -> list[str]:
     """Register one tool per API operation, plus the connector's other tools.
 
@@ -199,6 +185,11 @@ def register_tool_surface(
     ``<prefix>_<operation>`` where ``prefix`` is ``tool_prefix`` or derived
     from ``service`` (:func:`operation_prefix`). ``manifest`` carries the
     OpenAPI operation entries for ``client_cls``.
+
+    ``instances``, when given, advertises an optional ``instance`` argument
+    on every operation tool; a named instance resolves its client through the
+    connector's :class:`~scion_sdk.config.instances.ConnectorInstances`
+    instead of the default client (SCION-CENTRALIZED-CAPABILITIES-R050).
 
     Registrar tools come from exactly one of ``tool_registry``
     (``[(tag, toggle_setting, fn)]``), ``tools_module`` (every
@@ -258,6 +249,7 @@ def register_tool_surface(
         manifest=manifest,
         verbose_targets=verbose_targets,
         result_coercer=result_coercer,
+        instances=instances,
     )
     _gate_operations(mcp, operations)
     _register_declared_sources(

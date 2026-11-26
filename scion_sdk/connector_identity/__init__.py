@@ -41,6 +41,7 @@ __all__ = [
     "connector_version",
     "declared_connector_name",
     "distribution_version",
+    "operation_prefix",
 ]
 
 _NAME = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
@@ -222,3 +223,22 @@ def connector_version(package: str) -> str:
         if not declared:
             raise
         return str(declared)
+
+
+_SERVICE_SUFFIXES = ("-mcp", "-agent", "-api", "-server")
+
+
+def operation_prefix(service: str, tool_prefix: str | None = None) -> str:
+    """The operation-tool name prefix: ``tool_prefix``, else the service name.
+
+    The service name drops a trailing ``-mcp``/``-agent``/``-api``/``-server``
+    and becomes snake_case, so ``home-assistant-agent`` -> ``home_assistant``.
+    """
+    if tool_prefix:
+        return tool_prefix
+    name = service
+    for suffix in _SERVICE_SUFFIXES:
+        if name.endswith(suffix) and len(name) > len(suffix):
+            name = name[: -len(suffix)]
+            break
+    return re.sub(r"\W+", "_", name).strip("_").lower()

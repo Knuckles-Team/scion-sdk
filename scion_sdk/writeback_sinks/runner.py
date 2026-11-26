@@ -149,6 +149,7 @@ def _governed_call(
     call: _SinkCall, *, dry_run: bool
 ) -> GovernedOutcome | dict[str, Any]:
     """Run one sink call through the SDK; return its outcome or a failure manifest."""
+    from scion_sdk.transition_refused import MachineTransitionRefused
     from scion_sdk.writeback.errors import WriteBackError
 
     from .governed import execute_governed
@@ -163,7 +164,7 @@ def _governed_call(
             dry_run=dry_run,
             _capture_failure=True,
         )
-    except WriteBackError as e:
+    except (MachineTransitionRefused, WriteBackError) as e:
         logger.debug("governed write-back refused for %s", target, exc_info=True)
         return {
             "status": "refused",

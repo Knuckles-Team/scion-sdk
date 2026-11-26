@@ -75,6 +75,7 @@ All tests below are proposed in `tests/test_repository_source_effect_served.py`;
 | WB-27 | SCION-GOVERNED-WRITEBACK-R004.13 | `test_invalid_reservation_never_applies`, `test_file_reservation_refuses_a_different_change_set` | Missing IDs and mismatched file reservations refuse before the effect. |
 | WB-29 | SCION-GOVERNED-WRITEBACK-R004.15 | `test_dry_run_rejects_mismatched_preview` | Mismatched source version, values, scope, changed fields and JSON types refuse without mutation. |
 | WB-28 | SCION-GOVERNED-WRITEBACK-R004.14 | `test_uncertain_reconciliation_cannot_allow_retry` | An uncertain effect cannot permit a retry or trigger another apply. |
+| WB-30 | SCION-GOVERNED-WRITEBACK-R004.18 | `test_dry_run_receipt_is_preview_evidence`, `test_durable_attempt_skips_preview_receipts` | WB-30 recovers a durable dry-run receipt as preview evidence — no effect, no state change, only the apply attempt returned on restart. |
 
 
 Use a contributor-owned disposable provider repository and an admitted production connector. Call its existing authenticated governed entrypoint with a real durable graph ledger. Record exact SDK, adapter and graph revisions, provider API/profile, registered operation ID and served route. Include canonical change-set and receipt digests plus redacted audit/attempt references. No production credentials or raw payload logs belong in evidence. A local fake and a helper call are useful unit fixtures but cannot satisfy WB-22 through WB-26 alone.

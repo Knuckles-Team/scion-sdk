@@ -22,7 +22,7 @@ classifiers = [
 # medulla client. The MCP server/client stack is the "mcp" extra.
 # It must never depend on the agent control plane.
 dependencies = [
-    "medulla>=3.3.4,<4.0.0",
+    "medulla>=3.3.5,<4.0.0",
     "mcp-types>=2.3.0,<3",
     "pydantic>=2.14.1,<3",
     "PyYAML>=6.0.3",
@@ -314,6 +314,7 @@ public_modules = [
     "scion_sdk.certify.declared_coverage",
     "scion_sdk.compute",
     "scion_sdk.compute.engine",
+    "scion_sdk.compute.finance",
     "scion_sdk.config",
     "scion_sdk.contracts",
     "scion_sdk.credentials.openbao",
@@ -363,6 +364,7 @@ public_modules = [
     "scion_sdk.finance.stock_source",
     "scion_sdk.finance.stock_image",
     "scion_sdk.finance.records",
+    "scion_sdk.finance.research_records",
     "scion_sdk.finance.strategy_export",
     "scion_sdk.http.bodies",
     "scion_sdk.http.client",
@@ -433,6 +435,7 @@ public_modules = [
     "scion_sdk.runner.connector_registry",
     "scion_sdk.ports.errors",
     "scion_sdk.ports.repair_proposals",
+    "scion_sdk.ports.repository_provider",
     "scion_sdk.ports.session",
     "scion_sdk.ports.web_source",
     "scion_sdk.ports.sink",
@@ -538,6 +541,7 @@ public_modules = [
     "scion_sdk.writeback.errors",
     "scion_sdk.writeback.memory",
     "scion_sdk.ports.writeback_models",
+    "scion_sdk.writeback.repository_transport",
     "scion_sdk.writeback.service",
     "scion_sdk.writeback.validation",
     "scion_sdk.writeback_sinks",
@@ -567,6 +571,7 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.twenty",
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
+    "scion_sdk.scm",
 ]
 
 # Inputs of the shared hooks (Knuckles-Team/pipelines .pre-commit-hooks.yaml).
@@ -609,6 +614,7 @@ units = [
     "privacy_reference",
     "privacy_rules",
     "progress",
+    "scm",
     "schema_contract",
     "schema_drift",
     "schema_repair",
@@ -660,6 +666,7 @@ units = [
     "source_connectors",
     "streaming",
     "taxonomy",
+    "state_machine",
     "transports",
     "vendor_extractors",
     "writeback",
@@ -674,7 +681,6 @@ units = [
     "connector",
     "mcp",
     "sinks",
-    "state_machine",
     "surface_contracts",
 ]
 

@@ -1,19 +1,25 @@
 """Bound wallet signatures are proof facts, never authorization grants."""
 
 import base64
+import re
 from dataclasses import replace
 
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from pydantic import ValidationError
 
 from scion_sdk.writeback import (
+    WalletBusinessIntent,
+    WalletConfirmation,
+    WalletExecutionEnvelope,
     WalletKeyResolver,
     WalletKeyTrust,
     WalletProofBinding,
     WalletProofRequest,
     WalletProofResult,
     WalletSignatureVerifier,
+    wallet_plan_digest,
 )
 
 
@@ -162,3 +168,92 @@ def test_wire_refuses_duplicate_fields():
     )
     with pytest.raises(ValueError, match="duplicate"):
         WalletProofRequest.from_wire_json(duplicate)
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.1")
+def test_intent_and_envelope_models_are_closed() -> None:
+    intent = WalletBusinessIntent(
+        operation_id="pay",
+        account_id="account",
+        wallet_id="wallet",
+        network_id="network",
+        key_id="key",
+        params={"amount": 100, "memo": "rent"},
+    )
+    plan = wallet_plan_digest(intent)
+    confirmation = WalletConfirmation(
+        confirmed_by="actor", confirmed_at_ms=1000, plan_digest=plan
+    )
+    envelope = WalletExecutionEnvelope(intent=intent, confirmation=confirmation)
+
+    # Round-trip the closed models.
+    assert WalletBusinessIntent.model_validate(intent.model_dump()) == intent
+    assert WalletConfirmation.model_validate(confirmation.model_dump()) == confirmation
+    assert (
+        WalletExecutionEnvelope.model_validate_json(envelope.model_dump_json())
+        == envelope
+    )
+    assert envelope.proof is None
+
+    # The intent never carries the proof or the plan digest.
+    with pytest.raises(ValidationError):
+        WalletBusinessIntent.model_validate(
+            {**intent.model_dump(), "plan_digest": plan}
+        )
+    with pytest.raises(ValidationError):
+        WalletBusinessIntent.model_validate({**intent.model_dump(), "proof": None})
+    with pytest.raises(ValidationError):
+        WalletConfirmation.model_validate(
+            {**confirmation.model_dump(), "authorized": True}
+        )
+    with pytest.raises(ValidationError):
+        WalletExecutionEnvelope.model_validate(
+            {**envelope.model_dump(), "proof_present": True}
+        )
+
+    # A digest that is not 64 lowercase hex characters is refused.
+    for bad in ("A" * 64, "a" * 63, "g" * 64):
+        with pytest.raises(ValidationError):
+            WalletConfirmation(
+                confirmed_by="actor", confirmed_at_ms=1000, plan_digest=bad
+            )
+
+    # Params must be a canonical JSON object of at most 16384 bytes.
+    boundary = "x" * (16384 - len('{"blob":""}'))
+    assert WalletBusinessIntent(
+        operation_id="pay",
+        account_id="account",
+        wallet_id="wallet",
+        network_id="network",
+        key_id="key",
+        params={"blob": boundary},
+    ).params == {"blob": boundary}
+    with pytest.raises(ValidationError):
+        WalletBusinessIntent(
+            operation_id="pay",
+            account_id="account",
+            wallet_id="wallet",
+            network_id="network",
+            key_id="key",
+            params={"blob": "x" * (len(boundary) + 1)},
+        )
+    with pytest.raises(ValidationError):
+        WalletBusinessIntent(
+            operation_id="pay",
+            account_id="account",
+            wallet_id="wallet",
+            network_id="network",
+            key_id="key",
+            params=["not", "an", "object"],
+        )
+
+    # The plan digest is deterministic, hex and bound to the intent.
+    assert re.fullmatch(r"[0-9a-f]{64}", plan)
+    assert (
+        wallet_plan_digest(WalletBusinessIntent.model_validate(intent.model_dump()))
+        == plan
+    )
+    assert (
+        wallet_plan_digest(intent.model_copy(update={"params": {"amount": 200}}))
+        != plan
+    )

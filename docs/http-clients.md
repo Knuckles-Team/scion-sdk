@@ -51,6 +51,7 @@ exactly what the tool returns.
 | Plaintext | `http://` only to loopback, or with `allow_plaintext=True` and a logged warning |
 | Proxies | never from the ambient environment; the TLS profile names one |
 | Redirects | not followed |
+| Route host | `route_host` names the upstream site in the `Host` header while dial, address pinning and the TLS server name keep using the base URL host; redirects never carry the override |
 | Pinned egress | `pin_egress=True` rejects an unapproved private literal base when building the client. Each request resolves and pins its destination. Use `allowed_private_hosts` or `allow_loopback` to admit intended private targets. |
 | Retries | `RetryPolicy`: 3 attempts, exponential backoff with jitter, idempotent methods only; a connection never established is retried for any method; certificate failures are never retried |
 | Rate limits | `Retry-After` (seconds or HTTP date) is honoured up to `max_retry_after`; beyond that, or for a non-idempotent request, the caller gets `HttpRateLimitedError.retry_after` |
@@ -123,6 +124,40 @@ global fallback, and `SSL_CERT_FILE`/`SSL_CERT_DIR`.
 `ResolvedTLSProfile` adapts to `httpx_kwargs()`, `requests_kwargs()`,
 `configure_requests_session()`, `psycopg_kwargs()` and `pymongo_kwargs()`.
 
+## Named upstream instances
+
+A connector process may serve several upstream instances of one system.
+`ConnectorInstances` (`scion_sdk.config.instances`) reads
+`<PREFIX>_INSTANCES`, a JSON object mapping an instance name to an entry
+with `base_url`, optional `route_host`, optional `access_headers` (header
+name to a secret reference) and optional `tls_profile_ref`, plus
+`<PREFIX>_DEFAULT_INSTANCE` (default: the first entry):
+
+```json
+{
+  "prod": {
+    "base_url": "https://prod.example.com",
+    "route_host": "prod.example.com",
+    "access_headers": {"X-Service-Token": "openbao://secret/data/prod#TOKEN"},
+    "tls_profile_ref": "openbao://secret/data/prod#TLS_PROFILE"
+  },
+  "staging": {"base_url": "https://staging.example.com"}
+}
+```
+
+`ConnectorInstances("CRM", client_cls=CrmClient, resolver=...)` keeps the
+connector's own client class; `client_for("prod")` builds one client from
+the entry, resolving access-header values through the injected resolver.
+An unknown name raises `UnknownInstanceError`, which lists the instance
+names only. With no map set, the one-URL settings (`CRM_BASE_URL`,
+`CRM_ROUTE_HOST`, `CRM_ACCESS_HEADERS`, `CRM_TLS_PROFILE_REF`) name the
+implicit `default` instance, so a deployment that sets no map is unchanged.
+
+`register_tool_surface(..., instances=...)` advertises an optional
+`instance` argument on every operation tool; the served call first checks
+the caller's entitlement to `<namespace>:<instance>` (the namespace is the
+lowercased prefix unless named), then builds that instance's client.
+
 ## Outbound authentication
 
 | Need | Use |
@@ -132,6 +167,7 @@ global fallback, and `SSL_CERT_FILE`/`SSL_CERT_DIR`.
 | API key | `api_key_auth(ref, header="X-Api-Key")` or `query="apikey"` |
 | OAuth 2.0 client credentials | `client_credentials_auth(ClientCredentialsConfig(...))`, or `ClientCredentialsTokenProvider` + `ClientCredentialsAuth` |
 | On behalf of the MCP caller (RFC 8693) | `DelegatedTokenAuth(DelegationSettings.from_settings(), http_client=...)` |
+| Zero-trust proxy service tokens | `header_auth_from_settings("DEMO")` (reads `DEMO_ACCESS_HEADERS`); pair with the application credential, e.g. `auth=(pair, bearer_token)` on `BaseApiClient` |
 
 Client-credentials tokens are cached, refreshed 30 seconds before expiry and
 re-minted once on a 401; the client secret is resolved at every mint, so a

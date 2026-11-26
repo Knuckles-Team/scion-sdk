@@ -97,6 +97,49 @@
 ### Changed
 
 - Breaking, hard cutover (`SCION-CENTRALIZED-CAPABILITIES-R045`): `create_http_client` and `create_async_http_client` are one `build_http_client(options, async_=False)`; `configure_oauth_proxy` and `configure_oidc_proxy` are one `configure_proxy(inputs, flow)`; the four repeated write-back sink `_run` bodies are a `passes` table run by `run_sink`. The old names are removed with no alias; update imports.
+- Breaking, hard cutover (`SCION-CENTRALIZED-CAPABILITIES-R046`): the layered unit moves ship with no alias. One line per unit, old path to new path; update imports:
+  - `scion_sdk.credentials.provider_profile` → `scion_sdk.auth.provider_profile`.
+  - `scion_sdk.credentials.source` → `scion_sdk.auth.source_credentials`.
+  - `scion_sdk.testing.successor_parity` → `scion_sdk.certify.successor_parity`.
+  - `scion_sdk._connector_decl` → `scion_sdk.connector._decl`.
+  - `scion_sdk._connector_serve` → `scion_sdk.connector._serve`.
+  - `scion_sdk._connector_metadata` → `scion_sdk.connector_identity._metadata`.
+  - `scion_sdk._contract_fields` → `scion_sdk.contract_fields`.
+  - `scion_sdk.data_prep._classification` → `scion_sdk.data_prep.classification`.
+  - `scion_sdk.ports.decide_runner` → `scion_sdk.decide.runner`.
+  - `scion_sdk._embedding_providers` → `scion_sdk.embeddings._providers`.
+  - `scion_sdk._extras` → `scion_sdk.extras`.
+  - `scion_sdk._lock_unavailable` → `scion_sdk.file_lock._unavailable`.
+  - `scion_sdk._file_lock_windows` → `scion_sdk.file_lock._windows`.
+  - `scion_sdk.http._bounded_provider` → `scion_sdk.http.bounded_provider`.
+  - `scion_sdk.http.support` → `scion_sdk.httpsupport.api_client`.
+  - `scion_sdk.http.support_mixins` → `scion_sdk.httpsupport.api_client_mixins`.
+  - `scion_sdk.http.support_rate` → `scion_sdk.httpsupport.api_client_rate`.
+  - `scion_sdk.runner.backoff` → `scion_sdk.ingest.backoff`.
+  - `scion_sdk.ingest._stream_checkpoint` → `scion_sdk.ingest.stream_checkpoint`.
+  - `scion_sdk.certify.fingerprints` → `scion_sdk.manifest.fingerprints`.
+  - `scion_sdk.ingest.for_each` → `scion_sdk.manifest.for_each`.
+  - `scion_sdk.artifacts.resource_derivation` → `scion_sdk.manifest.resource_derivation`.
+  - `scion_sdk.artifacts.resource_descriptor` → `scion_sdk.manifest.resource_descriptor`.
+  - `scion_sdk.artifacts.resource_descriptor_model` → `scion_sdk.manifest.resource_descriptor_model`.
+  - `scion_sdk.ingest.sources` → `scion_sdk.manifest.sources`.
+  - `scion_sdk._platform_paths` → `scion_sdk.paths._platform`.
+  - `scion_sdk._payment_guard` → `scion_sdk.payments._guard`.
+  - `scion_sdk._payment_models` → `scion_sdk.payments._models`.
+  - `scion_sdk.writeback.models` → `scion_sdk.ports.writeback_models`.
+  - `scion_sdk._privacy_urls` → `scion_sdk.privacy._urls`.
+  - `scion_sdk.ports.connector_registry` → `scion_sdk.runner.connector_registry`.
+  - `scion_sdk._stream_bus` → `scion_sdk.streaming._bus`.
+  - `scion_sdk._stream_types` → `scion_sdk.streaming._types`.
+  - `scion_sdk._stream_websocket` → `scion_sdk.streaming._websocket`.
+  - `scion_sdk._surface_agents` → `scion_sdk.surface_contracts._agents`.
+  - `scion_sdk._surface_complete` → `scion_sdk.testing.surface_draft`.
+  - `scion_sdk._turtle` → `scion_sdk.turtle_reader`.
+  - `scion_sdk._utc_records` → `scion_sdk.utc_records`.
+  - `scion_sdk._version` → `scion_sdk.version`.
+- `connector_tool` and `triage_event` in the decide helpers are one
+  `bounded_choice(question_id, ...)` (SCION-CENTRALIZED-CAPABILITIES-R046).
+- The surface-drafting command is `python -m scion_sdk.testing.surface_draft complete <package>`; the old `python -m scion_sdk._surface_complete` form is gone (SCION-CENTRALIZED-CAPABILITIES-R046).
 - `ConnectorHealth.lifecycle_state` replaces `credentials_ok`; `/health/ready` answers 200 only
   when every connector is `Ready`, so a connector that has not proven a cycle is not ready.
 - `WebSocketStreamAdapter.connect` outside `Idle`, `listen` outside `Open` and a second
@@ -176,7 +219,7 @@
 
 ### Changed
 
-- The SDK requires `medulla>=3.3.4,<4.0.0` and follows its client contracts. The in-memory
+- The SDK requires `medulla>=3.3.5,<4.0.0` and follows its client contracts. The in-memory
   conformance sink builds `SourceIngestionReceipt` with `classes`, `governance`, `report`
   and `stream_object_id`.
 

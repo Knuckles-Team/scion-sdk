@@ -55,7 +55,7 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T049 SCION-CENTRALIZED-CAPABILITIES-R004.7 implement and prove: Protect pagination iterator state
 - [x] T050 SCION-CENTRALIZED-CAPABILITIES-R004.6 implement and prove: Refuse malformed pagination pages
 - [ ] T051 SCION-CENTRALIZED-CAPABILITIES-R017.1 implement and prove: SDK A2A server takes a durable storage and serves tasks/list
-- [ ] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
+- [x] T052 SCION-CENTRALIZED-CAPABILITIES-R017.2 implement and prove: SDK A2A server streams turn events with a cursor
 - [ ] T053 SCION-CENTRALIZED-CAPABILITIES-R041 implement and prove: connector-certify submits conformance evidence
 - [x] T054 SCION-CENTRALIZED-CAPABILITIES-R042 implement and prove: Object store and file-share backends (rollup)
 - [x] T055 SCION-CENTRALIZED-CAPABILITIES-R042.1 implement and prove: Model: one backend protocol for every store
@@ -77,9 +77,12 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [x] T071 [US1] SCION-CENTRALIZED-CAPABILITIES-R044 SDK units form a layered, acyclic graph with public surfaces only.
 - [x] T072 [US1] SCION-CENTRALIZED-CAPABILITIES-R045 Duplicate constructors and sink runners collapse into one parameterised function.
 - [ ] T073 [US1] SCION-CENTRALIZED-CAPABILITIES-R046 Release 0.10.0 removes every pre-layer path (rollup). Size: M, 3 PRs, half a day.
-- [ ] T074 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.1 Removed-path table with an absence test. Size: S, 1 PR, 2 hours.
-- [ ] T075 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.2 Version 0.10.0 and the changelog entry. Size: S, 1 PR, 1 hour.
-- [ ] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.
+- [x] T074 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.1 Removed-path table with an absence test. Size: S, 1 PR, 2 hours.
+- [x] T075 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.2 Version 0.10.0 and the changelog entry. Size: S, 1 PR, 1 hour.
+- [x] T076 [US1] SCION-CENTRALIZED-CAPABILITIES-R046.3 Consumer floor and the fresh-venv import check. Size: S, 1 PR, 2 hours.
 - [x] T077 [US1] SCION-CENTRALIZED-CAPABILITIES-R006.6 Typed category on a GraphQL query error, without server text. Size: S, 1 PR, 2 hours.
 - [x] T078 [US1] SCION-CENTRALIZED-CAPABILITIES-R047 The shared state-machine census runs in staged mode.
-- [ ] T079 [US1] SCION-CENTRALIZED-CAPABILITIES-R048 Migrate to the medulla 3.3.x client contracts. Size: S, 1 PR, 3 hours.
+- [ ] T079 [US1] SCION-CENTRALIZED-CAPABILITIES-R048 Service-token header pair auth strategy.
+- [ ] T080 [US1] SCION-CENTRALIZED-CAPABILITIES-R049 Site routing host header.
+- [ ] T081 [US1] SCION-CENTRALIZED-CAPABILITIES-R050 Named upstream instances per connector.
+- [ ] T082 [US1] SCION-CENTRALIZED-CAPABILITIES-R051 Migrate to the medulla 3.3.x client contracts. Size: S, 1 PR, 3 hours.

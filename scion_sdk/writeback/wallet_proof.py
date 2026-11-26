@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import binascii
 import hashlib
-import json
 import re
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
@@ -14,7 +13,10 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
 
-from scion_sdk.writeback._contract_json import _decode_contract_json
+from scion_sdk.writeback._contract_json import (
+    _canonical_bytes,
+    _decode_contract_json,
+)
 
 _MAX_JSON_INTEGER = 2**53 - 1
 _SIGNATURE = re.compile(r"[A-Za-z0-9_-]{86}\Z")
@@ -114,15 +116,7 @@ class WalletProofRequest(BaseModel):
     def signed_bytes(self) -> bytes:
         """Serialize the fixed ASCII-keyed string/integer profile of RFC 8785."""
         value = self.model_dump(exclude={"signature"})
-        # This profile contains only ASCII property names, strings and exact
-        # nonnegative integers, so Python's compact sorted JSON matches JCS.
-        return b"SDK-WALLET-INTENT\x001\x00" + json.dumps(
-            value,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-            allow_nan=False,
-        ).encode("utf-8", errors="strict")
+        return b"SDK-WALLET-INTENT\x001\x00" + _canonical_bytes(value)
 
 
 @dataclass(frozen=True, slots=True)
