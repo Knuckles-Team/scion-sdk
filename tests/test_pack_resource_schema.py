@@ -36,7 +36,10 @@ async def test_pack_satisfies_engine_resource_schema_rule(
     async with sessions() as session:
         pack = await build_content_pack(session, connector="demo-agent", kinds=KINDS)
     resources = [e for e in pack.archive.entries if e.kind is PackEntryKind.RESOURCE]
-    assert [e.uri for e in resources] == ["connector://resources"]
+    assert [e.uri for e in resources] == [
+        "connector://resources",
+        "seed://demo-agent/seed.ttl",
+    ]
     for entry in pack.archive.entries:
         if entry.kind is PackEntryKind.RESOURCE:
             assert entry.output_schema is not None, (

@@ -6,17 +6,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from scion_sdk.contract_fields import ACCESS_KINDS
 from scion_sdk.credentials.references import (
     SecretReferenceError,
     parse_secret_reference,
 )
+from scion_sdk.transports.registry import registered_transport
 
 _RESOURCE_KINDS = frozenset({"data", "ontology", "shapes", "skill", "seed", "manifest"})
-# Do not admit a newly described protocol into a captured pack until its
-# transport has a certification boundary. Keep existing resource support.
-_RESOURCE_ACCESS_KINDS = frozenset(
-    {"mcp_tool", "http_endpoint", "graphql_query", "a2a_skill", "virtual_graph"}
-)
 #: Dialects and capabilities a ``virtual_graph`` resource declares (R912).
 VIRTUAL_GRAPH_DIALECTS = frozenset(
     {"mssql", "oracle", "db2", "mongodb", "documentdb", "snowflake", "bigquery"}
@@ -224,9 +221,14 @@ def _validate(
     paging_refusal = _validate_paging(entry)
     if paging_refusal is not None:
         return paging_refusal
-    if entry.get("access_kind", "mcp_tool") not in _RESOURCE_ACCESS_KINDS:
+    kind = entry.get("access_kind", "mcp_tool")
+    if kind not in ACCESS_KINDS:
         return ResourceDeclarationError(
             "ACCESS_KIND_UNKNOWN", f"{name}: unknown access_kind"
+        )
+    if registered_transport(kind) is None:
+        return ResourceDeclarationError(
+            "TRANSPORT_UNIMPLEMENTED", f"{name}: no transport registered for {kind}"
         )
     if entry.get("pagination") not in _RESOURCE_PAGINATION_MODES:
         return ResourceDeclarationError(
