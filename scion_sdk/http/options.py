@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 import httpx
 
 from scion_sdk.http.egress import normalize_private_hosts
+from scion_sdk.http.payments import PaymentAuthorization
 from scion_sdk.http.redaction import is_sensitive_name
 from scion_sdk.http.retry import RetryPolicy
 from scion_sdk.tls.profile import ResolvedTLSProfile
@@ -104,6 +105,8 @@ class HttpClientOptions:
         allow_loopback: Permit loopback destinations under ``pin_egress``.
         verify_pinned_peer: Check the connected peer against the pin; disable
             only for an injected in-process test transport.
+        payment: The caller's grant for answering an HTTP 402 challenge; with none,
+            a 402 is returned unchanged and nothing is paid.
 
     Raises:
         ValueError: on construction, when any of the rules above is broken.
@@ -122,6 +125,7 @@ class HttpClientOptions:
     allowed_private_hosts: tuple[str, ...] = ()
     allow_loopback: bool = False
     verify_pinned_peer: bool = True
+    payment: PaymentAuthorization | None = None
 
     def __post_init__(self) -> None:
         credential_headers = any(is_sensitive_name(name) for name in self.headers)

@@ -13,6 +13,7 @@ from scion_sdk.manifest.tool_schema import read_field
 from scion_sdk.ports.errors import MalformedArtifactError
 
 _EG_ANNOTATIONS_KEY = "eg.annotations"
+READABLE_FORM_KEY = "readable_form"
 _TOOL_HINTS = {
     "readOnlyHint": "read_only_hint",
     "destructiveHint": "destructive_hint",
@@ -95,6 +96,9 @@ def _annotations_from_mcp(
 ) -> PackAnnotations:
     """Return the one generated annotation model for an MCP primitive."""
     values = _declared_annotations(primitive)
+    values.pop(
+        READABLE_FORM_KEY, None
+    )  # SDK-side contract fact, not an engine annotation
     hints = _mapping(tool_annotations, label="MCP ToolAnnotations")
     for source, target in _TOOL_HINTS.items():
         _merge_exact(values, target, hints.get(source))
