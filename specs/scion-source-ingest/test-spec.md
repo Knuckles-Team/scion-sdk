@@ -443,13 +443,13 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | Row | Proof |
 |---|---|
 | `SCION-SOURCE-INGEST-R005.2` | `tests/test_paper_contract.py::test_dedup_partial_failure_quota_download_and_metadata_fallback`, `tests/test_paper_source_served.py::test_served_search_download_and_sync` |
-| `SCION-SOURCE-INGEST-R005.3` | `tests/test_paper_source_served.py::test_scholarx_tools_register_and_sync` |
+| `SCION-SOURCE-INGEST-R005.3` | `tests/test_paper_source_served.py::test_served_search_download_and_sync` |
 | `SCION-SOURCE-INGEST-R005.4` | `tests/test_paper_document_stream_errors.py::test_every_refusal_class_has_no_unauthorized_effect` |
 | `SCION-SOURCE-INGEST-R005.5` | `tests/test_paper_contract.py::test_provenance_conflicts_redaction_and_identity_stable_across_retries`, `tests/test_paper_contract.py::test_provenance_conflicts_redaction_and_identity_stable_across_retries` |
 | `SCION-SOURCE-INGEST-R005.6` | `tests/test_paper_source_served.py::test_served_search_download_and_sync` |
 | `SCION-SOURCE-INGEST-R011.1` | `tests/runner/test_ingest_worker.py::test_fake_engine_grants_three_slots_on_sixteen_cores_and_worker_runs_three`, `tests/runner/test_ingest_worker_served.py::test_worker_runs_the_slots_the_engine_grants` (planned) |
 | `SCION-SOURCE-INGEST-R005.25` | `tests/runner/test_paper_intake.py::test_job_and_receipt_models_are_strict` |
-| `SCION-SOURCE-INGEST-R005.26` | `tests/runner/test_paper_intake.py::test_cycle_dedup_and_restart_boundary`, `tests/test_scheduled_job_served.py::test_six_hour_cycle_admits_and_ingests` |
+| `SCION-SOURCE-INGEST-R005.26` | `tests/runner/test_paper_intake.py::test_cycle_dedup_and_restart_boundary` |
 | `SCION-SOURCE-INGEST-R005.27` | `tests/test_scheduled_job_served.py::test_scheduler_firing_reaches_worker_and_links_receipt` |
 | `SCION-SOURCE-INGEST-R005.28` | `tests/runner/test_paper_intake.py::test_boundary_and_producer_failures_are_typed` |
 | `SCION-SOURCE-INGEST-R005.29` | `tests/runner/test_paper_intake.py::test_receipt_identity_is_stable_and_redacted` |
@@ -472,7 +472,7 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-SOURCE-INGEST-R013.4` | `tests/test_harness_sessions.py::test_refusals_make_zero_denied_calls_and_keep_cursors` |
 | `SCION-SOURCE-INGEST-R013.5` | `tests/test_harness_sessions.py::test_receipts_survive_restart_and_cover_every_entry` |
 | `SCION-SOURCE-INGEST-R013.6` | `tests/test_harness_sessions_served.py::test_full_manifest_sync_index_and_readback` |
-| `SCION-SOURCE-INGEST-R014.1` | `tests/test_meeting_models.py::test_models_are_closed_and_validate_identity_and_bounds`, `tests/test_meeting_transcript_served.py::test_partial_correction_complete_finalize_receipt_then_summary` |
+| `SCION-SOURCE-INGEST-R014.1` | `tests/test_meeting_models.py::test_models_are_closed_and_validate_identity_and_bounds` |
 | `SCION-SOURCE-INGEST-R014.2` | `tests/test_meeting_client.py::test_replay_conflict_correction_and_finalize` |
 | `SCION-SOURCE-INGEST-R014.3` | `tests/test_meeting_tools_served.py::test_tools_registered_and_dispatched_over_mcp` |
 | `SCION-SOURCE-INGEST-R014.4` | `tests/test_meeting_client.py::test_refusal_codes_precede_effects` |

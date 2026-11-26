@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from scion_sdk.contracts import ExternalAccess
 
 __all__ = [
     "CONTRACT_REVISION",
@@ -24,6 +26,7 @@ __all__ = [
     "MediaTagProducer",
     "MediaTagRefusal",
     "MediaTagRefusalCode",
+    "media_tag_records",
     "tag_media",
     "tag_record_id",
 ]
@@ -211,3 +214,22 @@ async def tag_media(
         unique.values(), key=lambda t: (-t.confidence, t.taxonomy_id, t.label)
     )[: producer.max_tags_per_item]
     return tuple(sorted(kept, key=lambda t: (t.taxonomy_id, t.label)))
+
+
+def media_tag_records(
+    tags: Sequence[MediaTag], access: ExternalAccess
+) -> list[dict[str, object]]:
+    """Map tags to ``MediaTag`` payload rows carrying their media item's access.
+
+    The engine authorizes tag search with the access of the media, so every row
+    holds the media item's ``ExternalAccess``; a tag never widens it. The id is
+    the stable tag record id, so re-ingesting an identical item upserts.
+    """
+    return [
+        {
+            "id": tag_record_id(tag),
+            **tag.model_dump(mode="json"),
+            "access": access.model_dump(mode="json"),
+        }
+        for tag in tags
+    ]

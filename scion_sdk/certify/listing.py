@@ -58,6 +58,7 @@ class ToolListing:
     upstream_tools: tuple[Any, ...] = ()
     resources: str = ""
     upstreams_body: str = ""
+    ontologies: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -140,12 +141,23 @@ async def _upstreams_body(session: McpSession) -> str:
     return ""
 
 
+async def _ontology_bodies(session: McpSession) -> tuple[str, ...]:
+    """The body of every served ``ontology://`` resource, in URI order."""
+    uris = sorted(
+        str(uri)
+        for resource in await session.list_resources()
+        if str(uri := read_field(resource, "uri")).startswith("ontology://")
+    )
+    return tuple([await session.read_resource(uri) for uri in uris])
+
+
 async def _listing(transport: Transport, endpoint: TransportEndpoint) -> ToolListing:
     async with transport.session(endpoint) as session:
         identity = await session.server_identity()
         tools = await session.list_tools()
         resources = await session.read_resource(RESOURCES_URI)
         upstreams_body = await _upstreams_body(session)
+        ontologies = await _ontology_bodies(session)
     local, proxied = split_upstream_tools(tools)
     return ToolListing(
         identity.name,
@@ -154,6 +166,7 @@ async def _listing(transport: Transport, endpoint: TransportEndpoint) -> ToolLis
         proxied,
         resources,
         upstreams_body,
+        ontologies,
     )
 
 

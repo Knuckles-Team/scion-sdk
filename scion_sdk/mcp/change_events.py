@@ -29,6 +29,7 @@ from mcp.server.subscriptions import (
 __all__ = [
     "announce_content_changed",
     "announce_resource_updated",
+    "announce_resources_changed",
     "change_bus",
     "serve_change_subscriptions",
 ]
@@ -76,3 +77,8 @@ async def announce_content_changed(mcp: FastMCP[Any]) -> None:
 async def announce_resource_updated(mcp: FastMCP[Any], uri: str) -> None:
     """Publish that the resource at ``uri`` was updated."""
     await change_bus(mcp).publish(ResourceUpdated(uri=uri))
+
+
+async def announce_resources_changed(mcp: FastMCP[Any]) -> None:
+    """Publish that only the resource list changed (a served digest changed)."""
+    await change_bus(mcp).publish(ResourcesListChanged())
