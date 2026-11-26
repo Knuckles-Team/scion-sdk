@@ -20,7 +20,7 @@ from scion_sdk.transports.mcp import McpTransport
     [
         ({"ontology_class": "urn:test:Missing"}, "RESOURCE_UNMAPPED"),
         ({"access_kind": "invalid"}, "ACCESS_KIND_UNKNOWN"),
-        ({"access_kind": "stream_topic"}, "ACCESS_KIND_UNKNOWN"),
+        ({"access_kind": "stream_topic"}, "TRANSPORT_UNIMPLEMENTED"),
         ({"pagination": "sync_token"}, "PAGINATION_UNDECLARED"),
         ({"pagination": None}, "PAGINATION_UNDECLARED"),
         ({"credential_ref": "test-secret"}, "SECRET_IN_CONTRACT"),
