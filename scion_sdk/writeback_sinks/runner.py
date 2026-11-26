@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from ._env import setting
@@ -13,13 +14,16 @@ from .core import (
     get_sink,
     list_sinks,
 )
+from .release import ReleasedChangeSet, ReleaseError, fetch_release
 
 if TYPE_CHECKING:
+    from scion_sdk.decide.transport import DecideTransport
+
     from .governed import GovernedOutcome, SinkGrant
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["run_writeback"]
+__all__ = ["run_released_writeback", "run_writeback"]
 
 
 @dataclass(frozen=True)
@@ -119,7 +123,7 @@ def run_writeback(
         enable_flag=sink.enable_flag,
         write_enabled=write_enabled,
         risk_tier=getattr(sink, "risk_tier", "standard"),
-        approved=bool(ops.get("_approved")),
+        approved=isinstance(ops.get("_release"), ReleasedChangeSet),
     )
     call = _SinkCall(target, sink, ctx, ops, grant)
     # High-stakes sinks NEVER auto-execute: a live request (enabled, not dry-run,
@@ -127,6 +131,46 @@ def run_writeback(
     if grant.risk_tier == "high_stakes" and not dry_run and not grant.approved:
         return _queue_high_stakes(call)
     return _governed_manifest(call, dry_run=dry_run)
+
+
+async def run_released_writeback(
+    transport: DecideTransport,
+    target: str,
+    *,
+    tenant_id: str,
+    change_set_id: str = "",
+    dry_run: bool = False,
+    **ops: Any,
+) -> dict[str, Any]:
+    """Execute ``target`` for a change set the engine released, and only then.
+
+    The set comes from :func:`~scion_sdk.writeback_sinks.release.fetch_release`
+    for ``tenant_id``; a missing, unknown, unapproved or unreachable release
+    returns a ``refused`` manifest carrying its ``RELEASE_*`` code and the sink
+    is never called. No local flag stands in for the release.
+    """
+    import anyio
+
+    try:
+        release = await fetch_release(transport, change_set_id, tenant_id=tenant_id)
+    except ReleaseError as refusal:
+        return {
+            "status": "refused",
+            "target": target,
+            "code": refusal.code,
+            "reason": str(refusal),
+        }
+    manifest = await anyio.to_thread.run_sync(
+        partial(
+            run_writeback,
+            target,
+            dry_run=dry_run,
+            _release=release,
+            **ops,
+        )
+    )
+    manifest["change_set_id"] = release.change_set_id
+    return manifest
 
 
 def _backfeed_preflight(

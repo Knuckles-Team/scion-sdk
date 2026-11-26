@@ -3,7 +3,7 @@
 Emits KG-derived trade intents as **proposed** orders. This sink is
 ``risk_tier="high_stakes"``: even with ``EMERALD_ENABLE_WRITE`` set it never
 auto-executes — ``run_writeback`` routes its proposals to the approval queue, and
-only an explicit ``approve`` (``_approved``) replays the order live via
+only an explicit ``approve`` (a ``fetch_release`` result in ``_release``) replays the order live via
 ``backend.submit_order``. The safety spine for finance writes.
 """
 
