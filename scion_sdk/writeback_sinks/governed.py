@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     )
 
     from scion_sdk.writeback.connector import DurableWritableConnector
+    from scion_sdk.writeback.wallet_gate import EnvelopeProofGate
 
 __all__ = [
     "PATCH_FIELD",
@@ -119,8 +120,37 @@ def ledger_root() -> Path:
     return runtime_dir() / "writeback-ledger"
 
 
+def _proof_gate(
+    sink: WritebackSink, ctx: WritebackContext, ops: dict[str, Any]
+) -> EnvelopeProofGate | None:
+    """The proof gate of a sink that ``requires_wallet_proof``, else ``None``.
+
+    The envelope is data in ``ops["wallet_envelope"]``, never a flag. A missing
+    envelope refuses ``missing_signature`` before any transport call.
+    """
+    from scion_sdk.writeback.errors import WalletProofRefusedError
+    from scion_sdk.writeback.wallet_gate import EnvelopeProofGate
+    from scion_sdk.writeback.wallet_intent import WalletExecutionEnvelope
+    from scion_sdk.writeback.wallet_trust import EngineWalletKeyResolver
+
+    if not getattr(sink, "requires_wallet_proof", False):
+        return None
+    envelope = ops.get("wallet_envelope")
+    if envelope is None:
+        raise WalletProofRefusedError("missing_signature")
+    if not isinstance(envelope, WalletExecutionEnvelope):
+        envelope = WalletExecutionEnvelope.model_validate(envelope)
+    resolver = ctx.wallet_resolver or EngineWalletKeyResolver(ctx.engine)
+    return EnvelopeProofGate(
+        envelope, tenant_id=ctx.tenant_id, actor_id=ctx.actor_id, resolver=resolver
+    )
+
+
 def _connector(
-    transport: SinkWriteBackTransport, change_set: SourceChangeSet, directory: Path
+    transport: SinkWriteBackTransport,
+    change_set: SourceChangeSet,
+    directory: Path,
+    proof_gate: EnvelopeProofGate | None = None,
 ) -> DurableWritableConnector:
     from scion_sdk.writeback.connector import DurableWritableConnector
     from scion_sdk.writeback.durable_ledger import FileWriteBackLedger
@@ -130,6 +160,7 @@ def _connector(
         transport,
         FileWriteBackLedger(directory),
         audit=FileAuditReservation(directory),
+        proof_gate=proof_gate,
     )
 
 
@@ -142,9 +173,12 @@ async def _dry_run(
 
 
 async def _apply(
-    transport: SinkWriteBackTransport, change_set: SourceChangeSet, directory: Path
+    transport: SinkWriteBackTransport,
+    change_set: SourceChangeSet,
+    directory: Path,
+    proof_gate: EnvelopeProofGate | None = None,
 ) -> WriteBackAttempt:
-    connector = _connector(transport, change_set, directory)
+    connector = _connector(transport, change_set, directory, proof_gate)
     await connector.register(change_set)
     return await connector.apply(change_set)
 
@@ -219,13 +253,14 @@ def execute_governed(
     """
     change_set = build_change_set(grant, ops)
     _require_state_machine(ops, change_set)
+    gate = None if dry_run else _proof_gate(sink, ctx, ops)
     transport = SinkWriteBackTransport(sink, ctx, ops)
     if dry_run:
         _preview(transport, change_set)
         return GovernedOutcome(_result(transport, grant), change_set)
     directory = (root or ledger_root()) / change_set.change_set_id
     attempt = run_sync_isolated(
-        lambda: asyncio.run(_apply(transport, change_set, directory))
+        lambda: asyncio.run(_apply(transport, change_set, directory, gate))
     )
     if transport.failure is not None:
         outcome = GovernedOutcome(
