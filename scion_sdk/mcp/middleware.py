@@ -23,6 +23,7 @@ from mcp.shared.exceptions import MCPError
 
 from scion_sdk.identity import ActorType, current_actor
 from scion_sdk.mcp.actor_binding import ActorBindingMiddleware
+from scion_sdk.mcp.call_context import ToolContextMiddleware
 
 __all__ = [
     "ActorRateLimitingMiddleware",
@@ -112,7 +113,9 @@ class ActorRateLimitingMiddleware(RateLimitingMiddleware):
         return await super().on_request(context, call_next)
 
 
-def build_middleware(*, no_auth: bool = False) -> list[Any]:
+def build_middleware(
+    *, no_auth: bool = False, connector_id: str = "connector"
+) -> list[Any]:
     """Error handling without tracebacks, the actor binding, then 10 requests/s per actor (burst 20).
 
     ``no_auth`` is true when the network config's auth type is ``none``. The
@@ -128,4 +131,5 @@ def build_middleware(*, no_auth: bool = False) -> list[Any]:
             burst_capacity=20,
             get_client_id=rate_limit_client_id,
         ),
+        ToolContextMiddleware(connector_id),
     ]
