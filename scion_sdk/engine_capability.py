@@ -27,6 +27,10 @@ ENGINE_CAPABILITIES: Mapping[str, tuple[str, str]] = {
         "medulla.client",
         "GraphOperationsClient.index_harness_session_batch",
     ),
+    "VerifySourceQueryApproval": (
+        "medulla.client",
+        "MedullaClient.verify_source_query_approval",
+    ),
 }
 
 

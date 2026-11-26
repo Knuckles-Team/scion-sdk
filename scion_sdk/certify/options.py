@@ -10,6 +10,7 @@ from scion_sdk.auth.oidc import (
     ClientCredentialsConfig,
     client_credentials_auth,
 )
+from scion_sdk.auth.pkce import PkceBearerAuth, PkcePorts
 
 
 def _positive_timeout(value: str) -> float:
@@ -23,8 +24,20 @@ def _positive_timeout(value: str) -> float:
     return timeout
 
 
-def _oidc_auth(args: argparse.Namespace) -> ClientCredentialsAuth | None:
-    """Build SDK client-credentials auth when any OIDC option is present."""
+def _pkce_auth(args: argparse.Namespace) -> PkceBearerAuth:
+    """Build PKCE auth from the host-supplied ceremony ports (``--auth pkce``)."""
+    ports = getattr(args, "pkce_ports", None)
+    if not isinstance(ports, PkcePorts):
+        raise ValueError("--auth pkce needs the host broker ports")
+    return PkceBearerAuth.from_ports(ports)
+
+
+def _oidc_auth(
+    args: argparse.Namespace,
+) -> ClientCredentialsAuth | PkceBearerAuth | None:
+    """Build SDK auth: PKCE for ``--auth pkce``, client credentials when any OIDC option is present."""
+    if getattr(args, "auth", "") == "pkce":
+        return _pkce_auth(args)
     values = (
         args.oidc_issuer,
         args.oidc_token_url,
