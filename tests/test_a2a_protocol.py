@@ -898,3 +898,25 @@ def test_turn_event_wire_models_round_trip() -> None:
         adapter.validate_json(
             '{"kind": "text-delta", "taskId": "t1", "contextId": "c1", "seq": 0, "text": "x"}'
         )
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R017.2")
+def test_card_advertises_streaming_from_the_wired_turn_log() -> None:
+    pytest.importorskip("fasta2a")
+    from pydantic_ai import Agent
+    from pydantic_ai.models.test import TestModel
+    from starlette.testclient import TestClient
+
+    from scion_sdk.a2a.app import streaming_wired
+
+    storage = _turn_storage()
+    # The card reports what is wired, not a constant: the turn log is wired.
+    assert streaming_wired(storage) is True
+    # A storage without the turn-event log wires no streaming.
+    assert streaming_wired(object()) is False
+    app = _streaming_app(storage, Agent(TestModel(custom_output_text="done")))
+    with TestClient(app) as client:
+        card = client.get("/.well-known/agent-card.json").json()
+        assert card["capabilities"]["streaming"] is True
+        assert card["capabilities"]["pushNotifications"] is False
+        assert card["name"] == "fixture"
