@@ -42,6 +42,7 @@ from scion_sdk.mcp.prompt_pack_meta import ContentError
 
 __all__ = [
     "PROMPT_META_KEY",
+    "SEED_RESOURCE_URI",
     "ConnectorContent",
     "ContentError",
     "ContentRegistration",
@@ -51,6 +52,10 @@ __all__ = [
     "register_connector_content",
     "register_ontology_resources",
 ]
+
+
+#: The seed graph resource of a connector (R068.1).
+SEED_RESOURCE_URI = "seed://{connector}/seed.ttl"
 
 
 @dataclass(frozen=True)
