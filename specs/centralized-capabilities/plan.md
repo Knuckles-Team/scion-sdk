@@ -125,6 +125,7 @@ Search method: `grep -rn` over `specs/` for the module name and the capability t
 | `SCION-CENTRALIZED-CAPABILITIES-R052` | SPARQL endpoint client | `SCION-CENTRALIZED-CAPABILITIES-R052` | `transports/sparql.py`, `transports/_rdf_http.py` | Unit and loopback tests `tests/test_sparql_client.py`. No connector scan. |
 | `SCION-CENTRALIZED-CAPABILITIES-R054` | Entity reconciliation client | `SCION-CENTRALIZED-CAPABILITIES-R054` | `transports/reconciliation.py` | Unit and loopback tests `tests/test_reconciliation_client.py`. No connector scan. |
 | `SCION-CENTRALIZED-CAPABILITIES-R055` | Linked Data resource client | `SCION-CENTRALIZED-CAPABILITIES-R055` | `transports/linked_data.py` | Unit and loopback tests `tests/test_linked_data_client.py`. No connector scan. |
+| `SCION-CENTRALIZED-CAPABILITIES-R056` | Host service and log provider interface | `SCION-CENTRALIZED-CAPABILITIES-R056` | `transports/host_services.py` | Unit tests `tests/test_host_services.py`. No connector scan. |
 
 ### Architecture
 

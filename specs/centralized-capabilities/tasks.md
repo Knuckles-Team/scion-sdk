@@ -101,3 +101,4 @@ Generated from the active rows of [requirements.md](requirements.md); one line p
 - [ ] T095 [US1] SCION-CENTRALIZED-CAPABILITIES-R054 Entity reconciliation client (rollup).
 - [ ] T096 [US1] SCION-CENTRALIZED-CAPABILITIES-R054.1 Behavior, refusal and wiring: candidates for one name.
 - [ ] T097 [US1] SCION-CENTRALIZED-CAPABILITIES-R054.2 Hot-path proof: reconcile one name end to end.
+- [ ] T098 [US1] SCION-CENTRALIZED-CAPABILITIES-R056 Host service and log provider interface.
