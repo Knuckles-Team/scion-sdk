@@ -14,7 +14,9 @@ import posixpath
 from pathlib import Path
 from typing import Any
 
+from scion_sdk.config import setting
 from scion_sdk.source._mount_models import (
+    MountBackendName,
     MountEntry,
     MountRefusedError,
     MountState,
@@ -24,6 +26,7 @@ from scion_sdk.source._mount_models import (
     _clean,
     _materialize,
     _require_declared,
+    select_backend,
 )
 from scion_sdk.source.client import (
     BlobRequest,
@@ -57,8 +60,10 @@ class SourceMount:
         branch: str,
         prefixes: tuple[str, ...],
         base_revision: str,
+        backend: MountBackendName = "overlay",
     ) -> None:
         self._client = client
+        self.backend = backend
         self._root = root.resolve()
         self._repository, self._ref, self._branch = repository_id, ref, branch
         self._prefixes = prefixes
@@ -80,7 +85,13 @@ class SourceMount:
         ref: str,
         branch: str,
         prefixes: tuple[str, ...],
+        backend: str | None = None,
     ) -> SourceMount:
+        chosen = select_backend(
+            backend
+            if backend is not None
+            else str(setting("SOURCE_MOUNT_BACKEND", "auto"))
+        )
         if not isinstance(client, SourceClient):
             raise MountRefusedError("client_not_admitted")
         if not prefixes:
@@ -113,9 +124,18 @@ class SourceMount:
             branch=branch,
             prefixes=cleaned,
             base_revision=revisions.pop(),
+            backend=chosen,
         )
         mount._event("mount")
         return mount
+
+    def fuse(self) -> Any:
+        """The FUSE operations over this mount; refuses unless the backend is ``fuse``."""
+        from scion_sdk.source._fuse_backend import FuseBackend
+
+        if self.backend != "fuse":
+            raise MountRefusedError("fuse_unavailable")
+        return FuseBackend(self)
 
     @property
     def state(self) -> MountState:
@@ -257,6 +277,7 @@ class SourceMount:
         self.events.append(
             {
                 "event": name,
+                "backend": self.backend,
                 "repository_id": self._repository,
                 "base_revision": self._base,
                 "prefixes": list(self._prefixes),

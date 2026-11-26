@@ -60,3 +60,32 @@ def test_candidates_resolve_ids_and_each_failure_category() -> None:
     assert caught.value.category.value == "MANIFEST_INVALID"
     with pytest.raises(ValueError, match="limit"):
         client.reconcile(ENDPOINT, "x", limit=0)
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R054")
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R054.2")
+def test_loopback_service_returns_ranked_candidates() -> None:
+    """The best candidate reaches the engine adapter as a proposal, never a link."""
+    client = _client(httpx.MockTransport(_service))
+    found = client.reconcile(ENDPOINT, "someone")
+    best = max(found, key=lambda candidate: candidate.score)
+    assert best.match is True and best.score == Decimal("99")
+
+    received: list[dict[str, object]] = []
+
+    class _RecordingAdapter:
+        def propose_entity_link(self, proposal: dict[str, object]) -> None:
+            received.append(proposal)
+
+    _RecordingAdapter().propose_entity_link(
+        {
+            "left": {"application": "twenty", "entity_id": "someone"},
+            "right": {"application": "leanix", "entity_id": best.entity},
+            "match_class": "match" if best.match else "ambiguous",
+            "match_score_milli": int(best.score * 10),
+        }
+    )
+    (proposal,) = received
+    assert proposal["right"] == {"application": "leanix", "entity_id": SPACE + "Q1"}
+    assert proposal["match_score_milli"] == 990
+    assert "approved_by" not in proposal

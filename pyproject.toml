@@ -34,6 +34,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+fuse = [
+    "pyfuse3>=3.4.0,<4",
+]
 requests = [
     "requests>=2.34.0,<3",
 ]
@@ -578,6 +581,7 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
     "scion_sdk.scm",
+    "scion_sdk.finance.forecast",
     "scion_sdk.environment",
     "scion_sdk.desktop",
     "scion_sdk.observation",
