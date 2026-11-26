@@ -114,6 +114,7 @@ class RunnerHealth:
         self._heartbeat = clock()
         self._registry_loaded = False
         self._connectors: dict[str, ConnectorHealth] = {}
+        self._stage_reports: dict[str, dict[str, object]] = {}
         self._threshold = (
             degraded_failures_threshold()
             if degraded_failures is None
@@ -207,6 +208,16 @@ class RunnerHealth:
                     current, LifecycleEvent.CREDS_OK, credential_error=""
                 )
             self._connectors[connector] = updated
+
+    def record_stage_report(self, connector: str, report: dict[str, object]) -> None:
+        """Keep the latest stage report of ``connector``."""
+        with self._lock:
+            self._stage_reports[connector] = report
+
+    def stage_report(self, connector: str) -> dict[str, object] | None:
+        """The latest stage report of ``connector``, if any."""
+        with self._lock:
+            return self._stage_reports.get(connector)
 
     def record_cycle_success(self, connector: str) -> None:
         """Send ``cycle_ok``: reset the failure count and prove the cycle."""

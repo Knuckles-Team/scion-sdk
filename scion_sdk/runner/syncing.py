@@ -22,7 +22,6 @@ from scion_sdk.ports.sink import Sink
 from scion_sdk.ports.source_adapter import SourceAdapter
 from scion_sdk.runner._page_checks import _is_delta_noop, _receipt_binds_request
 from scion_sdk.runner.errors import (
-    RunnerConfigurationError,
     SchemaDriftQuarantined,
     SinkReceiptError,
     StreamPaused,
@@ -207,8 +206,6 @@ async def sync_stream(
         StreamPaused: ``target.repair_proposals`` names an unresolved repair
             proposal for this stream; no page is extracted or submitted.
     """
-    if target.stages:
-        raise RunnerConfigurationError("concurrent stage execution is unavailable")
     descriptor = await adapter.discover(session)
     stream = descriptor.stream
     target = _discovered_target(target, descriptor)
