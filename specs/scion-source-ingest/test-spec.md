@@ -223,12 +223,12 @@ These tests are planned. They require the complete owner-approved manifest and p
 
 | Test ID | Requirement | Level | Setup and input | Expected observation | Evidence |
 |---|---|---|---|---|---|
-| HS-13.1 | R013.1 | Contract | unbound entries | refusal before calls | `tests/test_supported_harness_session_sync.py::test_manifest_rejects_unbound_entries_before_source_calls` (planned) |
-| HS-13.2 | R013.2 | Integration | sync/restart | full coverage and idempotent resume | `tests/test_supported_harness_session_sync.py::test_first_run_coverage_retry_and_restart` (planned) |
-| HS-13.3 | R013.3 | Served | connector-sync --once | generated SourceIngest calls | `tests/test_supported_harness_session_sync_served.py::test_connector_sync_uses_generated_source_ingest` (planned) |
-| HS-13.4 | R013.4 | Negative | denied/cross-tenant source | typed refusal; zero calls; cursor unchanged | `tests/test_supported_harness_session_sync_served.py::test_denial_is_partial_without_cursor_advance` (planned) |
-| HS-13.5 | R013.5 | Persistence | restart/readback | bound receipts agree | `tests/test_supported_harness_session_sync.py::test_receipts_read_back_after_restart` (planned) |
-| HS-13.6 | R013.6 | End-to-end | every entry and OVERSTORY-APPS-R006.4 | full browse/coverage; EG and Arbora IDs unassigned | `tests/test_supported_harness_session_sync_served.py::test_every_manifest_source_is_browsable` |
+| HS-13.1 | R013.1 | Contract | unbound entries | refusal before calls | `tests/test_harness_manifest.py::test_manifest_rejects_duplicates_unknown_versions_missing_owners_and_unbound_operations` |
+| HS-13.2 | R013.2 | Integration | sync/restart | full coverage and idempotent resume | `tests/test_harness_sessions.py::test_full_coverage_dedup_restart_and_per_source_progress` |
+| HS-13.3 | R013.3 | Served | connector-sync --once | generated SourceIngest calls | `tests/test_harness_sessions.py::test_adapter_calls_operation_then_index_once_per_page` |
+| HS-13.4 | R013.4 | Negative | denied/cross-tenant source | typed refusal; zero calls; cursor unchanged | `tests/test_harness_sessions.py::test_refusals_make_zero_denied_calls_and_keep_cursors` |
+| HS-13.5 | R013.5 | Persistence | restart/readback | bound receipts agree | `tests/test_harness_sessions.py::test_receipts_survive_restart_and_cover_every_entry` |
+| HS-13.6 | R013.6 | End-to-end | every entry and OVERSTORY-APPS-R006.4 | full browse/coverage; EG and Arbora IDs unassigned | `tests/test_supported_harness_session_sync_served.py::test_every_manifest_source_is_browsable` (planned) |
 
 ## Live meeting and summary providers (WEBUI:10)
 
