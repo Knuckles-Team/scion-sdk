@@ -19,8 +19,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-import scion_sdk
 from scion_sdk.environment_census import EnvironmentRead, census
+from scion_sdk.version import __version__
 
 __all__ = [
     "COMPONENT",
@@ -508,7 +508,7 @@ def environment_declarations(
             _refused("unknown_component", component, source_revision),
             component,
         )
-    if source_revision != scion_sdk.__version__:
+    if source_revision != __version__:
         raise EnvironmentDeclarationError(
             "source_revision_mismatch",
             _refused("source_revision_mismatch", component, source_revision),
@@ -681,9 +681,7 @@ SDK_READ_BINDINGS: tuple[EnvironmentReadBinding, ...] = (
 
 def declarations() -> tuple[EnvironmentDeclaration, ...]:
     """Every declared environment name of the installed SDK, sorted by name."""
-    return environment_declarations(
-        scion_sdk.__version__, SDK_READ_BINDINGS
-    ).declarations
+    return environment_declarations(__version__, SDK_READ_BINDINGS).declarations
 
 
 def startup_admission(

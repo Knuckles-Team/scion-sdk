@@ -12,12 +12,13 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 
-from scion_sdk.mcp._env_drift_reads import _alias_literals, _is_environ
-from scion_sdk.mcp._env_drift_scan import (
-    _literal_env_name,
-    _parse,
-    _skip_runtime_file,
-    _walk_files,
+from scion_sdk.env_scan import (
+    alias_literals,
+    is_environ,
+    literal_env_name,
+    parse_python,
+    skip_runtime_file,
+    walk_files,
 )
 
 __all__ = ["EnvironmentRead", "census"]
@@ -52,7 +53,7 @@ def _reader_arg(node: ast.Call) -> ast.expr | None:
     environ_get = (
         isinstance(func, ast.Attribute)
         and func.attr in {"get", "pop", "setdefault"}
-        and _is_environ(func.value)
+        and is_environ(func.value)
     )
     if (named or os_getenv or environ_get) and node.args:
         return node.args[0]
@@ -60,7 +61,7 @@ def _reader_arg(node: ast.Call) -> ast.expr | None:
 
 
 def _resolve(node: ast.expr, aliases: dict[str, str]) -> str | None:
-    literal = _literal_env_name(node)
+    literal = literal_env_name(node)
     if literal:
         return literal
     if isinstance(node, ast.Name):
@@ -82,21 +83,21 @@ def _is_forward(node: ast.AST) -> bool:
     if isinstance(node, ast.Call):
         func = node.func
         if isinstance(func, ast.Attribute) and func.attr == "copy":
-            return _is_environ(func.value)
+            return is_environ(func.value)
         if isinstance(func, ast.Name) and func.id == "dict" and node.args:
-            return _is_environ(node.args[0])
+            return is_environ(node.args[0])
     if isinstance(node, ast.Dict):
         return any(
-            k is None and _is_environ(v)
+            k is None and is_environ(v)
             for k, v in zip(node.keys, node.values, strict=True)
         )
     if isinstance(node, ast.keyword) and node.arg == "env":
-        return _is_environ(node.value)
+        return is_environ(node.value)
     return False
 
 
 def _reads_in(tree: ast.AST, path: str) -> list[EnvironmentRead]:
-    aliases = _alias_literals(tree)
+    aliases = alias_literals(tree)
     found: list[EnvironmentRead] = []
     for node in ast.walk(tree):
         line = getattr(node, "lineno", 0)
@@ -107,7 +108,7 @@ def _reads_in(tree: ast.AST, path: str) -> list[EnvironmentRead]:
         elif (
             isinstance(node, ast.Subscript)
             and isinstance(node.ctx, ast.Load)
-            and _is_environ(node.value)
+            and is_environ(node.value)
         ):
             found.append(_read(node.slice, aliases, path, line))
         if _is_forward(node):
@@ -119,10 +120,10 @@ def census(root: Path | None = None) -> tuple[EnvironmentRead, ...]:
     """Every read and forwarding site under ``root`` (default: this package), sorted."""
     package = root or Path(__file__).resolve().parent
     out: list[EnvironmentRead] = []
-    for py in _walk_files(package, suffix=".py"):
-        if _skip_runtime_file(package, py):
+    for py in walk_files(package, suffix=".py"):
+        if skip_runtime_file(package, py):
             continue
-        tree = _parse(py)
+        tree = parse_python(py)
         if tree is not None:
             rel = f"{package.name}/{py.relative_to(package).as_posix()}"
             out.extend(_reads_in(tree, rel))

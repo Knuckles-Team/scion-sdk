@@ -11,6 +11,7 @@ import pytest
 
 import scion_sdk
 import scion_sdk.environment_census as census_module
+from scion_sdk.env_scan import scan_setting_calls
 from scion_sdk.environment import (
     COMPONENT,
     REFUSAL_CODES,
@@ -26,7 +27,6 @@ from scion_sdk.environment import (
     startup_admission,
 )
 from scion_sdk.environment_census import EnvironmentRead, census
-from scion_sdk.mcp._env_drift_reads import _scan_setting_calls
 
 REVISION = scion_sdk.__version__
 PACKAGE = Path(scion_sdk.__file__).resolve().parent
@@ -108,7 +108,7 @@ def test_missing_and_undeclared_inputs_block_export(tmp_path: Path) -> None:
         d.name
         for d in environment_declarations(REVISION, SDK_READ_BINDINGS).declarations
     }
-    assert _scan_setting_calls(PACKAGE) <= exported
+    assert scan_setting_calls(PACKAGE) <= exported
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R053.4")
@@ -171,9 +171,9 @@ def test_digests_reproduce_from_pinned_inputs(
     assert first.receipt.declaration_digest == expected
     assert first.receipt.declaration_count == len(rows)
     assert first.receipt.schema_version == 1
-    original = census_module._walk_files
+    original = census_module.walk_files
     monkeypatch.setattr(
-        census_module, "_walk_files", lambda *a, **k: original(*a, **k)[::-1]
+        census_module, "walk_files", lambda *a, **k: original(*a, **k)[::-1]
     )
     shuffled = environment_declarations(REVISION, SDK_READ_BINDINGS, root=PACKAGE)
     assert shuffled.receipt == first.receipt

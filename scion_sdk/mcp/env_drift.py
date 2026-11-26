@@ -40,6 +40,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, TextIO
 
+from scion_sdk.env_scan import scan_setting_calls, script_reads
 from scion_sdk.mcp._env_drift_declared import (
     _compose_env_keys,
     _compose_subst_reads,
@@ -51,7 +52,6 @@ from scion_sdk.mcp._env_drift_families import (
     _scan_dynamic_families,
     _scan_dynamic_family_reads,
 )
-from scion_sdk.mcp._env_drift_reads import _scan_setting_calls, _script_reads
 from scion_sdk.mcp._env_drift_toggles import _derive_toggle_vars
 from scion_sdk.mcp.parser import PARSER_ENV
 from scion_sdk.tls.selection import (
@@ -131,7 +131,7 @@ _SDK_ROOT = Path(__file__).resolve().parents[1]
 @lru_cache(maxsize=1)
 def framework_reads() -> frozenset[str]:
     """The literal env reads inside the installed SDK itself."""
-    return frozenset(_scan_setting_calls(_SDK_ROOT))
+    return frozenset(scan_setting_calls(_SDK_ROOT))
 
 
 @lru_cache(maxsize=1)
@@ -160,12 +160,12 @@ def _code_reads(root: Path) -> tuple[set[str], set[str]]:
     """``(package reads incl. toggles, every read incl. scripts and the SDK)``."""
     families = {**framework_dynamic_families(), **_scan_dynamic_families(root)}
     documentable = (
-        _scan_setting_calls(root)
+        scan_setting_calls(root)
         | _compose_subst_reads(root)
         | _scan_dynamic_family_reads(root, families)
         | _derive_toggle_vars(root)
     )
-    return documentable, documentable | _script_reads(root) | framework_reads()
+    return documentable, documentable | script_reads(root) | framework_reads()
 
 
 def _declared_sources(root: Path) -> tuple[set[str], dict[str, set[str]]]:
