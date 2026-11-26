@@ -62,15 +62,43 @@ async def scoped_client(scopes: list[str]) -> Any:
     )
 
 
-def _wait_for(socket_path: Path, proc: subprocess.Popen[bytes]) -> None:
-    deadline = time.monotonic() + 30
+# Named bounds: every wait on the engine process states why it waits and for how long.
+STARTUP_SOCKET_WAIT_S = 90  # a loaded shared runner starts the engine slowly
+SHUTDOWN_TERMINATE_WAIT_S = 20  # grace after SIGTERM before the engine is killed
+SHUTDOWN_KILL_WAIT_S = 10  # reaping after SIGKILL
+
+
+def _log_tail(log_path: Path) -> str:
+    try:
+        return log_path.read_text(errors="replace")[-2000:]
+    except OSError:
+        return "<engine log unreadable>"
+
+
+def _wait_for(socket_path: Path, proc: subprocess.Popen[bytes], log_path: Path) -> None:
+    deadline = time.monotonic() + STARTUP_SOCKET_WAIT_S
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            raise RuntimeError("medulla-server exited during startup")
+            raise RuntimeError(
+                f"medulla-server exited during startup: {_log_tail(log_path)}"
+            )
         if socket_path.exists():
             return
         time.sleep(0.05)
-    raise RuntimeError("medulla-server did not open its socket")
+    raise RuntimeError(
+        f"medulla-server did not open its socket within {STARTUP_SOCKET_WAIT_S}s "
+        f"(startup wait): {_log_tail(log_path)}"
+    )
+
+
+def _stop(proc: subprocess.Popen[bytes]) -> None:
+    """Terminate the engine, killing it when it ignores SIGTERM, so no wait is unbounded."""
+    proc.terminate()
+    try:
+        proc.wait(timeout=SHUTDOWN_TERMINATE_WAIT_S)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=SHUTDOWN_KILL_WAIT_S)
 
 
 def _bootstrap(socket_path: Path) -> None:
@@ -150,7 +178,7 @@ def live_ingest(
             stderr=subprocess.STDOUT,
         )
         try:
-            _wait_for(socket_path, proc)
+            _wait_for(socket_path, proc, root / "engine.log")
             _bootstrap(socket_path)
             _LIVE["socket"] = socket_path
             monkeypatch.setenv(_SECRET_ENV, _SECRET)
@@ -165,5 +193,4 @@ def live_ingest(
                 )
             )
         finally:
-            proc.terminate()
-            proc.wait(timeout=30)
+            _stop(proc)

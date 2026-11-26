@@ -293,8 +293,6 @@ public_modules = [
     "scion_sdk.adapters.workspace_reader",
     "scion_sdk.raw_source",
     "scion_sdk.testing.raw_source",
-    "scion_sdk.raw_source",
-    "scion_sdk.testing.raw_source",
     "scion_sdk.adapters.workspace_models",
     "scion_sdk.adapters.document_sources",
     "scion_sdk.vendor_extractors.enterprise_contract",
