@@ -69,6 +69,16 @@ class FakeRunner:
     ) -> Choice:
         return self._reply(question_id, options, fallback)
 
+    async def aevaluate(
+        self,
+        question_id: str,
+        option_id: str,
+        outcome: Any,
+        *,
+        evaluation_id: str,
+    ) -> None:
+        return None
+
 
 def _acted(option_id: str) -> Choice:
     return Choice(option_id, True, "acted")
