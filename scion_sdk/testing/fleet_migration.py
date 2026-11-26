@@ -17,7 +17,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import os
-import subprocess
+import subprocess  # nosec B404
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -217,7 +217,7 @@ class CensusReceipt:
 
 def _git_head(root: Path) -> str:
     try:
-        done = subprocess.run(
+        done = subprocess.run(  # nosec B603 B607
             ["git", "-C", str(root), "rev-parse", "HEAD"],
             capture_output=True,
             text=True,
