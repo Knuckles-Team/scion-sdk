@@ -62,3 +62,42 @@ def test_live_pinned_engine_refuses_meeting_transcript_revision(live_ingest):  #
     assert not engine_capability_present("MeetingTranscriptRevision")
     with pytest.raises(EngineCapabilityUnavailable, match="MeetingTranscriptRevision"):
         require_engine_capability("MeetingTranscriptRevision")
+
+
+@pytest.mark.spec("SCION-GOVERNED-WRITEBACK-R001.6")
+def test_live_engine_answers_an_unseeded_wallet_key_as_absent(live_ingest):  # noqa: F811
+    """The pinned engine serves WalletKeyTrustGet; no trust record is seeded, so the
+    resolver answers ``None`` exactly as it would for a foreign record."""
+    import asyncio
+
+    from live_engine import scoped_client
+
+    from scion_sdk.writeback.wallet_proof import WalletProofBinding
+    from scion_sdk.writeback.wallet_trust import EngineWalletKeyResolver
+
+    binding = WalletProofBinding(
+        tenant_id="tenant:sdk-test",
+        actor_id="actor",
+        connector_id="emerald-exchange",
+        operation_id="op",
+        account_id="account-absent",
+        wallet_id="wallet-absent",
+        network_id="network",
+        key_id="key-absent",
+        plan_digest="a" * 64,
+        change_set_digest="b" * 64,
+        change_set_id="changeset:1",
+        idempotency_key="idem",
+    )
+
+    async def resolve():
+        client = await scoped_client(["finance:records"])
+        try:
+            return await EngineWalletKeyResolver(client).resolve(binding)
+        finally:
+            await client.close()
+
+    assert (
+        asyncio.run_coroutine_threadsafe(resolve(), live_ingest._loop).result(30)
+        is None
+    )
