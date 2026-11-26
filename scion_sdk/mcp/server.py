@@ -48,6 +48,7 @@ from scion_sdk.mcp.served_security import (
     ServedSecurityOverride,
     apply_served_security_profile,
 )
+from scion_sdk.mcp.tool_paging import install_tool_paging
 from scion_sdk.mcp.visibility import VisibilityTransform
 from scion_sdk.mcp.visibility_policy import VisibilityPolicy
 
@@ -176,6 +177,7 @@ def create_mcp_server(
             VisibilityPolicy.from_settings(args.tools, args.disabled_tools)
         )
     )
+    install_tool_paging(mcp)
     _register_native_primitives(mcp, name)
     serve_change_subscriptions(mcp)
     if platform_fallback is not None:

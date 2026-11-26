@@ -573,6 +573,11 @@ public_modules = [
     "scion_sdk.writeback_sinks.sinks.wger",
     "scion_sdk.writeback_sinks.spec_link",
     "scion_sdk.scm",
+    "scion_sdk.environment",
+    "scion_sdk.desktop",
+    "scion_sdk.observation",
+    "scion_sdk.provisioning",
+    "scion_sdk.mcp.tool_declaration",
 ]
 
 # Inputs of the shared hooks (Knuckles-Team/pipelines .pre-commit-hooks.yaml).
@@ -664,6 +669,10 @@ units = [
     "finance",
     "ingest",
     "manifest",
+    "desktop",
+    "environment",
+    "observation",
+    "provisioning",
     "source_connectors",
     "streaming",
     "taxonomy",
