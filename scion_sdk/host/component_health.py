@@ -11,7 +11,22 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from scion_sdk.connector_lifecycle import LifecycleState
+
 __all__ = ["ComponentHealthState", "should_alert"]
+
+
+#: Lifecycle states a component that is not initialized (or is disabled) holds.
+_NOT_LIVE = frozenset({LifecycleState.UNCONFIGURED, LifecycleState.STOPPED})
+#: Lifecycle states of an initialized component that need an operator's attention.
+_ALERTING = frozenset(
+    {
+        LifecycleState.CREDENTIALS_PENDING,
+        LifecycleState.WARMING,
+        LifecycleState.DEGRADED,
+        LifecycleState.BACKOFF,
+    }
+)
 
 
 class ComponentHealthState(BaseModel):
@@ -20,7 +35,7 @@ class ComponentHealthState(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
     component_id: str = Field(min_length=1, max_length=512, pattern=r"^\S(?:.*\S)?$")
-    state: Literal["healthy", "degraded", "unavailable", "not_configured"]
+    lifecycle_state: LifecycleState
     configuration_status: Literal["disabled", "not_initialized", "initialized"]
     enabled: bool
     last_check_time: datetime
@@ -34,11 +49,11 @@ class ComponentHealthState(BaseModel):
         if self.last_check_time.utcoffset() is None:
             raise ValueError("health timestamp must include a timezone")
         if self.configuration_status == "initialized":
-            if not self.enabled or self.state == "not_configured":
+            if not self.enabled or self.lifecycle_state in _NOT_LIVE:
                 raise ValueError(
                     "initialized health requires an enabled configured component"
                 )
-        elif self.state != "not_configured":
+        elif self.lifecycle_state not in _NOT_LIVE:
             raise ValueError(
                 "uninitialized or disabled component cannot report a live state"
             )
@@ -50,9 +65,9 @@ class ComponentHealthState(BaseModel):
 
 
 def should_alert(observation: ComponentHealthState) -> bool:
-    """Alert only on a degraded or unavailable enabled, initialized component."""
+    """Alert on an enabled, initialized component that is not ``Ready``."""
     return (
         observation.enabled
         and observation.configuration_status == "initialized"
-        and observation.state in {"degraded", "unavailable"}
+        and observation.lifecycle_state in _ALERTING
     )

@@ -20,7 +20,7 @@ rule.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from scion_sdk.decide.options import Option
@@ -76,6 +76,20 @@ class DecisionRunner(Protocol):
         advisory-only outcome, or an option the caller never offered all mean
         the implementation calls ``fallback()`` itself and returns that
         answer with ``decided=False`` and a ``reason`` naming why.
+        """
+        ...
+
+    async def aevaluate(
+        self,
+        question_id: str,
+        option_id: str,
+        outcome: Literal["ok", "error"],
+        *,
+        evaluation_id: str,
+    ) -> None:
+        """Report how an executed option turned out (SCION-CONNECTOR-CONTROL-R904.2).
+
+        Never raises: a reporting failure is logged and costs nothing else.
         """
         ...
 

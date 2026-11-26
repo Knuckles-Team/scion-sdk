@@ -28,6 +28,8 @@ from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
+from scion_sdk.connector_lifecycle import LifecycleState
+
 if TYPE_CHECKING:
     from fastmcp import FastMCP
     from fastmcp.server.auth import AuthProvider
@@ -101,12 +103,30 @@ class Readiness:
 
     Args:
         ready: Whether the backend answers; ``False`` serves HTTP 503.
+        lifecycle_state: The state served in the body; ``Ready`` only when
+            ``ready`` is true.
         detail: Extra JSON fields for the response body. Never put a secret
             or an exception message here.
     """
 
     ready: bool
     detail: Mapping[str, ReadinessValue] = field(default_factory=dict)
+    lifecycle_state: LifecycleState | None = None
+
+    @property
+    def state(self) -> LifecycleState:
+        """The one lifecycle state this probe renders (R917.4).
+
+        An explicit ``lifecycle_state`` wins; otherwise a ready probe is
+        ``Ready`` and a failing one is ``Degraded``. ``ready`` always agrees.
+        """
+        if self.lifecycle_state is not None:
+            return self.lifecycle_state
+        return LifecycleState.READY if self.ready else LifecycleState.DEGRADED
+
+    def __post_init__(self) -> None:
+        if self.ready != (self.state is LifecycleState.READY):
+            raise ValueError("ready must agree with the lifecycle state")
 
 
 #: An async backend probe; an exception it raises is served as not ready.
@@ -157,7 +177,7 @@ def serve_routes(server: FastMCP[object], routes: tuple[Route, ...]) -> None:
 
 
 def serve_readiness(server: FastMCP[object], probe: ReadinessProbe) -> None:
-    """Serve ``probe`` at :data:`READINESS_PATH`: 200 when ready, 503 otherwise."""
+    """Serve ``probe`` at :data:`READINESS_PATH`: 200 only for ``Ready``, 503 otherwise."""
     from starlette.responses import JSONResponse
 
     async def ready(_request: Request) -> Response:
@@ -166,15 +186,14 @@ def serve_readiness(server: FastMCP[object], probe: ReadinessProbe) -> None:
         except Exception as exc:
             _logger.warning("readiness probe failed", exc_info=exc)
             body: dict[str, ReadinessValue] = {
-                "status": "unavailable",
+                "lifecycle_state": LifecycleState.BACKOFF.value,
                 "error": type(exc).__name__,
             }
             return JSONResponse(
                 body, status_code=503, headers={"Cache-Control": "no-store"}
             )
-        status = "ready" if result.ready else "unavailable"
         return JSONResponse(
-            {**result.detail, "status": status},
+            {**result.detail, "lifecycle_state": result.state.value},
             status_code=200 if result.ready else 503,
             headers={"Cache-Control": "no-store"},
         )
