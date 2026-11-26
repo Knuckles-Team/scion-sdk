@@ -1,6 +1,13 @@
 """Authenticated repository snapshot transport into medulla."""
 
-from scion_sdk.repository.errors import RepositoryTransportError
+from scion_sdk.repository.delta import (
+    DeltaIndexConfig,
+    DeltaIndexSource,
+    IndexPage,
+    accept_index_page,
+    index_delta,
+)
+from scion_sdk.repository.errors import IndexRefusal, RepositoryTransportError
 from scion_sdk.repository.indexing import RepositoryBatchReceipt, RepositoryIndexState
 from scion_sdk.repository.local_git import LocalGitRepositoryProvider
 from scion_sdk.repository.manifest import (
@@ -31,6 +38,10 @@ from scion_sdk.repository.transport import (
 from scion_sdk.repository.walk import RefTree, walk_refs
 
 __all__ = [
+    "DeltaIndexConfig",
+    "DeltaIndexSource",
+    "IndexPage",
+    "IndexRefusal",
     "LocalGitRepositoryProvider",
     "RefTree",
     "RepositoryAuthentication",
@@ -50,6 +61,8 @@ __all__ = [
     "RepositoryTransportError",
     "RepositoryTreeEntry",
     "RepositoryTreePage",
+    "accept_index_page",
+    "index_delta",
     "index_repository_snapshot",
     "walk_refs",
 ]

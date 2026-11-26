@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from scion_sdk.decide.runner import DecisionRunner
 from scion_sdk.discovery import ActivationPolicy
 from scion_sdk.ports.artifact_kind import ArtifactKind
+from scion_sdk.ports.governance_source import GovernanceSource
 from scion_sdk.ports.sink import Sink
 from scion_sdk.ports.transport import Transport
 from scion_sdk.runner.descriptors import RunnerSettings
@@ -38,3 +39,5 @@ class RunnerServices:
     #: before this port existed.
     decide_runner: DecisionRunner | None = None
     source_adapter_policy: ActivationPolicy | None = None
+    #: Per-connector source governance (access, groups, ids, containers).
+    governance: Mapping[str, GovernanceSource] | None = None

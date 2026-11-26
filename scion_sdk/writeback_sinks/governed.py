@@ -26,7 +26,7 @@ import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from scion_sdk.state_machine import (
     StateMachineDescriptor,
@@ -186,7 +186,24 @@ async def _apply(
 ) -> WriteBackAttempt:
     connector = _connector(transport, change_set, directory, proof_gate)
     await connector.register(change_set)
-    return await connector.apply(change_set)
+    attempt = await connector.apply(change_set)
+    evidence = getattr(proof_gate, "evidence", None)
+    if evidence is not None:
+        _record_proof_evidence(directory, evidence)
+    return attempt
+
+
+PROOF_EVIDENCE_FILE = "wallet-proof-evidence.json"
+
+
+def _record_proof_evidence(directory: Path, evidence: dict[str, Any]) -> None:
+    """Join the proof outcome to the durable ledger of its change set (R001.5)."""
+    import json
+
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / PROOF_EVIDENCE_FILE).write_text(
+        json.dumps(evidence, sort_keys=True), encoding="utf-8"
+    )
 
 
 def _preview(transport: SinkWriteBackTransport, change_set: SourceChangeSet) -> None:
@@ -236,6 +253,19 @@ def _require_state_machine(ops: dict[str, Any], change_set: SourceChangeSet) -> 
     next_state(descriptor, state, event, facts)
 
 
+def _change_set(grant: SinkGrant, ops: dict[str, Any]) -> SourceChangeSet:
+    """The change set; a prepared wallet operation is rebuilt exactly (R001.3)."""
+    from scion_sdk.writeback_sinks.wallet_prepare import (
+        PREPARATION_KEY,
+        rebuild_prepared_change_set,
+    )
+
+    preparation = ops.get(PREPARATION_KEY)
+    if preparation is None:
+        return build_change_set(grant, ops)
+    return cast("SourceChangeSet", rebuild_prepared_change_set(grant, ops, preparation))
+
+
 def execute_governed(
     sink: WritebackSink,
     ctx: WritebackContext,
@@ -257,7 +287,7 @@ def execute_governed(
     SDK refusals (expiry, scope, version, authorization, audit, stale or
     illegal record transition) raise before any live sink call.
     """
-    change_set = build_change_set(grant, ops)
+    change_set = _change_set(grant, ops)
     _require_state_machine(ops, change_set)
     transport = SinkWriteBackTransport(sink, ctx, ops)
     if dry_run:

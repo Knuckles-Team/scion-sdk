@@ -54,14 +54,33 @@ __all__ = [
     "CheckpointedBatch",
     "ConnectorCheckpoint",
     "ExternalAccess",
+    "HierarchyConnector",
     "LoadConnector",
     "PermSyncConnector",
     "PollConnector",
     "SlimConnector",
     "SlimDocument",
+    "SourceContainer",
     "SourceDocument",
+    "SourceGroup",
     "default_external_access",
 ]
+
+
+class SourceGroup(BaseModel):
+    """One source group and its member principals (SCION-SOURCE-INGEST-R805.1)."""
+
+    group_id: str = Field(min_length=1)
+    members: list[str] = Field(default_factory=list)
+
+
+class SourceContainer(BaseModel):
+    """One node of a source's container tree (SCION-SOURCE-INGEST-R805.3)."""
+
+    source: str = Field(min_length=1)
+    container_id: str = Field(min_length=1)
+    parent_id: str | None = None
+    title: str = ""
 
 
 class SourceDocument(BaseModel):
@@ -221,4 +240,17 @@ class PermSyncConnector(SlimConnector):
     @abc.abstractmethod
     def fetch_access(self) -> Iterator[tuple[str, ExternalAccess]]:
         """Yield ``(document_id, ExternalAccess)`` for every visible document."""
+        raise NotImplementedError  # ABSTRACT-OK
+
+    def fetch_groups(self) -> Iterator[SourceGroup]:
+        """Yield the source's groups; none by default (SCION-SOURCE-INGEST-R805.1)."""
+        return iter(())
+
+
+class HierarchyConnector(BaseSourceConnector):
+    """A connector that reports its container tree, parents before children."""
+
+    @abc.abstractmethod
+    def containers(self) -> Iterator[SourceContainer]:
+        """Yield every container, each parent before its children."""
         raise NotImplementedError  # ABSTRACT-OK

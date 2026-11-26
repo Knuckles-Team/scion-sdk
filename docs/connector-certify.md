@@ -18,7 +18,7 @@ fingerprint of each tool.
 ## Contract fingerprint
 
 The fingerprint algorithm label is
-`agent-connector-sdk:mcp-tool-contract-compat:v2`. Its digest binds the tool
+`scion-sdk:mcp-tool-contract-compat`. Its digest binds the tool
 name, canonical input schema and canonical output schema. Object keys are
 sorted; string lists such as `required` and `enum` are sorted; presentation
 fields (`title`, `description`, `examples`, `$comment`) and runtime defaults are

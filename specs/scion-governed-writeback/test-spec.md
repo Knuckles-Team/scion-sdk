@@ -20,7 +20,7 @@ Offline source PR gate includes focused pytest, Ruff, mypy, CCCC, Dupehound, KIS
 - WB-10: WB-10 checks valid proofs, canonical payloads and independent authorization. Bind `SCION-GOVERNED-WRITEBACK-R001.2` in `tests/test_wallet_proof_served.py`.
 - WB-11: WB-11 traces a served connector call through the verifier and governed apply. Bind `SCION-GOVERNED-WRITEBACK-R001.3` in `tests/test_wallet_proof_served.py`.
 - WB-12: WB-12 proves zero effects for every refusal and unavailable dependency. Bind `SCION-GOVERNED-WRITEBACK-R001.4` in `tests/test_wallet_proof_served.py`.
-- WB-13: WB-13 checks redaction, provenance and replay after restart. Bind `SCION-GOVERNED-WRITEBACK-R001.5` in `tests/test_wallet_proof_served.py`.
+- WB-13: WB-13 checks redaction, provenance and replay after restart. Bind `SCION-GOVERNED-WRITEBACK-R001.5` in `tests/test_wallet_proof_apply.py`.
 - WB-14: WB-14 requires served transport and durable read-back; direct verifier tests alone are insufficient. Bind `SCION-GOVERNED-WRITEBACK-R001.6` in `tests/test_wallet_proof_served.py`.
 
 Use synthetic account bindings and keys. Positive served acceptance requires valid proof, explicit confirmation and independent EG authorization together.

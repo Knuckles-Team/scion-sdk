@@ -70,6 +70,7 @@ _TABLE: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("FASTMCP_SERVER_AUTH_JWT_ISSUER", "str", ("scion_sdk.mcp.parser",)),
     ("GITHUB_ENABLE_WRITE", "bool", ("scion_sdk.writeback_sinks.sinks.issue_tracker",)),
     ("GITLAB_ENABLE_WRITE", "bool", ("scion_sdk.writeback_sinks.sinks.issue_tracker",)),
+    ("HARNESS_MANIFEST_PATH", "str", ("scion_sdk.manifest.harness",)),
     (
         "HOMEASSISTANT_ENABLE_WRITE",
         "bool",
@@ -190,6 +191,8 @@ _TABLE: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         ("scion_sdk.source_connectors.http_safety",),
     ),
     ("SOURCE_MOUNT_BACKEND", "str", ("scion_sdk.source.mount",)),
+    ("SOURCE_PERMISSION_SYNC_INTERVAL_S", "int", ("scion_sdk.runner.governance",)),
+    ("SQL_PROFILE_SAMPLE_ROWS", "int", ("scion_sdk.ingest.sql_profile",)),
     ("SSL_CERT_DIR", "str", ("scion_sdk.tls.selection",)),
     ("SSL_CERT_FILE", "str", ("scion_sdk.tls.selection",)),
     ("TECHNITIUM_DNS_ENABLE_WRITE", "bool", ("scion_sdk.writeback_sinks.sinks.ops",)),

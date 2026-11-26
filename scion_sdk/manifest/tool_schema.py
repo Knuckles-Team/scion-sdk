@@ -1,8 +1,8 @@
 """Canonical MCP tool contracts and their fingerprints.
 
-The v2 digest binds both the input and output schemas. Its predecessor bound
-only the input schema; :func:`legacy_empty_schema_fingerprint` exists solely so
-certification can identify and replace the fleet's old empty-schema pins.
+The digest binds both the input and output schemas under the SDK-owned labels
+``scion-sdk:mcp-tool-contract`` and ``scion-sdk:mcp-tool-contract-compat``
+(SCION-CONNECTOR-CONTROL-R067.3). The fleet recertifies against them.
 """
 
 from __future__ import annotations
@@ -18,17 +18,15 @@ __all__ = [
     "canonical_input_schema",
     "canonical_output_schema",
     "compatibility_fingerprint",
-    "legacy_empty_schema_fingerprint",
     "read_field",
     "schema_fingerprint",
 ]
 
 #: Algorithm label of the compatibility fingerprint.
-COMPATIBILITY_FINGERPRINT_ALGORITHM = "agent-connector-sdk:mcp-tool-contract-compat:v2"
+COMPATIBILITY_FINGERPRINT_ALGORITHM = "scion-sdk:mcp-tool-contract-compat"
 
-_EXACT_DOMAIN = b"agent-connector-sdk:mcp-tool-contract:v2\x00"
+_EXACT_DOMAIN = b"scion-sdk:mcp-tool-contract\x00"
 _COMPATIBILITY_DOMAIN = COMPATIBILITY_FINGERPRINT_ALGORITHM.encode("ascii") + b"\x00"
-_LEGACY_COMPATIBILITY_DOMAIN = b"meristem:mcp-tool-schema-compat:v1\x00"
 _PRESENTATION_KEYS = frozenset({"$comment", "description", "examples", "title"})
 _RUNTIME_CONFIGURATION_KEYS = frozenset({"default"})
 
@@ -161,14 +159,3 @@ def compatibility_fingerprint(
     return _fingerprint(
         _COMPATIBILITY_DOMAIN, name, input_schema, output_schema=output_schema
     )
-
-
-def legacy_empty_schema_fingerprint(name: str) -> str:
-    """The retired input-only v1 fingerprint of ``name`` with an empty schema."""
-    payload = json.dumps(
-        {"name": str(name), "input_schema": {}},
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-    ).encode("utf-8")
-    return hashlib.sha256(_LEGACY_COMPATIBILITY_DOMAIN + payload).hexdigest()

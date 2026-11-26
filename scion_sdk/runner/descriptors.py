@@ -97,6 +97,8 @@ class ConnectorDescriptor(_Strict):
     mapping_reference: str = ""
     empty_authoritative_approval: str = ""
     max_pages_per_cycle: int = Field(default=1_000, ge=1, le=1_000_000)
+    #: May lower the governance interval, never below 300 (SCION-SOURCE-INGEST-R805.4).
+    permission_sync_interval_s: int | None = Field(default=None, ge=300)
     tenant: str = ""
     stages: tuple[StageDeclaration, ...] = ()
     stage_limits: StageLimits | None = None

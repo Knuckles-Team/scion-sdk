@@ -24,6 +24,10 @@ ENGINE_CAPABILITIES: Mapping[str, tuple[str, str]] = {
     "ProfileSubmission": ("medulla.generated.source_ingestion", "ProfileSubmission"),
     "WalletKeyTrustGet": ("medulla.generated.compute", "send_wallet_key_trust_get"),
     "SchemaDriftQuarantinedError.drift": ("medulla", "SchemaDriftQuarantinedError"),
+    "IndexHarnessSessionBatch": (
+        "medulla.client",
+        "GraphOperationsClient.index_harness_session_batch",
+    ),
     "MeetingTranscriptRevision": (
         "medulla.client",
         "MedullaClient.meeting_transcript_revision",
