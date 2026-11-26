@@ -37,13 +37,17 @@ async def run_sandbox_conformance(provider: SandboxProvisioner, profile: str) ->
     """Raise ``AssertionError`` when ``provider`` breaks a port rule."""
     request = conformance_request(profile)
     first = await provider.provision(request)
-    assert await provider.provision(request) == first, "replay must not reallocate"
-    assert await provider.reconcile(request.operation_id) == first
+    if await provider.provision(request) != first:
+        raise AssertionError("replay must not reallocate")
+    if await provider.reconcile(request.operation_id) != first:
+        raise AssertionError("reconcile must return the recorded allocation")
     other = request.model_copy(update={"instance_count": request.instance_count + 1})
     try:
         await provider.provision(other)
     except SandboxRefused as refusal:
-        assert refusal.code == "conflicting_replay"
+        if refusal.code != "conflicting_replay":
+            raise AssertionError("a conflicting replay must refuse as such") from None
     else:
         raise AssertionError("a different request under one operation id must refuse")
-    assert await provider.reconcile("op-never-seen") is None
+    if await provider.reconcile("op-never-seen") is not None:
+        raise AssertionError("an unknown operation id has no allocation")

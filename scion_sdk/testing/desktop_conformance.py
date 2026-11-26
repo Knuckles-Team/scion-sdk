@@ -29,4 +29,5 @@ async def run_desktop_conformance(
     ):
         before = await observer.state()
         await call()
-        assert await observer.state() == before, f"{name} changed cursor or focus"
+        if await observer.state() != before:
+            raise AssertionError(f"{name} changed cursor or focus")

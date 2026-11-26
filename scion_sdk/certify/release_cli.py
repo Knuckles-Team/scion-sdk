@@ -36,6 +36,19 @@ from scion_sdk.ports.session import TransportEndpoint
 __all__ = ["main"]
 
 _logger = logging.getLogger(__name__)
+#: ``build_endpoint`` options this command never sets: a stdio server only.
+_BLANK_FIELDS = (
+    "url",
+    "bearer_token",
+    "predecessor_url",
+    "predecessor_bearer_token",
+    "oidc_issuer",
+    "oidc_token_url",
+    "oidc_client_id",
+    "oidc_client_secret_ref",
+    "oidc_audience",
+    "oidc_scope",
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -100,21 +113,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     split = items.index("--") if "--" in items else len(items)
     args = _parser().parse_args(items[:split])
     args.command = items[split + 1 :]
+    blank = dict.fromkeys(_BLANK_FIELDS, "")
     namespace = argparse.Namespace(
         command=args.command,
         env=args.env,
         placeholder=args.placeholder,
         timeout=args.timeout,
-        url="",
-        bearer_token="",
-        predecessor_url="",
-        predecessor_bearer_token="",
-        oidc_issuer="",
-        oidc_token_url="",
-        oidc_client_id="",
-        oidc_client_secret_ref="",
-        oidc_audience="",
-        oidc_scope="",
+        **blank,
     )
     try:
         endpoint = build_endpoint(namespace)
