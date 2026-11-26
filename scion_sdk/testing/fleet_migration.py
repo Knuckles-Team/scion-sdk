@@ -18,9 +18,12 @@ import ast
 import hashlib
 import os
 import subprocess  # nosec B404
-from collections.abc import Iterable
+import tempfile
+from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from scion_sdk.testing._fleet_scan import _imports_meristem
 from scion_sdk.testing._fleet_walk import (
@@ -28,16 +31,25 @@ from scion_sdk.testing._fleet_walk import (
     PackageScanResult,
     _scan_python_sources,
 )
+from scion_sdk.testing.major_version import (
+    MajorVersionTransition,
+    PackageCompatibilityReceipt,
+    PackageInventoryEntry,
+    PackageInventorySnapshot,
+)
 
 __all__ = [
     "BATCH_LETTERS",
     "CensusReceipt",
+    "InventoryIncomplete",
     "JsonTagLoaderEntry",
     "LoaderInventoryItem",
     "OperationMapping",
     "PackageScanResult",
+    "SuiteResult",
     "batch_census",
     "batch_roots",
+    "evaluate_major_version_compatibility",
     "fleet_census_receipt",
     "loader_parity_problems",
     "scan_for_meristem_imports",
@@ -326,3 +338,67 @@ def scan_json_tag_loaders(
                     )
                 )
     return tuple(items)
+
+
+class InventoryIncomplete(ValueError):
+    """R007.2 ``INVENTORY_INCOMPLETE``: the inventory is not proven complete."""
+
+    code = "INVENTORY_INCOMPLETE"
+
+
+@dataclass(frozen=True)
+class SuiteResult:
+    """A package's own test-suite result against the target artifact."""
+
+    suite: str
+    run: str
+    completed_at: datetime
+    outcome: Literal["passed", "failed", "incomplete", "cancelled"]
+
+
+#: Runs one package's own suite inside an isolated candidate directory.
+SuiteRunner = Callable[
+    [PackageInventoryEntry, MajorVersionTransition, Path], SuiteResult
+]
+
+
+def evaluate_major_version_compatibility(
+    inventory: PackageInventorySnapshot,
+    transition: MajorVersionTransition,
+    *,
+    declared_package_ids: Collection[str] | None,
+    suite_runner: SuiteRunner,
+) -> tuple[PackageCompatibilityReceipt, ...]:
+    """One receipt per inventoried package, from that package's own suite result.
+
+    Each package runs in its own temporary directory, removed afterwards; tracked
+    manifests and lockfiles are never touched. ``declared_package_ids`` is the
+    independent census of the fleet: ``None`` (unknown) or any difference from the
+    inventory refuses with ``INVENTORY_INCOMPLETE``. An import scan is never
+    evidence; only a suite result produces a receipt.
+    """
+    members = {entry.package_id for entry in inventory.entries}
+    if declared_package_ids is None or set(declared_package_ids) != members:
+        raise InventoryIncomplete("inventory completeness is not established")
+    receipts: list[PackageCompatibilityReceipt] = []
+    for entry in inventory.entries:
+        with tempfile.TemporaryDirectory(prefix="major-version-") as candidate:
+            result = suite_runner(entry, transition, Path(candidate))
+        receipts.append(
+            PackageCompatibilityReceipt(
+                transition_id=transition.transition_id,
+                inventory_digest=inventory.inventory_digest,
+                package_id=entry.package_id,
+                repository_id=entry.repository_id,
+                source_commit=entry.source_commit,
+                old_pin=transition.old_pin,
+                target_pin=transition.target_pin,
+                preimage_digest=entry.preimage_digest,
+                target_artifact_digest=transition.target_artifact_digest,
+                suite=result.suite,
+                run=result.run,
+                completed_at=result.completed_at,
+                outcome=result.outcome,
+            )
+        )
+    return tuple(receipts)
