@@ -101,6 +101,7 @@
   - `scion_sdk.credentials.provider_profile` → `scion_sdk.auth.provider_profile`.
   - `scion_sdk.credentials.source` → `scion_sdk.auth.source_credentials`.
   - `scion_sdk.testing.successor_parity` → `scion_sdk.certify.successor_parity`.
+  - `scion_sdk.certify.rollout` → `scion_sdk.testing.rollout`.
   - `scion_sdk._connector_decl` → `scion_sdk.connector._decl`.
   - `scion_sdk._connector_serve` → `scion_sdk.connector._serve`.
   - `scion_sdk._connector_metadata` → `scion_sdk.connector_identity._metadata`.
