@@ -2,6 +2,8 @@
 
 Provider: scion-sdk SCION-CONNECTOR-CONTROL-R053
 Consumer: arbora ARBORA-HOST-R010
+Consumer: arbora ARBORA-HOST-R010.2
+Consumer: arbora ARBORA-HOST-R010.3
 
 Counterpart: arbora `specs/host/contracts/environment-declarations.md`.
 
@@ -14,3 +16,11 @@ The host composes the declarations of the SDK and of the connector, and owns sta
 ## Refusal codes
 
 The export refuses with the closed codes defined in `SCION-CONNECTOR-CONTROL-R053.4`. A diagnostic never carries a value.
+
+## Authoritative types
+
+[`scion_sdk/environment.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/environment.py) and [`scion_sdk/environment_census.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/scion_sdk/environment_census.py).
+
+## Test vectors
+
+[`tests/test_environment_manifest_served.py`](https://github.com/Knuckles-Team/scion-sdk/blob/main/tests/test_environment_manifest_served.py)::`test_model_rejects_duplicates_and_credential_defaults`.
