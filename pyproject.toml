@@ -578,6 +578,10 @@ public_modules = [
     "scion_sdk.adapters.sandbox_provisioner",
     "scion_sdk.mcp.sandbox_tools",
     "scion_sdk.testing.sandbox_conformance",
+    "scion_sdk.testing.desktop_conformance",
+    "scion_sdk.ports.native_desktop",
+    "scion_sdk.mcp.tool_context",
+    "scion_sdk.mcp.visual_observation",
     "scion_sdk.ontology.instance_profile",
     "scion_sdk.engine_capability",
 ]
