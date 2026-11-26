@@ -3,7 +3,7 @@
 Emits KG-derived legal actions as **proposed** filings/draft documents (LLC
 formation, EIN/SS-4 drafts, regulatory filings). ``risk_tier="high_stakes"``:
 even with ``LEGAL_ENABLE_WRITE`` set it never auto-files — proposals route to the
-approval queue and only an explicit ``approve`` (``_approved``) replays live via
+approval queue and only an explicit ``approve`` (a ``fetch_release`` result in ``_release``) replays live via
 the legal-peripherals client. Inbound (SoS/statute reads) stays in the connector;
 this is the governed write twin.
 """

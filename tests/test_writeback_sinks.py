@@ -95,7 +95,11 @@ def only_dir(root: Path) -> Path:
 
 
 def test_change_set_is_canonical_and_drops_private_ops():
-    ops = {"creations": [{"type": "CI", "name": "a"}], "_approved": True, "client": 1}
+    ops = {
+        "creations": [{"type": "CI", "name": "a"}],
+        "_release": object(),
+        "client": 1,
+    }
     change_set = build_change_set(grant(), ops)
     assert change_set.change_set_digest == change_set.canonical_digest()
     assert change_set.field_scope == [PATCH_FIELD]
