@@ -24,11 +24,11 @@ from scion_sdk.httpsupport.redaction import redact_text
 from scion_sdk.privacy._urls import _public_hostname, _split_http_url
 from scion_sdk.privacy_reference import persistence_reference
 from scion_sdk.privacy_rules import (
-    _SECRET_FIELDS,
     PATTERNS,
     STRUCTURAL_ID_FIELDS,
     field_name,
     field_redaction,
+    is_secret_field,
     runtime_deny_terms,
     usable_terms,
 )
@@ -172,7 +172,7 @@ def sanitize_tool_response(value: Any) -> Any:
     if isinstance(value, dict):
         return {
             key: "[REDACTED_SECRET]"
-            if field_name(str(key)) in _SECRET_FIELDS and item not in (None, "")
+            if is_secret_field(field_name(str(key))) and item not in (None, "")
             else sanitize_tool_response(item)
             for key, item in value.items()
         }

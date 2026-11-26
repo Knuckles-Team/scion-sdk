@@ -68,12 +68,13 @@ async def test_declared_event_feed_reaches_served_worker(tmp_path, monkeypatch):
         sink=sink,
         kinds=(),
         endpoints=lambda _: TransportEndpoint(in_process=server),
-        settings=RunnerSettings(),
+        release_keys={},
+        settings=RunnerSettings(release_lock=tmp_path / "release.lock"),
         source_adapter_policy=sdk_reference_extensions(),
     )
     config = tmp_path / "runner.yml"
     config.write_text(
-        "connectors:\n  - connector: demo\n    endpoint:\n      url: https://example.invalid/mcp\n    provision: false\n"
+        "settings:\n  release_lock: release.lock\nconnectors:\n  - connector: demo\n    endpoint:\n      url: https://example.invalid/mcp\n    provision: false\n"
     )
     monkeypatch.setattr(cli, "default_services", lambda *args, **kwargs: services)
     assert (
@@ -91,7 +92,8 @@ async def test_declared_event_feed_reaches_served_worker(tmp_path, monkeypatch):
         sink=InMemorySink(),
         kinds=(),
         endpoints=lambda _: TransportEndpoint(in_process=server),
-        settings=RunnerSettings(),
+        release_keys={},
+        settings=RunnerSettings(release_lock=tmp_path / "release.lock"),
         source_adapter_policy=CertifiedExtensions(()),
     )
     assert not await ConnectorWorker(

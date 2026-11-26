@@ -17,7 +17,10 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from typing import Any
+
+from pydantic import ValidationError
 
 from scion_sdk.connector_lifecycle import (
     LifecycleEvent,
@@ -26,15 +29,37 @@ from scion_sdk.connector_lifecycle import (
     degraded_failures_threshold,
     transition,
 )
+from scion_sdk.host.component_health import ComponentHealthState, should_alert
 from scion_sdk.ports.sink import Sink
 from scion_sdk.runner.sink_probe import probe_sink_readiness, sink_reason
 
-__all__ = ["ConnectorHealth", "HealthReport", "RunnerHealth"]
+__all__ = ["ComponentStateError", "ConnectorHealth", "HealthReport", "RunnerHealth"]
 
 _logger = logging.getLogger(__name__)
 _SCHEDULER_COMPONENT = "scheduler_loop"
 #: Default bound on a per-request sink readiness probe (see ``sink_probe.py``).
 _DEFAULT_SINK_TIMEOUT_SECONDS = 5.0
+_DISABLED_REASON = "disabled_by_operator"
+
+#: lifecycle state -> (configuration_status, health state) of the component record.
+_COMPONENT_MAP: dict[LifecycleState, tuple[str, str]] = {
+    LifecycleState.UNCONFIGURED: ("not_initialized", "not_configured"),
+    LifecycleState.CREDENTIALS_PENDING: ("initialized", "unavailable"),
+    LifecycleState.WARMING: ("initialized", "unavailable"),
+    LifecycleState.BACKOFF: ("initialized", "unavailable"),
+    LifecycleState.STOPPED: ("not_initialized", "not_configured"),
+    LifecycleState.DEGRADED: ("initialized", "degraded"),
+    LifecycleState.READY: ("initialized", "healthy"),
+}
+
+
+class ComponentStateError(ValueError):
+    """A component record cannot be built; ``code`` is closed, ``component`` is its id."""
+
+    def __init__(self, code: str, component: str) -> None:
+        self.code = code
+        self.component = component
+        super().__init__(code)
 
 
 @dataclass(frozen=True)
@@ -105,7 +130,10 @@ class RunnerHealth:
         sink_timeout_seconds: float = _DEFAULT_SINK_TIMEOUT_SECONDS,
         clock: Callable[[], float] = time.monotonic,
         degraded_failures: int | None = None,
+        wall_clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
+        self._wall_clock = wall_clock
+        self._disabled: frozenset[str] = frozenset()
         self._sink = sink
         self._sink_timeout = sink_timeout_seconds
         self._window = liveness_window_seconds
@@ -114,6 +142,7 @@ class RunnerHealth:
         self._heartbeat = clock()
         self._registry_loaded = False
         self._connectors: dict[str, ConnectorHealth] = {}
+        self._stage_reports: dict[str, dict[str, object]] = {}
         self._threshold = (
             degraded_failures_threshold()
             if degraded_failures is None
@@ -159,7 +188,9 @@ class RunnerHealth:
         with self._lock:
             self._heartbeat = self._clock()
 
-    def sync_registry(self, connectors: tuple[str, ...]) -> None:
+    def sync_registry(
+        self, connectors: tuple[str, ...], disabled: frozenset[str] = frozenset()
+    ) -> None:
         """Mark the registry loaded; start new connectors, stop removed ones.
 
         A connector unseen or ``Stopped`` gets a fresh machine and
@@ -168,6 +199,7 @@ class RunnerHealth:
         wanted = set(connectors)
         with self._lock:
             self._registry_loaded = True
+            self._disabled = frozenset(disabled)
             for name in connectors:
                 known = self._connectors.get(name)
                 if known is None or known.lifecycle_state is LifecycleState.STOPPED:
@@ -208,6 +240,16 @@ class RunnerHealth:
                 )
             self._connectors[connector] = updated
 
+    def record_stage_report(self, connector: str, report: dict[str, object]) -> None:
+        """Keep the latest stage report of ``connector``."""
+        with self._lock:
+            self._stage_reports[connector] = report
+
+    def stage_report(self, connector: str) -> dict[str, object] | None:
+        """The latest stage report of ``connector``, if any."""
+        with self._lock:
+            return self._stage_reports.get(connector)
+
     def record_cycle_success(self, connector: str) -> None:
         """Send ``cycle_ok``: reset the failure count and prove the cycle."""
         with self._lock:
@@ -232,6 +274,45 @@ class RunnerHealth:
                 failures=current.consecutive_failures + 1,
                 next_retry_seconds=next_retry_seconds,
             )
+
+    def component_states(self) -> list[tuple[ComponentHealthState, bool]]:
+        """One ``ComponentHealthState`` per registry connector with its alert flag.
+
+        A connector in the ``disabled`` set is ``disabled`` with the suppression
+        reason ``disabled_by_operator``; otherwise the state derives from
+        ``lifecycle_state``. Raises :class:`ComponentStateError`.
+        """
+        with self._lock:
+            connectors = dict(self._connectors)
+            disabled = self._disabled
+        checked = self._wall_clock()
+        records: list[tuple[ComponentHealthState, bool]] = []
+        for name, health in connectors.items():
+            if not name:
+                raise ComponentStateError("component_id_missing", name)
+            fields: dict[str, Any]
+            if name in disabled:
+                fields = {
+                    "state": "not_configured",
+                    "configuration_status": "disabled",
+                    "enabled": False,
+                    "alert_suppression_reason": _DISABLED_REASON,
+                }
+            else:
+                configuration, state = _COMPONENT_MAP[health.lifecycle_state]
+                fields = {
+                    "state": state,
+                    "configuration_status": configuration,
+                    "enabled": True,
+                }
+            try:
+                record = ComponentHealthState(
+                    component_id=name, last_check_time=checked, **fields
+                )
+            except ValidationError:
+                raise ComponentStateError("component_state_invalid", name) from None
+            records.append((record, should_alert(record)))
+        return records
 
     def liveness(self) -> HealthReport:
         """200 while the scheduler heartbeat is fresh; 503 naming it stale."""
@@ -261,10 +342,20 @@ class RunnerHealth:
             registry_loaded = self._registry_loaded
             connectors = dict(self._connectors)
         reasons = [] if registry_loaded else ["registry not loaded"]
+        try:
+            components = self.component_states()
+        except ComponentStateError as refusal:
+            return HealthReport(
+                False,
+                503,
+                {"status": refusal.code, "component": refusal.component},
+            )
         unready = sorted(
             f"{name} ({health.lifecycle_state.value})"
             for name, health in connectors.items()
-            if not health.ready and health.lifecycle_state is not LifecycleState.STOPPED
+            if not health.ready
+            and health.lifecycle_state is not LifecycleState.STOPPED
+            and name not in self._disabled
         )
         if unready:
             reasons.append(f"connectors not ready: {', '.join(unready)}")
@@ -280,5 +371,17 @@ class RunnerHealth:
             "connectors": {
                 name: health.snapshot(now=now) for name, health in connectors.items()
             },
+            "components": [
+                {
+                    "component_id": record.component_id,
+                    "state": record.state,
+                    "configuration_status": record.configuration_status,
+                    "enabled": record.enabled,
+                    "last_check_time": record.last_check_time.isoformat(),
+                    "alert_suppression_reason": record.alert_suppression_reason,
+                    "alert": alert,
+                }
+                for record, alert in components
+            ],
         }
         return HealthReport(not reasons, 200 if not reasons else 503, body)

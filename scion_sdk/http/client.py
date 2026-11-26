@@ -41,6 +41,7 @@ from scion_sdk.http.egress import (
 )
 from scion_sdk.http.egress_resolution import _check_pinned_base_host
 from scion_sdk.http.options import HttpClientOptions
+from scion_sdk.http.payments import AsyncPaymentTransport, PaymentTransport
 from scion_sdk.http.redaction import redact_origin
 from scion_sdk.http.transport import AsyncGovernedTransport, GovernedTransport
 from scion_sdk.version import __version__
@@ -329,6 +330,9 @@ def build_http_client(
         )
     proxy = options.tls.proxy_url if options.tls else None
     final_transport = airgap_type(governed, proxy)
+    if options.payment is not None:
+        payment_type = AsyncPaymentTransport if async_ else PaymentTransport
+        final_transport = payment_type(final_transport, options.payment)
     session_auth = _session_auth(options.auth)
     if session_auth is not None:
         final_transport = session_transport_type(final_transport, session_auth)

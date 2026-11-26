@@ -18,9 +18,11 @@ from scion_sdk.decide.consumers import (
     NO_WRITE,
     bounded_choice,
     propose_writeback,
+    ranked_choice,
 )
 from scion_sdk.decide.options import (
     Q32_ONE,
+    RankCandidate,
     declared_source,
     q32,
     text_param,
@@ -280,3 +282,138 @@ def test_text_param_is_never_substituted_into_query_text() -> None:
         "name": "connector",
         "value": {"type": "text", "value": "jira"},
     }
+
+
+def _ranking_runner(answer: Any = None, *, fail: BaseException | None = None) -> Any:
+    import asyncio
+
+    from scion_sdk.decide.medulla import MedullaDecisionRunner
+    from scion_sdk.decide.points import Binding, DecisionPoint, StaticBindings
+
+    class _Transport:
+        def __init__(self) -> None:
+            self.requests: list[Any] = []
+
+        async def decide(self, request: Any) -> Any:
+            self.requests.append(request)
+            if fail is not None:
+                raise fail
+            return answer
+
+        async def log(self, op: Any) -> Any:
+            return None
+
+        def run(self, call: Any) -> Any:
+            return asyncio.run(call)
+
+    transport = _Transport()
+    point = DecisionPoint("connector.path_preference", "rank")
+    runner = MedullaDecisionRunner(
+        transport=transport,  # type: ignore[arg-type]
+        tenant="t",
+        bindings=StaticBindings(
+            {"connector.path_preference": Binding(feature_schema={}, policy={})}
+        ),
+        points={point.question_id: point},
+    )
+    return runner, transport
+
+
+def _advice(*ids: str) -> dict[str, Any]:
+    scores = [{"option_id": i, "score": {"value": 100 - n}} for n, i in enumerate(ids)]
+    outcome = {"outcome": "advisory", "scores": scores}
+    return {"records": [{"record_digest": "sha256:" + "0" * 64, "outcome": outcome}]}
+
+
+CANDIDATES = [
+    RankCandidate("a", "Alpha", "first", "tool"),
+    RankCandidate("b", "Beta", "second", "tool"),
+    RankCandidate("c", "Gamma", "third", "tool"),
+]
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R006.1")
+def test_ranked_choice_returns_the_engine_order_filtered_to_candidates() -> None:
+    runner, transport = _ranking_runner(_advice("c", "zzz", "a"))
+    previous = decide.use_runner(runner)
+    try:
+        order = ranked_choice(
+            "connector.path_preference",
+            CANDIDATES,
+            lambda: ["a", "b", "c"],
+            query="find the thing",
+        )
+    finally:
+        decide.use_runner(None)
+        del previous
+    assert order == ["c", "a", "b"]
+    request = transport.requests[0]
+    assert "score" not in str(request["candidates"]).replace("scores", "")
+    texts = {t["key"] for t in request["candidates"]["options"][0]["texts"]}
+    assert texts == {"name", "description", "kind"}
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R006.1")
+def test_ranked_choice_answers_the_fallback_on_abstention_error_or_unknown_question() -> (
+    None
+):
+    abstained = {
+        "records": [
+            {"outcome": {"outcome": "abstained", "reasons": [{"reason": "low"}]}}
+        ]
+    }
+    for runner, question in (
+        (_ranking_runner(abstained)[0], "connector.path_preference"),
+        (_ranking_runner(fail=RuntimeError("down"))[0], "connector.path_preference"),
+        (_ranking_runner(_advice("c"))[0], "no.such.question"),
+    ):
+        decide.use_runner(runner)
+        try:
+            assert ranked_choice(
+                question, CANDIDATES, lambda: ["b", "a", "c"], query="q"
+            ) == ["b", "a", "c"]
+        finally:
+            decide.use_runner(None)
+    assert ranked_choice(
+        "connector.path_preference", CANDIDATES, lambda: ["c", "b", "a"], query="q"
+    ) == ["c", "b", "a"]
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R006.1")
+def test_ranked_choice_sends_no_score_rank_or_threshold() -> None:
+    runner, transport = _ranking_runner(_advice("a"))
+    decide.use_runner(runner)
+    try:
+        ranked_choice(
+            "connector.path_preference",
+            CANDIDATES,
+            lambda: ["a", "b", "c"],
+            query="q",
+            connector="demo",
+        )
+    finally:
+        decide.use_runner(None)
+    request = transport.requests[0]
+    for option in request["candidates"]["options"]:
+        assert option["numbers"] == []
+    assert {p["name"] for p in request["params"]} == {"query", "connector"}
+
+
+@pytest.mark.spec("SCION-CONNECTOR-CONTROL-R006")
+def test_ranking_is_observational_and_never_authorizes(eg: FakeRunner) -> None:
+    assert ranked_choice("q", CANDIDATES, lambda: ["a", "b", "c"], query="x") == [
+        "a",
+        "b",
+        "c",
+    ]
+
+
+def test_ranking_reading_names_the_ordered_offered_ids() -> None:
+    from scion_sdk.decide import Ranking, choose_many
+    from scion_sdk.decide.outcome import read_ranking
+
+    reading = read_ranking(_advice("b", "x", "a"), frozenset({"a", "b"}))
+    assert reading.option_id == "b\na"
+    assert choose_many("q", [Option("a")], lambda: ["a"]) == Ranking(
+        ("a",), False, "no_runner"
+    )

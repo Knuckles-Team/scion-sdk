@@ -7,17 +7,28 @@ resources trigger which presets. Credentials are references only
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    ValidationInfo,
+    field_validator,
     model_validator,
 )
 
 from scion_sdk.auth.oidc import ClientCredentialsConfig
 from scion_sdk.credentials.references import parse_secret_reference
+from scion_sdk.runner.stages import StageDependency, StageLimits
 
-__all__ = ["ConnectorDescriptor", "EndpointSpec", "RunnerConfig", "RunnerSettings"]
+__all__ = [
+    "ConnectorDescriptor",
+    "EndpointSpec",
+    "RunnerConfig",
+    "RunnerSettings",
+    "StageDeclaration",
+]
 
 _CONNECTOR_NAME = r"^[a-z0-9][a-z0-9._-]{0,127}$"
 
@@ -59,6 +70,15 @@ class EndpointSpec(_Strict):
         return self
 
 
+class StageDeclaration(_Strict):
+    """One concurrent stage: a preset's stream and the receipts it waits for."""
+
+    stage_id: str = Field(min_length=1)
+    preset: str = Field(min_length=1)
+    stream: str = Field(min_length=1)
+    dependencies: tuple[StageDependency, ...] = ()
+
+
 class ConnectorDescriptor(_Strict):
     """One connector the runner serves.
 
@@ -77,6 +97,20 @@ class ConnectorDescriptor(_Strict):
     mapping_reference: str = ""
     empty_authoritative_approval: str = ""
     max_pages_per_cycle: int = Field(default=1_000, ge=1, le=1_000_000)
+    tenant: str = ""
+    stages: tuple[StageDeclaration, ...] = ()
+    stage_limits: StageLimits | None = None
+
+    @model_validator(mode="after")
+    def _check_stages(self) -> ConnectorDescriptor:
+        if self.stages and (self.stage_limits is None or not self.tenant):
+            raise ValueError("STAGE_LIMITS_ABSENT: stages need stage_limits and tenant")
+        unknown = {s.preset for s in self.stages} - set(
+            self.presets or {s.preset for s in self.stages}
+        )
+        if unknown:
+            raise ValueError("a stage names a preset that is not selected")
+        return self
 
     @property
     def resolved_mapping_reference(self) -> str:
@@ -91,12 +125,21 @@ class RunnerSettings(_Strict):
     backoff_initial_seconds: float = Field(default=5.0, gt=0)
     backoff_max_seconds: float = Field(default=600.0, gt=0)
     registry_refresh_seconds: float = Field(default=60.0, gt=0)
+    #: Operator lock of pinned release signer keys. Fixed safety: required, no
+    #: default and no environment variable disables release verification.
+    release_lock: Path
+
+    @field_validator("release_lock")
+    @classmethod
+    def _anchor_lock(cls, value: Path, info: ValidationInfo) -> Path:
+        base = (info.context or {}).get("base_dir")
+        return base / value if base is not None and not value.is_absolute() else value
 
 
 class RunnerConfig(_Strict):
     """The ``connector-sync`` configuration document."""
 
-    settings: RunnerSettings = Field(default_factory=RunnerSettings)
+    settings: RunnerSettings
     connectors: tuple[ConnectorDescriptor, ...] = ()
 
     @model_validator(mode="after")

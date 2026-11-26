@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from scion_sdk.decide.runner import DecisionRunner
@@ -25,6 +26,9 @@ class RunnerServices:
     kinds: tuple[ArtifactKind, ...]
     endpoints: EndpointFactory
     settings: RunnerSettings
+    #: Pinned release signer public keys from the operator lock; verification
+    #: is mandatory and fails closed (SCION-CONNECTOR-CONTROL-R650.1.4).
+    release_keys: Mapping[str, bytes]
     #: Liveness/readiness state; ``None`` only in tests that build services
     #: directly without exercising the health surface.
     health: RunnerHealth | None = None
