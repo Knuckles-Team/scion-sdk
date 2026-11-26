@@ -290,6 +290,8 @@ public_modules = [
     "scion_sdk.adapters.paper_quota",
     "scion_sdk.adapters.paper_search",
     "scion_sdk.adapters.paper_tool",
+    "scion_sdk.adapters.paper_maintenance",
+    "scion_sdk.adapters.media_tags",
     "scion_sdk.adapters.workspace_reader",
     "scion_sdk.raw_source",
     "scion_sdk.testing.raw_source",
