@@ -45,6 +45,7 @@ from scion_sdk.mcp._tool_surface_sources import (
     _package_root,
     _register_declared_sources,
 )
+from scion_sdk.mcp.actor_binding import ACTOR_REQUIRED_META
 from scion_sdk.mcp.method_tools import (
     GATED_TAG,
     GRANULAR_TAG,
@@ -176,6 +177,7 @@ def register_tool_surface(
     result_coercer: Callable[[Any], Any] | None = None,
     package_root: Path | None = None,
     instances: ConnectorInstances | None = None,
+    actor_required: frozenset[str] = frozenset(),
 ) -> list[str]:
     """Register one tool per API operation, plus the connector's other tools.
 
@@ -257,7 +259,21 @@ def register_tool_surface(
     )
     if verbose_register is not None:
         _run_verbose_register(mcp, verbose_register)
+    _mark_actor_required(mcp, actor_required)
     return tags
+
+
+def _mark_actor_required(mcp: Any, names: frozenset[str]) -> None:
+    """Set the actor-required ``_meta`` key on each named tool (R902.1)."""
+    if not names:
+        return
+    tools = registered_tools(mcp)
+    unknown = sorted(names - set(tools))
+    if unknown:
+        raise ValueError(f"actor_required names unregistered tools: {unknown}")
+    for name in names:
+        tool = tools[name]
+        tool.meta = {**(tool.meta or {}), ACTOR_REQUIRED_META: True}
 
 
 def register_action_tools(

@@ -8,17 +8,20 @@ from __future__ import annotations
 
 import re
 
+from rdflib import Graph
+
 from scion_sdk.artifacts.annotations import _annotations_from_mcp
 from scion_sdk.artifacts.common import json_object, mime_type, require_kind
 from scion_sdk.contracts import CapturedArtifact, ServerIdentity
 from scion_sdk.manifest.resource_descriptor import RESOURCES_URI
+from scion_sdk.manifest.seed_graph import MAX_SEED_BYTES, MAX_SEED_TRIPLES
 from scion_sdk.ports.errors import MalformedArtifactError
 from scion_sdk.ports.session import McpSession
 
 __all__ = ["ResourceArtifactKind"]
 
 _RESOURCE_SCHEMES = frozenset(
-    {"ontology", "shapes", "model-profile", "a2a-card", "data"}
+    {"ontology", "shapes", "model-profile", "a2a-card", "data", "seed"}
 )
 _MCP_APP_URI = re.compile(r"^ui://[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$")
 _MCP_APP_MEDIA_TYPES = frozenset({"text/html", "text/html;profile=mcp-app"})
@@ -29,7 +32,22 @@ def _scheme(uri: str) -> str:
     return scheme if separator else ""
 
 
+def _validate_seed(entry: CapturedArtifact) -> None:
+    """A seed body is Turtle within 8 MiB and 50,000 triples (R907)."""
+    body = str(entry.body)
+    if len(body.encode()) > MAX_SEED_BYTES:
+        raise MalformedArtifactError(f"{entry.uri}: SEED_TOO_LARGE")
+    try:
+        triples = len(Graph().parse(data=body, format="turtle"))
+    except Exception:
+        raise MalformedArtifactError(f"{entry.uri} seed is not Turtle") from None
+    if triples > MAX_SEED_TRIPLES:
+        raise MalformedArtifactError(f"{entry.uri}: SEED_TOO_LARGE")
+
+
 def _validate_body(entry: CapturedArtifact, scheme: str) -> None:
+    if scheme == "seed":
+        _validate_seed(entry)
     if entry.uri == RESOURCES_URI:
         json_object(entry)
     if scheme in {"a2a-card", "model-profile", "data"}:

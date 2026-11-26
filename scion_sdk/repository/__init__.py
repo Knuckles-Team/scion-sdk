@@ -1,7 +1,7 @@
 """Authenticated repository snapshot transport into medulla."""
 
 from scion_sdk.repository.errors import RepositoryTransportError
-from scion_sdk.repository.indexing import RepositoryBatchReceipt
+from scion_sdk.repository.indexing import RepositoryBatchReceipt, RepositoryIndexState
 from scion_sdk.repository.local_git import LocalGitRepositoryProvider
 from scion_sdk.repository.manifest import (
     RepositoryManifestFile,
@@ -38,6 +38,7 @@ __all__ = [
     "RepositoryBatchReceipt",
     "RepositoryFile",
     "RepositoryIndexReceipt",
+    "RepositoryIndexState",
     "RepositoryManifestFile",
     "RepositoryPage",
     "RepositoryRef",
