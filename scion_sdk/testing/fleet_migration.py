@@ -16,11 +16,15 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
 import os
 import subprocess  # nosec B404
-from collections.abc import Iterable
-from dataclasses import dataclass
+import tempfile
+from collections.abc import Callable, Collection, Iterable, Mapping
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Literal
 
 from scion_sdk.testing._fleet_scan import _imports_meristem
 from scion_sdk.testing._fleet_walk import (
@@ -28,21 +32,39 @@ from scion_sdk.testing._fleet_walk import (
     PackageScanResult,
     _scan_python_sources,
 )
+from scion_sdk.testing.major_version import (
+    MajorVersionTransition,
+    PackageCompatibilityReceipt,
+    PackageInventoryEntry,
+    PackageInventorySnapshot,
+)
 
 __all__ = [
     "BATCH_LETTERS",
     "CensusReceipt",
+    "InventoryIncomplete",
     "JsonTagLoaderEntry",
+    "LoaderClassification",
     "LoaderInventoryItem",
     "OperationMapping",
     "PackageScanResult",
+    "ParityCall",
+    "ParityProblem",
+    "ParityReceipt",
+    "ServerUnderParity",
+    "SuiteResult",
     "batch_census",
     "batch_roots",
+    "classify_json_tag_loaders",
+    "evaluate_major_version_compatibility",
     "fleet_census_receipt",
+    "loader_inventory_digest",
     "loader_parity_problems",
+    "run_loader_parity",
     "scan_for_meristem_imports",
     "scan_json_tag_loaders",
     "scan_many_packages",
+    "sorted_loader_entries",
 ]
 
 #: SCION-CONNECTOR-CONTROL-R009-R013: the five alphabetical migration batches.
@@ -54,7 +76,7 @@ BATCH_LETTERS: dict[str, str] = {
     "R013": "tuvwxyz",
 }
 
-_REGISTRATION_KINDS = frozenset({"operation", "callback", "action_dispatch"})
+_REGISTRATION_KINDS = frozenset({"operation", "explicit_callback", "action_dispatch"})
 
 
 def scan_for_meristem_imports(
@@ -138,6 +160,8 @@ class OperationMapping:
     target_tags: frozenset[str] = frozenset()
     source_authorization: str = ""
     target_authorization: str = ""
+    registration_kind: str = "operation"
+    refusal_cases: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -151,6 +175,8 @@ class JsonTagLoaderEntry:
     json_digest: str
     registration: str
     mappings: tuple[OperationMapping, ...] = ()
+    public_repository: str = ""
+    python_target: str = ""
 
 
 def loader_parity_problems(
@@ -180,6 +206,7 @@ def _entry_problems(entry: JsonTagLoaderEntry) -> list[str]:
         problems.append(f"{where}: incomplete entry")
     if not entry.mappings:
         problems.append(f"{where}: no operation mapping")
+    problems.extend(_shape_problems(where, entry))
     for m in entry.mappings:
         problems.extend(
             _mapping_problems(
@@ -187,6 +214,49 @@ def _entry_problems(entry: JsonTagLoaderEntry) -> list[str]:
             )
         )
     return problems
+
+
+def _shape_problems(where: str, entry: JsonTagLoaderEntry) -> list[str]:
+    """R054.1: repository-relative paths, unique ids and complete source/target pairs."""
+    problems = [
+        f"{where}: path is not repository-relative: {path}"
+        for path in (entry.loader_path, entry.json_path)
+        if path and (Path(path).is_absolute() or ".." in Path(path).parts)
+    ]
+    sources = [m.source_operation_id for m in entry.mappings]
+    targets = [m.target_operation_id for m in entry.mappings]
+    for label, ids in (("source", sources), ("target", targets)):
+        problems.extend(
+            f"{where}: duplicate {label} operation {name}"
+            for name in sorted({n for n in ids if ids.count(n) > 1})
+        )
+    problems.extend(
+        f"{where}: incomplete pair {m.source_operation_id!r}->{m.target_operation_id!r}"
+        for m in entry.mappings
+        if not (m.source_operation_id and m.target_operation_id)
+    )
+    problems.extend(
+        f"{where}: unknown registration kind {m.registration_kind!r}"
+        for m in entry.mappings
+        if m.registration_kind not in _REGISTRATION_KINDS
+    )
+    return problems
+
+
+def sorted_loader_entries(
+    entries: Iterable[JsonTagLoaderEntry],
+) -> tuple[JsonTagLoaderEntry, ...]:
+    """Entries ordered by package, loader path and JSON path."""
+    return tuple(sorted(entries, key=lambda e: (e.package, e.loader_path, e.json_path)))
+
+
+def loader_inventory_digest(entries: Iterable[JsonTagLoaderEntry]) -> str:
+    """SHA-256 of the canonical, sorted inventory; equal inventories digest equally."""
+    payload = [asdict(e) for e in sorted_loader_entries(entries)]
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), default=sorted
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 _MAPPING_FACETS = (
@@ -326,3 +396,370 @@ def scan_json_tag_loaders(
                     )
                 )
     return tuple(items)
+
+
+class InventoryIncomplete(ValueError):
+    """R007.2 ``INVENTORY_INCOMPLETE``: the inventory is not proven complete."""
+
+    code = "INVENTORY_INCOMPLETE"
+
+
+@dataclass(frozen=True)
+class SuiteResult:
+    """A package's own test-suite result against the target artifact."""
+
+    suite: str
+    run: str
+    completed_at: datetime
+    outcome: Literal["passed", "failed", "incomplete", "cancelled"]
+
+
+#: Runs one package's own suite inside an isolated candidate directory.
+SuiteRunner = Callable[
+    [PackageInventoryEntry, MajorVersionTransition, Path], SuiteResult
+]
+
+
+def evaluate_major_version_compatibility(
+    inventory: PackageInventorySnapshot,
+    transition: MajorVersionTransition,
+    *,
+    declared_package_ids: Collection[str] | None,
+    suite_runner: SuiteRunner,
+) -> tuple[PackageCompatibilityReceipt, ...]:
+    """One receipt per inventoried package, from that package's own suite result.
+
+    Each package runs in its own temporary directory, removed afterwards; tracked
+    manifests and lockfiles are never touched. ``declared_package_ids`` is the
+    independent census of the fleet: ``None`` (unknown) or any difference from the
+    inventory refuses with ``INVENTORY_INCOMPLETE``. An import scan is never
+    evidence; only a suite result produces a receipt.
+    """
+    members = {entry.package_id for entry in inventory.entries}
+    if declared_package_ids is None or set(declared_package_ids) != members:
+        raise InventoryIncomplete("inventory completeness is not established")
+    receipts: list[PackageCompatibilityReceipt] = []
+    for entry in inventory.entries:
+        with tempfile.TemporaryDirectory(prefix="major-version-") as candidate:
+            result = suite_runner(entry, transition, Path(candidate))
+        receipts.append(
+            PackageCompatibilityReceipt(
+                transition_id=transition.transition_id,
+                inventory_digest=inventory.inventory_digest,
+                package_id=entry.package_id,
+                repository_id=entry.repository_id,
+                source_commit=entry.source_commit,
+                old_pin=transition.old_pin,
+                target_pin=transition.target_pin,
+                preimage_digest=entry.preimage_digest,
+                target_artifact_digest=transition.target_artifact_digest,
+                suite=result.suite,
+                run=result.run,
+                completed_at=result.completed_at,
+                outcome=result.outcome,
+            )
+        )
+    return tuple(receipts)
+
+
+@dataclass(frozen=True)
+class LoaderClassification:
+    """R054.2: one JSON-reading registration path and whether it is migrated."""
+
+    package: str
+    loader_path: str
+    json_path: str
+    status: Literal["migrated", "unresolved"]
+    reason: str
+
+
+def _json_reading_sources(
+    root: Path, exclude_dirs: frozenset[str]
+) -> Iterable[tuple[Path, ast.AST | None]]:
+    for source in sorted(_python_files(root, exclude_dirs)):
+        try:
+            tree = ast.parse(source.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            yield source, None
+            continue
+        if _reads_json(tree):
+            yield source, tree
+
+
+def classify_json_tag_loaders(
+    package_roots: Iterable[Path],
+    entries: Iterable[JsonTagLoaderEntry],
+    *,
+    bindings: Collection[tuple[str, str]] = (),
+    exclude_dirs: frozenset[str] = _DEFAULT_EXCLUDED_DIRS,
+) -> tuple[LoaderClassification, ...]:
+    """Classify every JSON-reading Python path as ``migrated`` or ``unresolved``.
+
+    A path is migrated when an inventory entry covers it and that entry passes
+    parity. A dynamic JSON path or an unreadable file is unresolved until an
+    explicit ``(package, loader_path)`` binding explains it.
+    """
+    entries = list(entries)
+    by_loader = {(e.package, e.loader_path): e for e in entries}
+    explained = set(bindings)
+    found: list[LoaderClassification] = []
+    for root in package_roots:
+        for source, tree in _json_reading_sources(root, exclude_dirs):
+            rel = str(source.relative_to(root))
+            key = (root.name, rel)
+            literals = [] if tree is None else sorted(set(_json_literals(tree)))
+            json_path = literals[0] if literals else ""
+            if key in explained:
+                status, reason = "migrated", "explained by binding"
+            elif tree is None:
+                status, reason = "unresolved", "unreadable source"
+            elif not literals:
+                status, reason = "unresolved", "dynamic JSON path"
+            elif key not in by_loader:
+                status, reason = "unresolved", "no inventory entry"
+            else:
+                problems = _entry_problems(by_loader[key])
+                status = "unresolved" if problems else "migrated"
+                reason = problems[0] if problems else "parity holds"
+            found.append(
+                LoaderClassification(root.name, rel, json_path, status, reason)  # type: ignore[arg-type]
+            )
+    return tuple(found)
+
+
+#: R054.4 refusal codes of the served parity run.
+PARITY_CODES = frozenset(
+    {
+        "unknown_loader",
+        "unresolved_binding",
+        "malformed_inventory",
+        "operation_mismatch",
+        "schema_difference",
+        "missing_baseline",
+        "backend_calls",
+        "result_difference",
+        "refusal_difference",
+    }
+)
+
+
+@dataclass(frozen=True)
+class ParityProblem:
+    """One reason parity is not established, with a stable code."""
+
+    code: str
+    subject: str
+
+
+@dataclass(frozen=True)
+class ServerUnderParity:
+    """A started server and its backend call counter."""
+
+    server: Any
+    backend_calls: Callable[[], int]
+
+
+@dataclass(frozen=True)
+class ParityCall:
+    """One served ``tools/call`` driven against both servers."""
+
+    source_operation_id: str
+    arguments: Mapping[str, Any]
+    permitted: bool
+
+
+@dataclass(frozen=True)
+class ParityReceipt:
+    """Canonical, reference-only record of one parity run."""
+
+    inventory_digest: str
+    sdk_revision: str
+    protocol_version: str
+    fixture_seed: str
+    comparisons: tuple[tuple[str, str, str], ...]
+    backend_counts: tuple[tuple[str, int, int], ...]
+    problems: tuple[ParityProblem, ...]
+    unresolved: tuple[str, ...]
+
+    def canonical_json(self) -> str:
+        return json.dumps(asdict(self), sort_keys=True, separators=(",", ":"))
+
+    def digest(self) -> str:
+        return hashlib.sha256(self.canonical_json().encode("utf-8")).hexdigest()
+
+
+def _tool_tags(tool: Any) -> frozenset[str]:
+    return frozenset(((tool.meta or {}).get("fastmcp") or {}).get("tags") or ())
+
+
+def _outcome(result: Any) -> tuple[bool, Any]:
+    if result.is_error:
+        text = "".join(getattr(part, "text", "") for part in result.content)
+        return True, text
+    return False, result.structured_content
+
+
+async def run_loader_parity(
+    entries: Iterable[JsonTagLoaderEntry],
+    source: ServerUnderParity | None,
+    replacement: ServerUnderParity,
+    calls: Iterable[ParityCall],
+    *,
+    sdk_revision: str,
+    protocol_version: str,
+    fixture_seed: str,
+    inventory: Iterable[tuple[str, str]] = (),
+    classifications: Iterable[LoaderClassification] = (),
+) -> ParityReceipt:
+    """Drive ``tools/list`` and ``tools/call`` on both servers and compare them.
+
+    Missing old-server evidence blocks parity (``missing_baseline``); it never
+    becomes an empty baseline. Permitted calls must reach each backend exactly
+    once and refused calls zero times, with the same typed refusal on both.
+    """
+    from fastmcp import Client
+
+    entries = sorted_loader_entries(entries)
+    digest = loader_inventory_digest(entries)
+    problems: list[ParityProblem] = []
+    unresolved = tuple(
+        f"{p[0]}:{p[1]}"
+        for p in sorted(set(inventory) - {(e.package, e.loader_path) for e in entries})
+    )
+    problems.extend(ParityProblem("unknown_loader", item) for item in unresolved)
+    problems.extend(
+        ParityProblem("unresolved_binding", f"{c.package}:{c.loader_path}")
+        for c in classifications
+        if c.status == "unresolved"
+    )
+    for entry in entries:
+        shape = _shape_problems(f"{entry.package}:{entry.loader_path}", entry)
+        problems.extend(ParityProblem("malformed_inventory", text) for text in shape)
+    if source is None:
+        problems.append(ParityProblem("missing_baseline", "source server"))
+        return ParityReceipt(
+            digest,
+            sdk_revision,
+            protocol_version,
+            fixture_seed,
+            (),
+            (),
+            tuple(problems),
+            unresolved,
+        )
+    mappings = {m.source_operation_id: m for e in entries for m in e.mappings}
+    comparisons: list[tuple[str, str, str]] = []
+    async with Client(source.server) as old, Client(replacement.server) as new:
+        old_tools = {t.name: t for t in await old.list_tools()}
+        new_tools = {t.name: t for t in await new.list_tools()}
+        for source_id, mapping in sorted(mappings.items()):
+            old_tool = old_tools.get(source_id)
+            new_tool = new_tools.get(mapping.target_operation_id)
+            if old_tool is None or new_tool is None:
+                problems.append(ParityProblem("operation_mismatch", source_id))
+                continue
+            facets = {
+                "input_schema": (old_tool.inputSchema, new_tool.inputSchema),
+                "output_schema": (old_tool.outputSchema, new_tool.outputSchema),
+                "tags": (
+                    _tool_tags(old_tool) - {"granular"},
+                    _tool_tags(new_tool) - {"granular"},
+                ),
+            }
+            for facet, (before, after) in facets.items():
+                same = before == after
+                comparisons.append((source_id, facet, "equal" if same else "different"))
+                if not same:
+                    problems.append(
+                        ParityProblem("schema_difference", f"{source_id}:{facet}")
+                    )
+        counts: list[tuple[str, int, int]] = []
+        for call in calls:
+            bound = mappings.get(call.source_operation_id)
+            if bound is None:
+                problems.append(
+                    ParityProblem("unknown_loader", call.source_operation_id)
+                )
+                continue
+            before_old, before_new = source.backend_calls(), replacement.backend_calls()
+            old_result = await old.call_tool(
+                call.source_operation_id, dict(call.arguments), raise_on_error=False
+            )
+            new_result = await new.call_tool(
+                bound.target_operation_id, dict(call.arguments), raise_on_error=False
+            )
+            used_old = source.backend_calls() - before_old
+            used_new = replacement.backend_calls() - before_new
+            counts.append((call.source_operation_id, used_old, used_new))
+            expected = 1 if call.permitted else 0
+            if (used_old, used_new) != (expected, expected):
+                problems.append(
+                    ParityProblem("backend_calls", call.source_operation_id)
+                )
+            old_out, new_out = _outcome(old_result), _outcome(new_result)
+            if old_out[0] != new_out[0] or old_out[0] == call.permitted:
+                problems.append(
+                    ParityProblem("refusal_difference", call.source_operation_id)
+                )
+            elif old_out != new_out:
+                problems.append(
+                    ParityProblem("result_difference", call.source_operation_id)
+                )
+            comparisons.append(
+                (
+                    call.source_operation_id,
+                    "call",
+                    "equal" if old_out == new_out else "different",
+                )
+            )
+    return ParityReceipt(
+        digest,
+        sdk_revision,
+        protocol_version,
+        fixture_seed,
+        tuple(comparisons),
+        tuple(counts),
+        tuple(problems),
+        unresolved,
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """``python -m scion_sdk.testing.fleet_migration``: list every unresolved loader.
+
+    ``--root`` is a connector package root; ``--entries`` is a JSON list of
+    inventory entries. Exit 0 only when every JSON-reading path is migrated.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="fleet_migration")
+    parser.add_argument("--root", type=Path, action="append", required=True)
+    parser.add_argument("--entries", type=Path)
+    args = parser.parse_args(argv)
+    entries: list[JsonTagLoaderEntry] = []
+    if args.entries:
+        for raw in json.loads(args.entries.read_text(encoding="utf-8")):
+            maps = tuple(
+                OperationMapping(
+                    **{
+                        **m,
+                        "source_tags": frozenset(m.get("source_tags", ())),
+                        "target_tags": frozenset(m.get("target_tags", ())),
+                        "refusal_cases": tuple(m.get("refusal_cases", ())),
+                    }
+                )
+                for m in raw.pop("mappings", ())
+            )
+            entries.append(JsonTagLoaderEntry(**raw, mappings=maps))
+    bad = [
+        c
+        for c in classify_json_tag_loaders(args.root, entries)
+        if c.status == "unresolved"
+    ]
+    for c in bad:
+        print(f"unresolved {c.package}:{c.loader_path}: {c.reason}")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
