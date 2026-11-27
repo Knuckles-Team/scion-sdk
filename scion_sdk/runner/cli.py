@@ -20,6 +20,7 @@ from scion_sdk.discovery import (
     ExtensionActivationError,
     ExtensionDiscoveryError,
 )
+from scion_sdk.ports.release_pins import ReleasePins
 from scion_sdk.runner.composition import default_services
 from scion_sdk.runner.errors import RunnerConfigurationError
 from scion_sdk.runner.health_server import HealthServer, parse_health_address
@@ -121,6 +122,7 @@ def _start(
     sink_client: object | None = None,
     pack_import_authority: PackImportAuthorityResolver | None = None,
     decide_tenant: str | None = None,
+    release_pins: ReleasePins | None = None,
 ) -> tuple[RunnerServices, HealthServer | None]:
     """Build services and, when configured, the health listener.
 
@@ -137,6 +139,7 @@ def _start(
         sink_client=sink_client,
         pack_import_authority=pack_import_authority,
         decide_tenant=_resolve_decide_tenant(decide_tenant),
+        release_pins=release_pins,
     )
     return services, _health_server(args, services)
 
@@ -156,6 +159,7 @@ def main(
     sink_client: object | None = None,
     pack_import_authority: PackImportAuthorityResolver | None = None,
     decide_tenant: str | None = None,
+    release_pins: ReleasePins | None = None,
 ) -> int:
     """Run the connector-sync runner; returns the process exit code.
 
@@ -177,6 +181,7 @@ def main(
             sink_client=sink_client,
             pack_import_authority=pack_import_authority,
             decide_tenant=decide_tenant,
+            release_pins=release_pins,
         )
     except _STARTUP_ERRORS as exc:
         _logger.error("connector-sync cannot start: %s", exc)

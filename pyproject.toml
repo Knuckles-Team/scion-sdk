@@ -123,7 +123,7 @@ Documentation = "https://knuckles-team.github.io/scion-sdk/"
 [project.scripts]
 connector-sync = "scion_sdk.runner.cli:main"
 connector-certify = "scion_sdk.certify.cli:main"
-connector-release-sign = "scion_sdk.certify.release_cli:main"
+connector-release-digest = "scion_sdk.certify.release_cli:main"
 connector-rollout = "scion_sdk.testing.rollout:main"
 ingest-worker = "scion_sdk.runner.ingest_worker_cli:main"
 

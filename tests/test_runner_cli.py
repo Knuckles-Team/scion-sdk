@@ -14,7 +14,6 @@ from medulla.generated.connector_pack import (
     AgentLibraryMutationContext,
     McpCatalogSnapshotBinding,
 )
-from release_support import write_lock
 
 from scion_sdk import decide
 from scion_sdk.decide.medulla import MedullaDecisionRunner
@@ -35,6 +34,7 @@ from scion_sdk.runner.logs import (
     configure_logging,
     structured,
 )
+from scion_sdk.runner.release_pins import MedullaReleasePins
 from scion_sdk.runner.services import RunnerServices
 from scion_sdk.sinks.medulla import MedullaSink
 from scion_sdk.transports.mcp import McpTransport
@@ -69,11 +69,6 @@ def test_structured_json_logs() -> None:
     assert text is not None and not isinstance(text, JsonLogFormatter)
 
 
-@pytest.fixture(autouse=True)
-def _release_lock(tmp_path: Path) -> None:
-    write_lock(tmp_path / "release.lock")
-
-
 def test_parser_and_state_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     args = build_parser().parse_args(["--config", "runner.yml"])
     assert (args.sink, args.once, args.log_format, args.state_dir) == (
@@ -92,13 +87,14 @@ def test_parser_and_state_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
 def test_default_services_load_certified_extensions(tmp_path: Path) -> None:
     verified_client = object()
     built = default_services(
-        RunnerSettings(release_lock=write_lock(tmp_path / "release.lock")),
+        RunnerSettings(),
         state_dir=tmp_path,
         sink_name="medulla",
         sink_client=verified_client,
         pack_import_authority=_pack_import_authority,
     )
     assert isinstance(built, RunnerServices)
+    assert isinstance(built.release_pins, MedullaReleasePins)
     assert isinstance(built.transport, McpTransport)
     assert isinstance(built.sink, MedullaSink)
     assert built.sink._client is verified_client
@@ -115,7 +111,7 @@ def test_default_services_load_certified_extensions(tmp_path: Path) -> None:
     )
     with pytest.raises(ExtensionActivationError):
         default_services(
-            RunnerSettings(release_lock=write_lock(tmp_path / "release.lock")),
+            RunnerSettings(),
             state_dir=tmp_path,
             sink_name="medulla",
             sink_client=verified_client,
@@ -124,7 +120,7 @@ def test_default_services_load_certified_extensions(tmp_path: Path) -> None:
         )
     with pytest.raises(ExtensionDiscoveryError, match="pack import authority"):
         default_services(
-            RunnerSettings(release_lock=write_lock(tmp_path / "release.lock")),
+            RunnerSettings(),
             state_dir=tmp_path,
             sink_name="medulla",
         )
@@ -142,7 +138,7 @@ def test_default_services_installs_no_decide_runner_without_a_tenant(
     """A verified client with no tenant: never invented, logged once."""
     with caplog.at_level(logging.WARNING):
         built = default_services(
-            RunnerSettings(release_lock=write_lock(tmp_path / "release.lock")),
+            RunnerSettings(),
             state_dir=tmp_path,
             sink_name="medulla",
             sink_client=object(),
@@ -174,7 +170,7 @@ def test_default_services_installs_the_eg_backed_decide_runner_with_a_tenant(
 ) -> None:
     verified_client = object()
     built = default_services(
-        RunnerSettings(release_lock=write_lock(tmp_path / "release.lock")),
+        RunnerSettings(),
         state_dir=tmp_path,
         sink_name="medulla",
         sink_client=verified_client,
@@ -229,7 +225,7 @@ def test_cli_main_installs_the_decide_runner_with_a_verified_client(
 ) -> None:
     """The real CLI path (``main()``), not just ``default_services`` directly."""
     empty = tmp_path / "empty.yml"
-    empty.write_text("settings:\n  release_lock: release.lock\nconnectors: []\n")
+    empty.write_text("settings: {}\nconnectors: []\n")
     state = ["--state-dir", str(tmp_path / "state")]
     verified_client = object()
     exit_code = main(
@@ -251,7 +247,7 @@ def test_cli_main_env_tenant_overrides_the_injected_one(
 ) -> None:
     monkeypatch.setenv("RUNNER_DECIDE_TENANT", "env-tenant")
     empty = tmp_path / "empty.yml"
-    empty.write_text("settings:\n  release_lock: release.lock\nconnectors: []\n")
+    empty.write_text("settings: {}\nconnectors: []\n")
     state = ["--state-dir", str(tmp_path / "state")]
     exit_code = main(
         ["--config", str(empty), "--once", *state],
@@ -269,7 +265,7 @@ def test_cli_exits_2_when_it_cannot_start(tmp_path: Path) -> None:
     (tmp_path / "broken.yml").write_text("connectors: [unclosed")
     assert main(["--config", str(tmp_path / "broken.yml"), "--log-format", "text"]) == 2
     empty = tmp_path / "empty.yml"
-    empty.write_text("settings:\n  release_lock: release.lock\nconnectors: []\n")
+    empty.write_text("settings: {}\nconnectors: []\n")
     state = ["--state-dir", str(tmp_path / "state")]
     assert main(["--config", str(empty), "--once", "--sink", "missing", *state]) == 2
     assert main(["--config", str(empty), "--once", *state]) == 2
@@ -277,7 +273,7 @@ def test_cli_exits_2_when_it_cannot_start(tmp_path: Path) -> None:
 
 def test_cli_skips_the_health_server_for_once(tmp_path: Path) -> None:
     empty = tmp_path / "empty.yml"
-    empty.write_text("settings:\n  release_lock: release.lock\nconnectors: []\n")
+    empty.write_text("settings: {}\nconnectors: []\n")
     state = ["--state-dir", str(tmp_path / "state")]
     # A non-loopback address with no --health-allow-non-loopback would refuse
     # to bind if the health server were started; --once must never start it.
@@ -291,7 +287,7 @@ def test_cli_exits_2_for_an_unconfigured_non_loopback_health_addr(
     tmp_path: Path,
 ) -> None:
     empty = tmp_path / "empty.yml"
-    empty.write_text("settings:\n  release_lock: release.lock\nconnectors: []\n")
+    empty.write_text("settings: {}\nconnectors: []\n")
     state = ["--state-dir", str(tmp_path / "state")]
     assert main(["--config", str(empty), "--health-addr", "0.0.0.0:0", *state]) == 2
 
@@ -305,11 +301,7 @@ def test_cli_once_over_stdio_refuses_to_mint_an_engine_client(
         "endpoint": {"command": sys.executable, "args": [str(server)]},
     }
     config = tmp_path / "runner.yml"
-    config.write_text(
-        yaml.safe_dump(
-            {"settings": {"release_lock": "release.lock"}, "connectors": [connector]}
-        )
-    )
+    config.write_text(yaml.safe_dump({"settings": {}, "connectors": [connector]}))
     state = tmp_path / "state"
     assert main(["--config", str(config), "--once", "--state-dir", str(state)]) == 2
     lines = [

@@ -24,6 +24,7 @@ less than the package declares is how provisioning drifts.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +36,11 @@ from fastmcp.server.providers.skills import SkillsDirectoryProvider
 from pydantic import AnyUrl
 
 from scion_sdk.manifest.prompt_source import prompt_document
+from scion_sdk.manifest.release_digest import (
+    ReleaseDigestError,
+    ReleaseEvidence,
+    installed_release_evidence,
+)
 from scion_sdk.manifest.seed_graph import SeedGraphDeclaration, SeedTriple
 from scion_sdk.mcp._content_descriptors import resource_descriptor_source
 from scion_sdk.mcp._content_prompts import (
@@ -63,7 +69,7 @@ __all__ = [
     "seed_declaration",
 ]
 
-#: The signed release evidence resource (SCION-CONNECTOR-CONTROL-R650.1.1).
+#: The wheel content digest resource (SCION-CONNECTOR-CONTROL-R650.1.1).
 RELEASE_URI = "connector://release"
 
 
@@ -85,11 +91,6 @@ class ConnectorContent:
     connector: str
     package_root: Path
     package_version: str
-
-    @property
-    def release_path(self) -> Path:
-        """``<package root>/release.json``, the signed release evidence."""
-        return self.package_root / "release.json"
 
     def __post_init__(self) -> None:
         if not self.connector.strip() or not self.package_version.strip():
@@ -234,38 +235,53 @@ def _content_resources(content: ConnectorContent) -> list[FileResource | TextRes
     return found
 
 
-def register_release_resource(mcp: Any, content: ConnectorContent) -> bool:
-    """Serve ``release.json`` as ``connector://release`` when the file exists.
+def register_release_resource(
+    mcp: Any,
+    content: ConnectorContent,
+    *,
+    evidence: Callable[[str], ReleaseEvidence] = installed_release_evidence,
+) -> bool:
+    """Serve the installed wheel's content digest as ``connector://release``.
 
-    Raises:
-        ContentError: the file is malformed.
+    The digest is computed from the installed distribution on every server
+    start, never read from a file shipped inside the wheel. A distribution that
+    is not installed (a source checkout) serves nothing, and the runner refuses it.
     """
-    from scion_sdk.manifest.release_signature import (
-        ReleaseSigningError,
-        read_release_evidence,
-    )
-
-    path = content.release_path
-    if not path.is_file():
-        return False
-    text = path.read_text(encoding="utf-8")
     try:
-        read_release_evidence(text)
-    except ReleaseSigningError as error:
-        raise ContentError(f"{path.name} is malformed: {error}") from None
+        report = evidence(_distribution_name(content))
+    except ReleaseDigestError:
+        return False
     mcp.add_resource(
         TextResource(
             uri=AnyUrl(RELEASE_URI),
             name=RELEASE_URI,
-            text=text,
+            text=json.dumps(
+                {
+                    "distribution": report.distribution,
+                    "version": report.version,
+                    "content_sha256": report.content_sha256,
+                },
+                sort_keys=True,
+            ),
             mime_type="application/json",
         )
     )
     return True
 
 
+def _distribution_name(content: ConnectorContent) -> str:
+    """The distribution that ships the package, from the import name."""
+    from importlib.metadata import packages_distributions
+
+    found = packages_distributions().get(content.package_root.name, [])
+    return found[0] if found else content.connector
+
+
 def register_connector_content(
-    mcp: Any, content: ConnectorContent
+    mcp: Any,
+    content: ConnectorContent,
+    *,
+    release_evidence: Callable[[str], ReleaseEvidence] = installed_release_evidence,
 ) -> ContentRegistration:
     """Register the connector's skills, prompts and content resources on ``mcp``.
 
@@ -285,7 +301,7 @@ def register_connector_content(
         mcp.add_resource(resource)
     source = resource_descriptor_source(mcp, content)
     seed = source is not None and register_seed_resource(mcp, content, source)
-    register_release_resource(mcp, content)
+    register_release_resource(mcp, content, evidence=release_evidence)
     return ContentRegistration(
         skills=skill_count,
         prompts=len(prompt_paths),

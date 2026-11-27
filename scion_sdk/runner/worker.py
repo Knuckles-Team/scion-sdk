@@ -206,7 +206,7 @@ class ConnectorWorker:
             connector=name,
             kinds=services.kinds,
             sink=services.sink,
-            trusted_keys=services.release_keys,
+            pins=services.release_pins,
         )
         self._resource_uris = outcome.resource_uris
         event = "pack_imported" if outcome.changed else "pack_unchanged"

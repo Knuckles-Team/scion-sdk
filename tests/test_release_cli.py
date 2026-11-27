@@ -1,69 +1,37 @@
-"""``connector-release-sign`` writes verifiable evidence and refuses bad keys (R650.1.2)."""
+"""``connector-release-digest`` prints the digests a release record carries (R650.1.2)."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
-from release_fixture import CONNECTOR, package, server
-from release_support import KEY_ID, TRUSTED, _Resolver, write_lock
+from test_release_digest import FILES, _wheel
 
 from scion_sdk.certify import release_cli
-from scion_sdk.manifest.release_lock import create_release_key_lock
-from scion_sdk.ports.session import TransportEndpoint
-from scion_sdk.runner.provisioning import verify_release
-from scion_sdk.transports.mcp import McpTransport
-
-
-def _arguments(root: Path, lock: Path, key_ref: str) -> list[str]:
-    return [
-        "--package-root", str(root), "--connector", CONNECTOR,
-        "--key-id", KEY_ID, "--key-ref", key_ref, "--lock", str(lock),
-        "--", "unused-server-command",
-    ]  # fmt: skip
-
-
-@pytest.fixture
-def served(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    content = package(tmp_path / "pkg")
-    monkeypatch.setattr(
-        release_cli,
-        "build_endpoint",
-        lambda _args: TransportEndpoint(in_process=server(content)),
-    )
-    monkeypatch.setattr(release_cli, "default_credential_resolver", _Resolver)
-    return tmp_path / "pkg"
+from scion_sdk.manifest.release_digest import CONTENT_PREFIX
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R650.1.2")
-async def test_sign_writes_verifiable_evidence_and_refuses_untrusted_key(
-    served: Path, tmp_path: Path, caplog: pytest.LogCaptureFixture
+def test_digest_command_prints_pins_and_refuses_a_bad_wheel(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from functools import partial
-
-    import anyio
-
-    key_ref = f"openbao://apps/{CONNECTOR}/sign#seed@1"
-    lock = write_lock(tmp_path / "good.lock")
-    code = await anyio.to_thread.run_sync(
-        partial(release_cli.main, _arguments(served, lock, key_ref))
+    wheel = _wheel(tmp_path / "digestdemo-1.0.0-py3-none-any.whl", FILES)
+    sdist = tmp_path / "digestdemo-1.0.0.tar.gz"
+    sdist.write_bytes(b"source")
+    assert release_cli.main([str(wheel), "--sdist", str(sdist)]) == 0
+    printed = json.loads(capsys.readouterr().out)
+    wheel_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
+    assert printed["distribution"] == "digestdemo" and printed["version"] == "1.0.0"
+    assert printed["wheel_sha256"] == wheel_sha
+    assert printed["sdist_sha256"] == hashlib.sha256(b"source").hexdigest()
+    assert printed["artifact_digests"] == sorted(
+        [
+            f"sha256:{wheel_sha}",
+            f"sha256:{printed['sdist_sha256']}",
+            f"{CONTENT_PREFIX}{printed['content_sha256']}",
+        ]
     )
-    assert code == 0
-    written = (served / "release.json").read_text(encoding="utf-8")
-    assert set(__import__("json").loads(written)) == {"key_id", "digest", "signature"}
-    content = package(served)
-    async with McpTransport().session(
-        TransportEndpoint(in_process=server(content))
-    ) as session:
-        await verify_release(session, CONNECTOR, TRUSTED)
-    (served / "release.json").unlink()
-    other = Path(tmp_path / "other.lock")
-    create_release_key_lock(other, {"artifact": (KEY_ID, bytes(32))})
-    for lock_file, ref in (
-        (other, key_ref),
-        (lock, f"openbao://apps/{CONNECTOR}/sign#seed"),
-    ):
-        code = await anyio.to_thread.run_sync(
-            partial(release_cli.main, _arguments(served, lock_file, ref))
-        )
-        assert code == 2 and not (served / "release.json").exists()
+    assert release_cli.main([str(tmp_path / "absent.whl")]) == 2
+    assert capsys.readouterr().out == ""

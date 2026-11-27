@@ -37,7 +37,7 @@ from scion_sdk.runner.static_registry import (
     load_runner_config,
 )
 
-_SETTINGS = {"settings": {"release_lock": "release.lock"}}
+_SETTINGS = {"settings": {}}
 
 
 def _connector(**endpoint: Any) -> dict[str, Any]:
@@ -56,7 +56,7 @@ async def test_config_anchors_paths_and_lists_connectors(tmp_path: Path) -> None
     config = _write(
         tmp_path / "runner.yml",
         {
-            "settings": {"max_concurrency": 2, "release_lock": "release.lock"},
+            "settings": {"max_concurrency": 2},
             "connectors": [_connector()],
         },
     )

@@ -459,11 +459,7 @@ non-ASCII text against the named divisor.
   contract. Owner merge `1915fce3ef886c82ce17edbf9cb0d92bdfe50dfb` passed
   its PR checks. This is not SDK-local evidence or engine mapping proof.
 
-- **SCION-CONNECTOR-CONTROL-R650.1:** Future acceptance must bind the current
-  live declaration and ontology to the signed release. Confirm signer-lock
-  agreement, declared rotation, canonical signature encoding and rejection of
-  environment-backed publication keys. The removed manifest tests do not
-  establish this proof.
+- **SCION-CONNECTOR-CONTROL-R650.1:** Acceptance binds the wheel a connector runs from to the digest its release recorded: a matching pin provisions, and an unreported, invalid, unavailable, missing or differing digest refuses before any pack is imported.
 
 ## Malformed Retry-After (SCION-CONNECTOR-CONTROL-R780.3)
 
@@ -513,17 +509,14 @@ process settings do not alter the result, and an unknown profile refuses.
 
 - `SCION-CONNECTOR-CONTROL-R050.8`: `tests/test_ordered_progress.py` checks ordering, suppression, bounds, redaction and terminal refusal.
 
-- `SCION-CONNECTOR-CONTROL-R650.2`: `tests/test_release_identity.py::test_release_digest_binds_live_declaration_and_graph` checks order invariance and changes to each input.
+- `SCION-CONNECTOR-CONTROL-R650.2`: `tests/test_release_digest.py::test_wheel_and_install_agree_and_every_file_counts` checks wheel and install agree and each file changes the digest; `tests/test_release_digest.py::test_an_edit_after_install_or_a_missing_install_refuses` checks refusals.
 
-- `SCION-CONNECTOR-CONTROL-R650.3`: `tests/test_release_signature.py` covers input tampering, key scope, version, trust and canonical signature refusals.
-- `SCION-CONNECTOR-CONTROL-R650.4`: `tests/test_release_lock.py` uses lock pins in actual release signing and verification and refuses malformed locks.
 - `SCION-CONNECTOR-CONTROL-R048.7`: `tests/test_readable_form.py` covers finite ratios and refuses non-ratios through both constructors.
 
 - `SCION-CONNECTOR-CONTROL-R048.8`: `tests/test_readable_count_score.py` checks the ratio and refuses invalid grades.
 
 - `SCION-CONNECTOR-CONTROL-R046.9`: `tests/test_oauth_token_key_identity.py` tests key collisions and refuses ambiguous legacy files.
 
-- `SCION-CONNECTOR-CONTROL-R650.5`: `tests/test_release_lock.py` checks lock creation, round-trip and refusal without replacement.
 
 - `SCION-CONNECTOR-CONTROL-R014.30`: `tests/test_http_dns_pinned_egress.py` covers shared-address refusal through the URL guard and governed transports.
 - `SCION-CONNECTOR-CONTROL-R014.31`: `tests/test_http_dns_pinned_egress.py` checks cancellation during blocked DNS without a transport call.
@@ -586,10 +579,10 @@ Rows that carry no pytest spec marker are proven by the test named in their own 
 | `SCION-CONNECTOR-CONTROL-R065.6` | `tests/test_component_health_served.py::test_unconfigured_and_disabled_suppress_alerts` |
 | `SCION-CONNECTOR-CONTROL-R017.1` | `tests/test_tls_bundle_served.py::test_connector_call_verifies_against_bundle_and_refuses_mismatch` |
 | `SCION-CONNECTOR-CONTROL-R650.1.1` | `tests/test_release_evidence.py::test_release_resource_is_served_and_not_packed` |
-| `SCION-CONNECTOR-CONTROL-R650.1.2` | `tests/test_release_cli.py::test_sign_writes_verifiable_evidence_and_refuses_untrusted_key` |
+| `SCION-CONNECTOR-CONTROL-R650.1.2` | `tests/test_release_cli.py::test_digest_command_prints_pins_and_refuses_a_bad_wheel` |
 | `SCION-CONNECTOR-CONTROL-R650.1.3` | `tests/test_runner_release.py::test_each_code_blocks_provisioning` |
-| `SCION-CONNECTOR-CONTROL-R650.1.4` | `tests/test_runner_release.py::test_startup_requires_a_readable_lock` |
-| `SCION-CONNECTOR-CONTROL-R650.1.5` | `tests/test_release_verification_served.py::test_runner_refuses_unsigned_and_tampered_release` |
+| `SCION-CONNECTOR-CONTROL-R650.1.4` | `tests/test_runner_release.py::test_pins_come_from_the_caller_or_the_engine_record` |
+| `SCION-CONNECTOR-CONTROL-R650.1.5` | `tests/test_release_verification_served.py::test_runner_refuses_unpinned_and_altered_release` |
 | `SCION-CONNECTOR-CONTROL-R904.1` | `tests/test_ordered_equivalent_fallback.py::test_transport_follows_ranked_path_order`, `tests/test_ordered_equivalent_fallback.py::test_transport_follows_ranked_path_order` |
 | `SCION-CONNECTOR-CONTROL-R904.2` | `tests/test_ordered_equivalent_fallback.py::test_outcomes_report_through_evaluate`, `tests/test_ordered_equivalent_fallback.py::test_outcomes_report_through_evaluate` |
 | `SCION-CONNECTOR-CONTROL-R904.3` | `tests/test_ordered_equivalent_fallback.py::test_served_read_fails_over_in_ranked_order` |

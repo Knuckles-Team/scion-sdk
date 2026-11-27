@@ -134,10 +134,7 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [ ] T127 [US1] SCION-CONNECTOR-CONTROL-R007.5 Evidence.
 - [ ] T128 [US1] SCION-CONNECTOR-CONTROL-R007.6 Hot-path proof.
 - [ ] T129 [US1] SCION-CONNECTOR-CONTROL-R060 Native desktop operation port with a no-cursor, no-focus invariant.
-- [x] T130 [US1] SCION-CONNECTOR-CONTROL-R650.2 Release identity digest.
-- [x] T131 [US1] SCION-CONNECTOR-CONTROL-R650.3 Explicit release signing.
-- [x] T132 [US1] SCION-CONNECTOR-CONTROL-R650.4 Explicit release key lock.
-- [x] T133 [US1] SCION-CONNECTOR-CONTROL-R650.5 Create a release key lock.
+- [x] T130 [US1] SCION-CONNECTOR-CONTROL-R650.2 Wheel content digest.
 - [x] T134 [US1] SCION-CONNECTOR-CONTROL-R014.30 Reject unlisted shared addresses.
 - [x] T135 [US1] SCION-CONNECTOR-CONTROL-R014.31 Cancellable async DNS pinning.
 - [ ] T136 [US1] SCION-CONNECTOR-CONTROL-R051.1 Model.
@@ -270,10 +267,10 @@ Each task line reads `- [ ] T001 [P] [US1] <ID>-R012.4 description`. The task nu
 - [x] T263 [US1] SCION-CONNECTOR-CONTROL-R075.5 Skills, ontology and shapes stay on fastmcp.
 - [x] T264 [US1] SCION-CONNECTOR-CONTROL-R075.6 Mapping references name the declaration.
 - [x] T265 [US1] SCION-CONNECTOR-CONTROL-R075.7 The declaration entry carries its content schema.
-- [ ] T266 [US1] SCION-CONNECTOR-CONTROL-R650.1.1 Release evidence resource.
-- [ ] T267 [US1] SCION-CONNECTOR-CONTROL-R650.1.2 Signing command.
+- [ ] T266 [US1] SCION-CONNECTOR-CONTROL-R650.1.1 Wheel digest resource.
+- [ ] T267 [US1] SCION-CONNECTOR-CONTROL-R650.1.2 Digest command.
 - [ ] T268 [US1] SCION-CONNECTOR-CONTROL-R650.1.3 Verification in the runner.
-- [ ] T269 [US1] SCION-CONNECTOR-CONTROL-R650.1.4 Trust configuration.
+- [ ] T269 [US1] SCION-CONNECTOR-CONTROL-R650.1.4 Pin configuration.
 - [ ] T270 [US1] SCION-CONNECTOR-CONTROL-R650.1.5 Hot-path proof.
 - [x] T271 [US1] SCION-CONNECTOR-CONTROL-R781.1 Route trajectory and training calls.
 - [ ] T272 [US1] SCION-CONNECTOR-CONTROL-R904.1 Ranked order.

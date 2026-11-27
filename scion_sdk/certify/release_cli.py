@@ -1,134 +1,63 @@
-"""The ``connector-release-sign`` console script.
+"""The ``connector-release-digest`` console script.
 
-``connector-release-sign --package-root DIR --key-id ID --key-ref REF --lock FILE
--- COMMAND [ARG ...]`` starts the connector over stdio as ``connector-certify``
-does, reads its live declaration and ontology, signs their digest and writes
-``release.json`` atomically into the package root (SCION-CONNECTOR-CONTROL-R650.1.2).
+``connector-release-digest WHEEL [--sdist FILE]`` prints one JSON document for a
+built connector wheel: the distribution, the version, the sha256 of the wheel
+file, the sha256 of the sdist when given, the content digest the runner
+verifies (SCION-CONNECTOR-CONTROL-R650.1.2) and ``artifact_digests``, the strings
+a release record carries. No key and no secret take part.
 
-Exit ``0``: written. ``2``: refused, with the signing error message.
+Exit ``0``: printed. ``2``: refused, with the reason.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
-import os
 import sys
-import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 
-import anyio
-
-from scion_sdk.artifacts.release_inputs import read_release_inputs
-from scion_sdk.certify.cli import build_endpoint
-from scion_sdk.credentials.provider import CredentialProvider
-from scion_sdk.credentials.references import (
-    SecretReferenceError,
-    parse_secret_reference,
-)
-from scion_sdk.credentials.resolution import default_credential_resolver
-from scion_sdk.manifest.release_lock import load_release_key_lock
-from scion_sdk.manifest.release_signature import ReleaseSigningError, sign_release
-from scion_sdk.ports.session import TransportEndpoint
+from scion_sdk.manifest.release_digest import ReleaseDigestError, wheel_release_evidence
 
 __all__ = ["main"]
 
 _logger = logging.getLogger(__name__)
-#: ``build_endpoint`` options this command never sets: a stdio server only.
-_BLANK_FIELDS = (
-    "url",
-    "bearer_token",
-    "predecessor_url",
-    "predecessor_bearer_token",
-    "oidc_issuer",
-    "oidc_token_url",
-    "oidc_client_id",
-    "oidc_client_secret_ref",
-    "oidc_audience",
-    "oidc_scope",
-)
 
 
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="connector-release-sign")
-    parser.add_argument("--package-root", type=Path, required=True)
-    parser.add_argument(
-        "--connector", required=True, help="connector name (scopes the key)"
-    )
-    parser.add_argument("--key-id", required=True)
-    parser.add_argument("--key-ref", required=True, help="versioned openbao reference")
-    parser.add_argument("--lock", type=Path, required=True)
-    parser.add_argument("--timeout", type=float, default=60.0)
-    parser.add_argument("--env", action="append", default=[], metavar="NAME=REFERENCE")
-    parser.add_argument("--placeholder", action="append", default=[], metavar="NAME")
-    parser.epilog = "Everything after -- is the stdio server command and its arguments."
-    return parser
-
-
-def _write_release_evidence(root: Path, evidence: dict[str, str]) -> Path:
-    """Write ``release.json`` into ``root`` atomically."""
-    target = root / "release.json"
-    body = json.dumps(evidence, sort_keys=True, indent=2) + "\n"
-    with tempfile.NamedTemporaryFile(
-        "w", dir=root, delete=False, encoding="utf-8"
-    ) as handle:
-        handle.write(body)
-        handle.flush()
-        os.fsync(handle.fileno())
-    Path(handle.name).replace(target)
-    return target
-
-
-async def _sign(
-    endpoint: TransportEndpoint, args: argparse.Namespace
-) -> dict[str, str]:
-    from scion_sdk.transports.mcp import McpTransport
-
-    trusted = load_release_key_lock(args.lock)
-    reference = parse_secret_reference(args.key_ref)
-    async with McpTransport().session(endpoint) as session:
-        declaration, graph = await read_release_inputs(session)
-    provider = CredentialProvider(default_credential_resolver(), args.connector)
-    signed = sign_release(
-        declaration,
-        graph,
-        key_id=args.key_id,
-        key_reference=reference,
-        provider=provider,
-        trusted_keys=trusted,
-    )
-    return {
-        "key_id": signed.key_id,
-        "digest": signed.digest,
-        "signature": signed.signature,
-    }
+def _file_digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run ``connector-release-sign``; returns the process exit code."""
+    """Run ``connector-release-digest``; returns the process exit code."""
     logging.basicConfig(stream=sys.stderr, format="%(message)s", level=logging.INFO)
-    items = list(sys.argv[1:] if argv is None else argv)
-    split = items.index("--") if "--" in items else len(items)
-    args = _parser().parse_args(items[:split])
-    args.command = items[split + 1 :]
-    blank = dict.fromkeys(_BLANK_FIELDS, "")
-    namespace = argparse.Namespace(
-        command=args.command,
-        env=args.env,
-        placeholder=args.placeholder,
-        timeout=args.timeout,
-        **blank,
-    )
+    parser = argparse.ArgumentParser(prog="connector-release-digest")
+    parser.add_argument("wheel", type=Path)
+    parser.add_argument("--sdist", type=Path)
+    args = parser.parse_args(sys.argv[1:] if argv is None else list(argv))
     try:
-        endpoint = build_endpoint(namespace)
-        evidence = anyio.run(_sign, endpoint, args)
-        _write_release_evidence(args.package_root, evidence)
-    except (ReleaseSigningError, SecretReferenceError) as error:
-        _logger.error("connector-release-sign: %s", error)
+        evidence = wheel_release_evidence(args.wheel)
+        wheel_sha256 = _file_digest(args.wheel)
+        sdist_sha256 = _file_digest(args.sdist) if args.sdist else None
+    except (ReleaseDigestError, OSError) as error:
+        _logger.error("connector-release-digest: %s", error)
         return 2
-    except Exception:
-        _logger.error("connector-release-sign cannot sign this connector")
-        return 2
+    digests = [f"sha256:{wheel_sha256}", evidence.pin]
+    if sdist_sha256 is not None:
+        digests.append(f"sha256:{sdist_sha256}")
+    print(
+        json.dumps(
+            {
+                "distribution": evidence.distribution,
+                "version": evidence.version,
+                "wheel_sha256": wheel_sha256,
+                "sdist_sha256": sdist_sha256,
+                "content_sha256": evidence.content_sha256,
+                "artifact_digests": sorted(digests),
+            },
+            sort_keys=True,
+        )
+    )
     return 0
