@@ -34,16 +34,16 @@ FLEET_PACKAGES = Path(__file__).parent / "fleet_packages"
 FRESHRSS_ROOT = FLEET_PACKAGES / "freshrss-agent"
 ARCHIVEBOX_ROOT = FLEET_PACKAGES / "archivebox-api"
 FRESHRSS_ENUM_SHA256 = (
-    "7e18bf9ed1c48cadece180e17777cc68da409d0e86cb79fbebcf69172794d3b4"
+    "2ae6aba58275c066ac6c57e04918e8bbe37979e0f9bf8ffdec2d94ade48d996c"
 )
 ARCHIVEBOX_ENUM_SHA256 = (
-    "f86ef345d867f55d1a343f684357291f80a1071bccdef5bde8ff859fea3dcc8d"
+    "33ac1d3445998f97af9d4b9b04f2ea70dc9ed0b0863ced2e17d40a946a6ea492"
 )
 FRESHRSS_CURRENT_SHA256 = (
-    "853fb6e29803342a2b48e6000d1669a50b029a6414cf36f64fffd035d5838f5f"
+    "c7083cbaa053a6bdfb39e125b34a10afe2ce4cd941ff993db4d32de9dbabab85"
 )
 ARCHIVEBOX_CURRENT_SHA256 = (
-    "a8227dfe8c93b062ebea2f1e055fbf14621d3e21972594b5fddfb64b9b549fe8"
+    "acb5d74b06ea3f62fc540723eff6b49246f9b05d75617237bd75888b4f5f5e73"
 )
 FRESHRSS_READING_LIST = "data://freshrss-agent/reading-list"
 
