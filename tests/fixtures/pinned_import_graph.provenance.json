@@ -39,6 +39,7 @@
         "medulla.generated._shared": "medulla/generated/_shared.py",
         "medulla.generated.connector_pack": "medulla/generated/connector_pack.py",
         "medulla.generated.coordination": "medulla/generated/coordination.py",
+        "medulla.generated.graph": "medulla/generated/graph.py",
         "medulla.generated.index_repository": "medulla/generated/index_repository.py",
         "medulla.generated.ingestion": "medulla/generated/ingestion.py",
         "medulla.generated.models": "medulla/generated/models.py",
