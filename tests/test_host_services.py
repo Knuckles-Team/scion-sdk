@@ -25,7 +25,7 @@ PLATFORMS = ("linux", "darwin", "windows")
 
 def _provider(
     platform: str, out: str = "ok"
-) -> tuple[CommandHostServiceProvider, list]:
+) -> tuple[CommandHostServiceProvider, list[Sequence[str]]]:
     calls: list[Sequence[str]] = []
 
     def run(argv: Sequence[str]) -> str:
