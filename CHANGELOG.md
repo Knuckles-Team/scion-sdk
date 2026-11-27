@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.13.0
+
+### Changed
+
+- Connector releases are no longer key-signed. A connector serves the content digest of the wheel it
+  runs from at `connector://release`, and the runner refuses it unless that digest is among the digests
+  the release pipeline recorded in the engine's sealed release record (SCION-CONNECTOR-CONTROL-R650).
+  The refusal codes are `RELEASE_DIGEST_UNREPORTED`, `RELEASE_EVIDENCE_INVALID`,
+  `RELEASE_PIN_UNAVAILABLE`, `RELEASE_PIN_MISSING` and `RELEASE_DIGEST_MISMATCH`.
+- `connector-release-digest` replaces `connector-release-sign`. `default_services` takes
+  `release_pins` and otherwise reads the pins through the verified engine client.
+
+### Removed
+
+- The release signing, key lock and identity modules, `RunnerSettings.release_lock`, and the
+  `release.json` file a signed wheel carried. There is no compatibility path.
+
 ## 0.12.1
 
 ### Fixed

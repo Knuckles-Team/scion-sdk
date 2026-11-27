@@ -20,7 +20,7 @@ pyoxigraph==0.5.11
 pyparsing==3.3.3
 pyyaml==6.0.3
 rdflib==7.6.0
-scion-sdk==0.12.1
+scion-sdk==0.13.0
 truststore==0.10.5
 typing-extensions==4.16.0
 typing-inspection==0.4.4
