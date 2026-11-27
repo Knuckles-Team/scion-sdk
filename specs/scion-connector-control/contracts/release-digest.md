@@ -2,7 +2,6 @@
 
 Provider: scion-sdk SCION-CONNECTOR-CONTROL-R650.1.2
 Provider: scion-sdk SCION-CONNECTOR-CONTROL-R650.1.4
-Provider: pipelines PIPE-RELEASE-R009
 Consumer: pipelines PIPE-RELEASE-R019
 Consumer: arbora ARBORA-HOST-R037
 
@@ -29,6 +28,5 @@ Consumer: arbora ARBORA-HOST-R037
 ## Owner rows
 
 - Provider: scion-sdk SCION-CONNECTOR-CONTROL-R650.1.2 and SCION-CONNECTOR-CONTROL-R650.1.4.
-- Provider: pipelines PIPE-RELEASE-R009 (the release record the runner reads).
 - Consumer: pipelines PIPE-RELEASE-R019.
 - Consumer: arbora ARBORA-HOST-R037.
