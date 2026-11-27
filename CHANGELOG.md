@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.12.0
+
+### Added
+
+- Host service and log provider interface: `HostServiceProvider`, the closed `HOST_SERVICE_ADAPTERS`
+  table for Linux, macOS and Windows, and `HostServiceError` with redacted log lines
+  (SCION-CENTRALIZED-CAPABILITIES-R056).
+- Transport clients for Linked Data resources, SPARQL, entity reconciliation and an approved SQL client,
+  with engine verification at every boundary.
+- Connector control: environment declarations exported from a static census, the connector pack
+  contract authored as Turtle, the connector seed graph served with digest metadata, operation
+  descriptors and the scope registry in the handshake, caller-scoped tool context and call receipts,
+  a registry of admitted connector transports, and a fleet census receipt.
+- Runner and adapters: paper intake dispatch with citation edges, harness-session sync over the
+  approved manifest, validated media tags, EVM trade log decoding, a delta repository index, and
+  signed release verification with component health.
+- Write-back: wallet prepare-then-sign with proof evidence, and wallet-proof sinks that verify an
+  envelope through the engine trust record.
+- Scoped credential provider boundary and a PKCE auth manager.
+
+### Changed
+
+- The MCP tool contract fingerprints use the SDK-owned labels `scion-sdk:mcp-tool-contract` and
+  `scion-sdk:mcp-tool-contract-compat` (SCION-CONNECTOR-CONTROL-R067.3). Recorded pins are recomputed;
+  the fleet recertifies against them.
+- The rollout command moved to the testing layer.
+
+### Fixed
+
+- The agent card derives its streaming capability from the wired storage.
+- Unauthenticated MCP calls run in the anonymous tenant scope.
+
 ## 0.11.3
 
 ### Fixed
