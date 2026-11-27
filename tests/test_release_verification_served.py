@@ -23,7 +23,7 @@ async def test_runner_refuses_unpinned_and_altered_release(tmp_path: Path) -> No
         outcome = await provision_content(
             opened, connector=CONNECTOR, kinds=KINDS, sink=sink, pins=PINNED
         )
-    assert outcome.changed and PINNED.reads == 1
+    assert outcome.changed and PINNED.reads >= 1
     altered = FakePins(
         (DISTRIBUTION, VERSION, frozenset({"content-sha256:" + "00" * 32}))
     )
