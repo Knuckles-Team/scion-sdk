@@ -1,27 +1,19 @@
 """Connector manifest schema, sync presets, tool-schema fingerprints and loaders."""
 
-from scion_sdk.manifest.release_identity import release_identity_digest
-from scion_sdk.manifest.release_lock import (
-    MAX_RELEASE_LOCK_BYTES,
-    create_release_key_lock,
-    load_release_key_lock,
-)
-from scion_sdk.manifest.release_signature import (
-    ReleaseSignature,
-    ReleaseSigningError,
+from scion_sdk.manifest.release_digest import (
+    CONTENT_PREFIX,
+    ReleaseDigestError,
+    ReleaseEvidence,
+    installed_release_evidence,
     read_release_evidence,
-    sign_release,
-    verify_release,
+    wheel_release_evidence,
 )
 
 __all__ = [
-    "MAX_RELEASE_LOCK_BYTES",
-    "ReleaseSignature",
-    "ReleaseSigningError",
-    "create_release_key_lock",
-    "load_release_key_lock",
+    "CONTENT_PREFIX",
+    "ReleaseDigestError",
+    "ReleaseEvidence",
+    "installed_release_evidence",
     "read_release_evidence",
-    "release_identity_digest",
-    "sign_release",
-    "verify_release",
+    "wheel_release_evidence",
 ]

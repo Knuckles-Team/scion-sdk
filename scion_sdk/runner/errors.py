@@ -34,10 +34,11 @@ class CredentialResolutionError(PermissionError):
 
 
 class ReleaseVerificationError(RuntimeError):
-    """A connector's signed release failed verification; ``code`` is closed.
+    """A connector's release digest failed verification; ``code`` is closed.
 
-    Codes: ``RELEASE_UNSIGNED``, ``RELEASE_KEY_UNTRUSTED``,
-    ``RELEASE_DIGEST_MISMATCH`` and ``RELEASE_SIGNATURE_INVALID``.
+    Codes: ``RELEASE_DIGEST_UNREPORTED``, ``RELEASE_EVIDENCE_INVALID``,
+    ``RELEASE_PIN_UNAVAILABLE``, ``RELEASE_PIN_MISSING`` and
+    ``RELEASE_DIGEST_MISMATCH``.
     """
 
     def __init__(self, code: str) -> None:

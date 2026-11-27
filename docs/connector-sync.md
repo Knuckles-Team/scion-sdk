@@ -124,13 +124,14 @@ reaches the pod IP rather than the container's loopback interface) unless
 
 ## Configuration
 
+Every connector release is verified before it provisions: the connector reports the content digest of the wheel it runs from, and the runner compares it with the digest the release pipeline recorded in the sealed release record. A missing record or a differing digest refuses the connector. There is no setting that disables this.
+
 ```yaml
 settings:
   max_concurrency: 4            # cycles running at once, runner-wide
   backoff_initial_seconds: 5    # per connector, doubling after each failure
   backoff_max_seconds: 600
   registry_refresh_seconds: 60  # how often the registry is re-read
-  release_lock: release.lock    # required: pinned release signer keys; every connector release is verified
 connectors:
   - connector: freshrss-agent
     endpoint:

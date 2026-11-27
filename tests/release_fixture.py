@@ -1,18 +1,18 @@
-"""A tiny connector package served in process with optional signed release evidence."""
+"""A tiny connector package served in process, reporting an installed wheel digest or none."""
 
 from __future__ import annotations
 
-import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastmcp import FastMCP
-from release_support import release_evidence
+from release_support import EVIDENCE
 
 from scion_sdk.artifacts.prompts import PromptArtifactKind
 from scion_sdk.artifacts.resources import ResourceArtifactKind
 from scion_sdk.artifacts.skills import SkillArtifactKind
+from scion_sdk.manifest.release_digest import ReleaseDigestError, ReleaseEvidence
 from scion_sdk.mcp.content import ConnectorContent, register_connector_content
 from scion_sdk.ports.session import McpSession, TransportEndpoint
 from scion_sdk.transports.mcp import McpTransport
@@ -33,21 +33,27 @@ def package(root: Path) -> ConnectorContent:
     return ConnectorContent(CONNECTOR, root, "1.0.0")
 
 
-def server(content: ConnectorContent) -> FastMCP[object]:
+def _installed(_distribution: str) -> ReleaseEvidence:
+    return EVIDENCE
+
+
+def _not_installed(_distribution: str) -> ReleaseEvidence:
+    raise ReleaseDigestError("the distribution is not installed")
+
+
+def server(content: ConnectorContent, *, installed: bool = True) -> FastMCP[object]:
+    """The connector over MCP; ``installed=False`` is a source checkout with no wheel."""
     mcp: FastMCP[object] = FastMCP(content.connector, version=content.package_version)
-    register_connector_content(mcp, content)
+    register_connector_content(
+        mcp, content, release_evidence=_installed if installed else _not_installed
+    )
     return mcp
 
 
 @asynccontextmanager
-async def session(content: ConnectorContent) -> AsyncIterator[McpSession]:
-    endpoint = TransportEndpoint(in_process=server(content))
+async def session(
+    content: ConnectorContent, *, installed: bool = True
+) -> AsyncIterator[McpSession]:
+    endpoint = TransportEndpoint(in_process=server(content, installed=installed))
     async with McpTransport().session(endpoint) as opened:
         yield opened
-
-
-async def sign_package(content: ConnectorContent) -> None:
-    """Write ``release.json`` signed over the package's live inputs."""
-    async with session(content) as opened:
-        evidence = await release_evidence(opened, content.connector)
-    content.release_path.write_text(json.dumps(evidence), encoding="utf-8")

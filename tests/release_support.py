@@ -1,72 +1,44 @@
-"""Signed-release fixtures shared by the runner tests (SCION-CONNECTOR-CONTROL-R650.1)."""
+"""Pinned-digest fixtures shared by the runner tests (SCION-CONNECTOR-CONTROL-R650.1)."""
 
 from __future__ import annotations
 
-import base64
 import json
 from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
-from scion_sdk.artifacts.release_inputs import read_release_inputs
-from scion_sdk.credentials.provider import CredentialProvider
-from scion_sdk.credentials.references import parse_secret_reference
-from scion_sdk.manifest.release_lock import create_release_key_lock
-from scion_sdk.manifest.release_signature import sign_release
+from scion_sdk.manifest.release_digest import ReleaseEvidence
 from scion_sdk.ports.session import McpSession, TransportEndpoint
 
 RELEASE_URI = "connector://release"
-KEY_ID = "release-key-1"
-SEED = bytes(range(32))
-PUBLIC = (
-    Ed25519PrivateKey.from_private_bytes(SEED)
-    .public_key()
-    .public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-)
-TRUSTED = {KEY_ID: PUBLIC}
+DISTRIBUTION = "fixture-agent"
+VERSION = "1.0.0"
+CONTENT = "ab" * 32
+EVIDENCE = ReleaseEvidence(DISTRIBUTION, VERSION, CONTENT)
 
 
-class _Resolver:
-    def resolve(self, reference: object) -> str:
-        return base64.urlsafe_b64encode(SEED).decode().rstrip("=")
+class FakePins:
+    """Release pins held in memory, keyed by distribution and version."""
+
+    def __init__(self, *entries: tuple[str, str, frozenset[str]]) -> None:
+        self.entries = {(d, v): digests for d, v, digests in entries}
+        self.reads = 0
+
+    async def pinned_digests(self, distribution: str, version: str) -> frozenset[str]:
+        self.reads += 1
+        return self.entries.get((distribution, version), frozenset())
 
 
-def write_lock(path: Path) -> Path:
-    """A release lock pinning the shared test signer."""
-    if not path.exists():
-        create_release_key_lock(path, {"artifact": (KEY_ID, PUBLIC)})
-    return path
+PINNED = FakePins((DISTRIBUTION, VERSION, frozenset({EVIDENCE.pin})))
 
 
-async def release_evidence(session: McpSession, connector: str) -> dict[str, str]:
-    """Sign the session's live declaration and ontology with the test key."""
-    declaration, graph = await read_release_inputs(session)
-    signed = sign_release(
-        declaration,
-        graph,
-        key_id=KEY_ID,
-        key_reference=parse_secret_reference("openbao://apps/fixture/sign#seed@1"),
-        provider=CredentialProvider(_Resolver(), "fixture"),
-        trusted_keys=TRUSTED,
-    )
-    return {
-        "key_id": signed.key_id,
-        "digest": signed.digest,
-        "signature": signed.signature,
-    }
+class ReportingSession:
+    """Serves ``connector://release`` for whatever the inner session serves."""
 
-
-class SignedSession:
-    """Serves ``connector://release`` signed over whatever the inner session serves."""
-
-    def __init__(self, inner: McpSession, connector: str) -> None:
+    def __init__(self, inner: McpSession, evidence: ReleaseEvidence) -> None:
         self._inner = inner
-        self._connector = connector
+        self._evidence = evidence
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
@@ -84,18 +56,24 @@ class SignedSession:
 
     async def read_resource(self, uri: str) -> str:
         if uri == RELEASE_URI:
-            return json.dumps(await release_evidence(self._inner, self._connector))
+            return json.dumps(
+                {
+                    "distribution": self._evidence.distribution,
+                    "version": self._evidence.version,
+                    "content_sha256": self._evidence.content_sha256,
+                }
+            )
         return await self._inner.read_resource(uri)
 
 
-class SigningTransport:
-    """A transport whose sessions serve a valid signed release."""
+class ReportingTransport:
+    """A transport whose sessions report the fixture's pinned content digest."""
 
-    name = "signing"
+    name = "reporting"
 
-    def __init__(self, inner: Any, connector_of: Any = None) -> None:
+    def __init__(self, inner: Any, evidence: ReleaseEvidence = EVIDENCE) -> None:
         self._inner = inner
-        self._connector_of = connector_of
+        self._evidence = evidence
 
     def session(
         self, endpoint: TransportEndpoint
@@ -103,7 +81,6 @@ class SigningTransport:
         @asynccontextmanager
         async def open_session() -> AsyncIterator[McpSession]:
             async with self._inner.session(endpoint) as session:
-                name = (await session.server_identity()).name
-                yield SignedSession(session, name)  # type: ignore[misc]
+                yield ReportingSession(session, self._evidence)  # type: ignore[misc]
 
         return open_session()

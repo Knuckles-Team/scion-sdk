@@ -5,6 +5,7 @@ from functools import partial
 import anyio
 import pytest
 from fastmcp import FastMCP
+from release_support import PINNED
 
 from scion_sdk.discovery import CertifiedExtensions, sdk_reference_extensions
 from scion_sdk.ingest.live_declaration import source_meta
@@ -68,13 +69,13 @@ async def test_declared_event_feed_reaches_served_worker(tmp_path, monkeypatch):
         sink=sink,
         kinds=(),
         endpoints=lambda _: TransportEndpoint(in_process=server),
-        release_keys={},
-        settings=RunnerSettings(release_lock=tmp_path / "release.lock"),
+        release_pins=PINNED,
+        settings=RunnerSettings(),
         source_adapter_policy=sdk_reference_extensions(),
     )
     config = tmp_path / "runner.yml"
     config.write_text(
-        "settings:\n  release_lock: release.lock\nconnectors:\n  - connector: demo\n    endpoint:\n      url: https://example.invalid/mcp\n    provision: false\n"
+        "settings: {}\nconnectors:\n  - connector: demo\n    endpoint:\n      url: https://example.invalid/mcp\n    provision: false\n"
     )
     monkeypatch.setattr(cli, "default_services", lambda *args, **kwargs: services)
     assert (
@@ -92,8 +93,8 @@ async def test_declared_event_feed_reaches_served_worker(tmp_path, monkeypatch):
         sink=InMemorySink(),
         kinds=(),
         endpoints=lambda _: TransportEndpoint(in_process=server),
-        release_keys={},
-        settings=RunnerSettings(release_lock=tmp_path / "release.lock"),
+        release_pins=PINNED,
+        settings=RunnerSettings(),
         source_adapter_policy=CertifiedExtensions(()),
     )
     assert not await ConnectorWorker(

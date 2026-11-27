@@ -24,7 +24,7 @@ from medulla.generated.source_ingestion import (
     SourceIngestionReceipt,
     SourceIngestionRequest,
 )
-from release_support import TRUSTED, SigningTransport
+from release_support import PINNED, ReportingTransport
 from runner_support import (
     FAST,
     KINDS,
@@ -89,7 +89,7 @@ class _Transport:
         self.opened += 1
         if self.opened <= self.failures:
             raise ConnectionError("connector unreachable")
-        return SigningTransport(McpTransport()).session(endpoint)
+        return ReportingTransport(McpTransport()).session(endpoint)
 
 
 def _target(sink: InMemorySink, max_pages: int) -> SyncTarget:
@@ -105,7 +105,7 @@ async def test_passes_commit_before_advancing(tmp_path: Path) -> None:
     server = build_enumerated_archivebox_server(
         FakeArchiveBox(archivebox_snapshots(250))
     )
-    async with SigningTransport(McpTransport()).session(
+    async with ReportingTransport(McpTransport()).session(
         TransportEndpoint(in_process=server)
     ) as session:
         adapter = (await load_sync_adapters(archivebox_descriptor(), session))[STREAM]
@@ -129,7 +129,7 @@ async def test_passes_commit_before_advancing(tmp_path: Path) -> None:
             connector="archivebox-api",
             kinds=KINDS,
             sink=InMemorySink(),
-            trusted_keys=TRUSTED,
+            pins=PINNED,
         )
         assert isinstance(provisioned, ProvisionOutcome) and provisioned.changed
 
@@ -137,7 +137,7 @@ async def test_passes_commit_before_advancing(tmp_path: Path) -> None:
 async def test_mismatched_receipts_fail_without_rolling_back_eg(tmp_path: Path) -> None:
     sink = _LyingSink()
     server = build_enumerated_archivebox_server(FakeArchiveBox(archivebox_snapshots(3)))
-    async with SigningTransport(McpTransport()).session(
+    async with ReportingTransport(McpTransport()).session(
         TransportEndpoint(in_process=server)
     ) as session:
         adapter = (await load_sync_adapters(archivebox_descriptor(), session))[STREAM]
@@ -149,7 +149,7 @@ async def test_mismatched_receipts_fail_without_rolling_back_eg(tmp_path: Path) 
                 connector="archivebox-api",
                 kinds=KINDS,
                 sink=_LyingSink(),
-                trusted_keys=TRUSTED,
+                pins=PINNED,
             )
     status = await sink.source_status("archivebox-api", STREAM)
     assert status.accepted_checkpoint is not None and len(sink.batches) == 1

@@ -21,13 +21,15 @@ from scion_sdk.discovery import (
     load_extension,
     sdk_reference_extensions,
 )
-from scion_sdk.manifest.release_lock import load_release_key_lock
 from scion_sdk.ports.artifact_kind import ArtifactKind
+from scion_sdk.ports.release_pins import ReleasePins
 from scion_sdk.ports.sink import Sink
 from scion_sdk.ports.transport import Transport
 from scion_sdk.runner.descriptors import RunnerSettings
 from scion_sdk.runner.endpoints import CredentialEndpoints
+from scion_sdk.runner.errors import RunnerConfigurationError
 from scion_sdk.runner.health_state import RunnerHealth
+from scion_sdk.runner.release_pins import MedullaReleasePins
 from scion_sdk.runner.services import RunnerServices
 from scion_sdk.sinks.medulla import PackImportAuthorityResolver
 
@@ -130,6 +132,17 @@ def _decide_runner(
     )
 
 
+def _release_pins(given: ReleasePins | None, sink_client: object | None) -> ReleasePins:
+    """Release verification has no off switch: pins come from the caller or the engine."""
+    if given is not None:
+        return given
+    if sink_client is None:
+        raise RunnerConfigurationError(
+            "release pins are required: pass release_pins or an engine client"
+        )
+    return MedullaReleasePins(sink_client)
+
+
 def _artifact_kinds(policy: ActivationPolicy) -> tuple[ArtifactKind, ...]:
     kinds = tuple(
         extension_instance(ARTIFACT_KIND_GROUP, identity.name, policy=policy)
@@ -151,6 +164,7 @@ def default_services(
     policy: ActivationPolicy | None = None,
     decide_tenant: str | None = None,
     decide_bindings: Bindings | None = None,
+    release_pins: ReleasePins | None = None,
 ) -> RunnerServices:
     """Services from certified entry points and credential resolution.
 
@@ -179,12 +193,9 @@ def default_services(
     Raises:
         ExtensionActivationError: an extension is not certified by ``policy``.
         ExtensionDiscoveryError: an extension is missing or of the wrong port.
-        ReleaseSigningError: the release lock is missing, unreadable or malformed.
+        RunnerConfigurationError: no release pins and no engine client to read them from.
     """
-    del state_dir
-    release_keys = load_release_key_lock(
-        settings.release_lock
-    )  # Stable composition parameter; EG owns all durable checkpoints.
+    del state_dir  # Stable composition parameter; EG owns all durable checkpoints.
     chosen = policy or sdk_reference_extensions()
     transport = extension_instance(TRANSPORT_GROUP, "mcp", policy=chosen)
     sink = extension_instance(
@@ -193,6 +204,7 @@ def default_services(
         policy=chosen,
         **_sink_arguments(sink_name, sink_client, pack_import_authority),
     )
+    pins = _release_pins(release_pins, sink_client)
     kinds = _artifact_kinds(chosen)
     if not isinstance(transport, Transport) or not isinstance(sink, Sink):
         raise ExtensionDiscoveryError("transport or sink extension has the wrong port")
@@ -211,7 +223,7 @@ def default_services(
         kinds=kinds,
         endpoints=CredentialEndpoints(default_credential_resolver()),
         settings=settings,
-        release_keys=release_keys,
+        release_pins=pins,
         health=RunnerHealth(sink=sink, liveness_window_seconds=window),
         decide_runner=runner,
         source_adapter_policy=chosen,

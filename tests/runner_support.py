@@ -27,7 +27,7 @@ from medulla.generated.source_ingestion import (
     SourceIngestionRequest,
     SourceIngestStatus,
 )
-from release_support import TRUSTED, SigningTransport
+from release_support import PINNED, ReportingTransport
 
 from scion_sdk.artifacts.prompts import PromptArtifactKind
 from scion_sdk.artifacts.resources import ResourceArtifactKind
@@ -70,7 +70,6 @@ FAST = RunnerSettings(
     backoff_initial_seconds=0.01,
     backoff_max_seconds=0.05,
     registry_refresh_seconds=0.05,
-    release_lock=Path("release.lock"),
 )
 UNUSED_URL = EndpointSpec(url="https://connector.example.invalid/mcp")
 
@@ -198,12 +197,12 @@ def services(
 ) -> RunnerServices:
     """Runner services over the MCP transport and the four artifact kinds."""
     values: dict[str, Any] = {
-        "transport": SigningTransport(McpTransport()),
+        "transport": ReportingTransport(McpTransport()),
         "sink": sink,
         "kinds": KINDS,
         "endpoints": endpoints,
         "settings": FAST,
-        "release_keys": TRUSTED,
+        "release_pins": PINNED,
     }
     return RunnerServices(**{**values, **overrides})
 

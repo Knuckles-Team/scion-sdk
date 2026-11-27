@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -16,13 +16,9 @@ from scion_sdk.artifacts.pack import (
     build_connector_content_pack,
     build_content_pack,
 )
-from scion_sdk.artifacts.release_inputs import read_release_inputs
-from scion_sdk.manifest.release_signature import (
-    ReleaseSigningError,
-    read_release_evidence,
-)
-from scion_sdk.manifest.release_signature import verify_release as _verify_signature
+from scion_sdk.manifest.release_digest import ReleaseDigestError, read_release_evidence
 from scion_sdk.ports.artifact_kind import ArtifactKind
+from scion_sdk.ports.release_pins import ReleasePins
 from scion_sdk.ports.session import McpSession
 from scion_sdk.ports.sink import CapturedConnectorPack, Sink
 from scion_sdk.runner.errors import ReleaseVerificationError, SinkReceiptError
@@ -58,7 +54,7 @@ async def provision_content(
     connector: str,
     kinds: Sequence[ArtifactKind],
     sink: Sink,
-    trusted_keys: Mapping[str, bytes],
+    pins: ReleasePins,
 ) -> ProvisionOutcome:
     """Read the served content as a pack; import it only when its digest changed.
 
@@ -66,60 +62,48 @@ async def provision_content(
     resolved. The outcome names the MCP resource URIs a change subscription can
     follow.
 
-    The signed release is verified first and fails closed, so an unverified
+    The release digest is verified first and fails closed, so an unverified
     connector imports no pack (SCION-CONNECTOR-CONTROL-R650.1.3).
 
     Raises:
-        ReleaseVerificationError: the release is unsigned, untrusted, altered or invalid.
+        ReleaseVerificationError: the digest is unreported, invalid, unpinned or differs.
         SinkReceiptError: the receipt names another pack.
     """
-    await verify_release(session, connector, trusted_keys)
+    await verify_release(session, connector, pins)
     pack = await build_content_pack(session, connector=connector, kinds=kinds)
     return await _import_pack(pack, sink)
 
 
 async def verify_release(
-    session: McpSession, connector: str, trusted_keys: Mapping[str, bytes]
+    session: McpSession, connector: str, pins: ReleasePins
 ) -> None:
-    """Check the served release evidence against the live inputs and the lock."""
+    """Check the wheel content digest the connector reports against the release pin."""
     resources = await session.list_resources()
     if _RELEASE_URI not in {str(getattr(r, "uri", "")) for r in resources}:
-        raise ReleaseVerificationError("RELEASE_UNSIGNED")
+        raise ReleaseVerificationError("RELEASE_DIGEST_UNREPORTED")
     try:
         evidence = read_release_evidence(await session.read_resource(_RELEASE_URI))
-    except ReleaseSigningError:
-        raise ReleaseVerificationError("RELEASE_SIGNATURE_INVALID") from None
-    if evidence.key_id not in trusted_keys:
-        raise ReleaseVerificationError("RELEASE_KEY_UNTRUSTED")
+    except ReleaseDigestError:
+        raise ReleaseVerificationError("RELEASE_EVIDENCE_INVALID") from None
     try:
-        declaration, graph = await read_release_inputs(session)
-        valid = _verify_signature(
-            declaration, graph, evidence, trusted_keys=trusted_keys
-        )
-        digest_ok = evidence.digest == _live_digest(declaration, graph)
-    except ValueError:
-        raise ReleaseVerificationError("RELEASE_SIGNATURE_INVALID") from None
-    if not digest_ok:
+        pinned = await pins.pinned_digests(evidence.distribution, evidence.version)
+    except Exception:
+        raise ReleaseVerificationError("RELEASE_PIN_UNAVAILABLE") from None
+    if not pinned:
+        raise ReleaseVerificationError("RELEASE_PIN_MISSING")
+    if evidence.pin not in pinned:
         raise ReleaseVerificationError("RELEASE_DIGEST_MISMATCH")
-    if not valid:
-        raise ReleaseVerificationError("RELEASE_SIGNATURE_INVALID")
     _logger.info(
         "connector %s release_verified %s",
         connector,
-        evidence.digest,
+        evidence.content_sha256,
         extra=structured(
             "release_verified",
             connector,
-            key_id=evidence.key_id,
-            digest=evidence.digest,
+            version=evidence.version,
+            digest=evidence.content_sha256,
         ),
     )
-
-
-def _live_digest(declaration: object, graph: object) -> str:
-    from scion_sdk.manifest.release_identity import release_identity_digest
-
-    return release_identity_digest(declaration, graph)  # type: ignore[arg-type]
 
 
 async def provision_connector_content(

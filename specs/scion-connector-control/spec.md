@@ -292,7 +292,7 @@ A connector author or host integrator relies on the SDK for this capability: A c
 - **FR-049**: Budget-limited, approval-gated payment challenge handling (rollup). Rows: SCION-CONNECTOR-CONTROL-R049.
 - **FR-050**: Caller-scoped tool context and ordered progress (rollup). Rows: SCION-CONNECTOR-CONTROL-R050.
 - **FR-051**: Native desktop operation port with a no-cursor, no-focus invariant. Rows: SCION-CONNECTOR-CONTROL-R060.
-- **FR-052**: Release integrity binds the live declaration and ontology to a pinned signer (rollup). Rows: SCION-CONNECTOR-CONTROL-R650.
+- **FR-052**: Release integrity binds the running wheel to the digest its release recorded (rollup). Rows: SCION-CONNECTOR-CONTROL-R650.
 - **FR-053**: Sandbox allocation through one typed port (rollup). Rows: SCION-CONNECTOR-CONTROL-R051.
 - **FR-054**: Visual observation transport between ordered steps (rollup). Rows: SCION-CONNECTOR-CONTROL-R052.
 - **FR-055**: SDK environment declaration export (rollup). Rows: SCION-CONNECTOR-CONTROL-R053.

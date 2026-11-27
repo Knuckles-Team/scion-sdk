@@ -7,14 +7,10 @@ resources trigger which presets. Credentials are references only
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    ValidationInfo,
-    field_validator,
     model_validator,
 )
 
@@ -127,15 +123,6 @@ class RunnerSettings(_Strict):
     backoff_initial_seconds: float = Field(default=5.0, gt=0)
     backoff_max_seconds: float = Field(default=600.0, gt=0)
     registry_refresh_seconds: float = Field(default=60.0, gt=0)
-    #: Operator lock of pinned release signer keys. Fixed safety: required, no
-    #: default and no environment variable disables release verification.
-    release_lock: Path
-
-    @field_validator("release_lock")
-    @classmethod
-    def _anchor_lock(cls, value: Path, info: ValidationInfo) -> Path:
-        base = (info.context or {}).get("base_dir")
-        return base / value if base is not None and not value.is_absolute() else value
 
 
 class RunnerConfig(_Strict):
