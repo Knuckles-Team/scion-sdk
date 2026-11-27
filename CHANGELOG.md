@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.1
+
+### Fixed
+
+- `rdflib` is a base dependency. The Linked Data client is exported from `scion_sdk.transports` and used
+  by ingest, so a base install failed to import them without the `integrity` extra, and the release
+  consumer gate failed on every pinned consumer. The `integrity` extra remains. 0.12.0 was tagged but
+  never published.
+
 ## 0.12.0
 
 ### Added

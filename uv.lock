@@ -5170,7 +5170,7 @@ wheels = [
 
 [[package]]
 name = "scion-sdk"
-version = "0.12.0"
+version = "0.12.1"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
@@ -5182,6 +5182,7 @@ dependencies = [
     { name = "medulla" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "rdflib" },
 ]
 
 [package.optional-dependencies]
@@ -5307,6 +5308,7 @@ requires-dist = [
     { name = "pypdf", marker = "extra == 'workspace'", specifier = ">=6.21.3,<7" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "qdrant-client", marker = "extra == 'vector'", specifier = ">=1.18.0" },
+    { name = "rdflib", specifier = ">=7.1.0" },
     { name = "rdflib", marker = "extra == 'integrity'", specifier = ">=7.1.0" },
     { name = "requests", marker = "extra == 'requests'", specifier = ">=2.34.0,<3" },
     { name = "starlette", marker = "extra == 'a2a'", specifier = ">=1.8.0,<2" },

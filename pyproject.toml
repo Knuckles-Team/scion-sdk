@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scion-sdk"
-version = "0.12.0"
+version = "0.12.1"
 description = "Scion SDK for the Arbora ecosystem: MCP server scaffolding, connector manifests, and typed source/content extension ports"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -31,6 +31,7 @@ dependencies = [
     "anyio>=4.15.1",
     "cryptography>=50.0.2",
     "defusedxml>=0.7.1,<1",
+    "rdflib>=7.1.0",
 ]
 
 [project.optional-dependencies]
