@@ -23,10 +23,6 @@ def release_node_id(distribution: str, version: str) -> str:
 
 def _properties(result: Any) -> dict[str, Any]:
     body = getattr(result, "payload", result)
-    if isinstance(body, (bytes, bytearray)):
-        import msgpack
-
-        body = msgpack.unpackb(bytes(body), raw=False)
     return body if isinstance(body, dict) else {}
 
 
