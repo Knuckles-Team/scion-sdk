@@ -25,7 +25,7 @@ from scion_sdk.testing.results import SessionFactory, assert_conformant
 from scion_sdk.testing.source_adapters import run_source_adapter_suite
 from scion_sdk.transports.mcp import McpTransport
 
-TABLE_WIRE_SHA256 = "55996ec96eb3987015ce7d6ec11cb177141c802577ed087d0c07f70a36d37b16"
+TABLE_WIRE_SHA256 = "9bad9632ceaeb144aee8f87d78dd9bef9df52a899c628c6bbb9fca728a12f434"
 SERVICENOW_STYLE: dict[str, Any] = {
     "server": "table-mcp",
     "tool": "table_records",
