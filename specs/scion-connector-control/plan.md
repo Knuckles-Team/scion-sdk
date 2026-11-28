@@ -758,8 +758,8 @@ records the wheel, sdist and wheel content digests in the engine's sealed
 release record; the runner compares the content digest a connector reports
 against that record and refuses on any difference or absence. The content
 digest covers every file in the wheel, so the live declaration and the
-generated ontology need no separate signature. Package-index attestations
-cover the upload itself. No key, signing token or operator-created file exists.
+generated ontology need no separate signature.
+No attestation leg is pending: digests are the only integrity mechanism. No key, signing token or operator-created file exists.
 
 ### Retry-After malformed header handling (SCION-CONNECTOR-CONTROL-R780.3)
 
