@@ -1,5 +1,5 @@
 {
-  "graph_sha256": "cb815e6a4b02b9007acc86df66ee28ac7d0a26fc97f04a19d23861ef1db5b3ec",
+  "graph_sha256": "c7730ed8eb1771170071fc98dca02c7760e038741ef9118d3bdbb6ba29c0030c",
   "installed_distributions": [
     "annotated-types==0.8.0",
     "anyio==4.15.1",
@@ -23,7 +23,7 @@
     "pyparsing==3.3.3",
     "pyyaml==6.0.3",
     "rdflib==7.6.0",
-    "scion-sdk==0.13.0",
+    "scion-sdk==0.13.1",
     "truststore==0.10.5",
     "typing-extensions==4.16.0",
     "typing-inspection==0.4.4"
