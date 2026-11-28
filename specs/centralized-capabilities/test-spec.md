@@ -152,7 +152,7 @@ The storage tests need no network. An in-process S3 double, fake cloud clients a
 
 ## Machine roll-up proofs
 
-- `SCION-CENTRALIZED-CAPABILITIES-R057`: `tests/test_machine_observer.py::test_changeset_with_the_helper_builds_a_source_ingestion_request_with_the_observes_reference` (planned; the owning change adds the test)
-- `SCION-CENTRALIZED-CAPABILITIES-R057.1`: `tests/test_machine_observer.py::test_observes_machine_targets_the_key_anchor_of_the_vector` (planned; the owning change adds the test)
-- `SCION-CENTRALIZED-CAPABILITIES-R057.2`: `tests/test_machine_observer.py::test_public_surface_exports_the_helper` (planned; the owning change adds the test)
-- `SCION-CENTRALIZED-CAPABILITIES-R057.3`: `tests/test_machine_observer.py::test_changeset_with_the_helper_builds_a_source_ingestion_request_with_the_observes_reference` (planned; the owning change adds the test)
+- `SCION-CENTRALIZED-CAPABILITIES-R057`: `tests/test_machine_observer.py::test_changeset_with_the_helper_builds_a_source_ingestion_request_with_the_observes_reference`
+- `SCION-CENTRALIZED-CAPABILITIES-R057.1`: `tests/test_machine_observer.py::test_observes_machine_targets_the_key_anchor_of_the_vector`
+- `SCION-CENTRALIZED-CAPABILITIES-R057.2`: `tests/test_machine_observer.py::test_public_surface_exports_the_helper`
+- `SCION-CENTRALIZED-CAPABILITIES-R057.3`: `tests/test_machine_observer.py::test_changeset_with_the_helper_builds_a_source_ingestion_request_with_the_observes_reference`

@@ -258,6 +258,7 @@ exclude_dirs = ["tests", "scripts"]
 # The documented public surface. scripts/check_wiring.py orphans treats these and
 # every entry-point target as roots; every other module must be imported by one.
 public_modules = [
+    "scion_sdk.machine",
     "scion_sdk.cli",
     "scion_sdk.runner.ingest_worker_cli",
     "scion_sdk.auth.declare",
