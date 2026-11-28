@@ -1,6 +1,7 @@
 # Release record seam: the digests the runner reads
 
 Provider: arbora ARBORA-HOST-R037
+Consumer: scion-sdk SCION-CONNECTOR-CONTROL-R650
 Consumer: scion-sdk SCION-CONNECTOR-CONTROL-R650.1.4
 
 ## Wire shape
@@ -25,4 +26,4 @@ Arbora records a connector release when it onboards the connector version, throu
 ## Owner rows
 
 - Provider: arbora ARBORA-HOST-R037.
-- Consumer: scion-sdk SCION-CONNECTOR-CONTROL-R650.1.4.
+- Consumer: scion-sdk SCION-CONNECTOR-CONTROL-R650 and SCION-CONNECTOR-CONTROL-R650.1.4.
