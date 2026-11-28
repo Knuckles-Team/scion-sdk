@@ -221,6 +221,7 @@ module = [
     "feedparser",
     "great_expectations",
     "markitdown",
+    "msgpack",
     "oracledb",
     "pandas",
     "pandas.*",
