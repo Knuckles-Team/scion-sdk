@@ -7,6 +7,7 @@ and the engine agree on it byte for byte.
 
 from __future__ import annotations
 
+import importlib
 import json
 from typing import Literal
 
@@ -42,7 +43,7 @@ _REASONS = ("malformed", "placeholder", "empty")
 
 def machine_key_anchor(kind: MachineKeyKind, raw: str) -> str:
     """The key anchor id ``urn:machine-key:<kind>:<32 hex>`` of one machine key."""
-    from medulla import engine
+    engine = importlib.import_module("medulla.engine")
 
     try:
         answer = engine.machine_key_ref(kind, raw)
