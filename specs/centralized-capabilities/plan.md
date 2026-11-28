@@ -387,3 +387,5 @@ Call paths. A connector's server module calls a client in `scion_sdk/transports/
 Reuse inventory. The clients reuse `GovernedTransport`, the typed-problem redaction of R006 and the RDF parser already among the base dependencies. No new HTTP stack, retry loop or SSL context exists.
 
 Decisions. Failures carry a category and a status class and never server text, as the GraphQL client does. The reconciliation client returns candidates only. The engine accepts a link through `MEDULLA-UNIFIED-DATA-PLANE-R030.1`.
+- `SCION-CENTRALIZED-CAPABILITIES-R057.1` consumes the key anchor function of `MEDULLA-MACHINE-R007`. Contract: `contracts/machine-key-anchor.md`.
+- `SCION-CENTRALIZED-CAPABILITIES-R057.1` consumes the key anchor class of `MEDULLA-MACHINE-R004.3`. Contract: `contracts/machine-key-class.md`.
