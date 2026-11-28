@@ -119,8 +119,9 @@ jobs:
           set -euo pipefail
           version="${GITHUB_REF_NAME#v}"
           uv venv "$RUNNER_TEMP/import-check" --python 3.14
-          uv pip install --python "$RUNNER_TEMP/import-check/bin/python" \
-            "scion-sdk==$version"
+          # The index can lag the upload; the install retries for a bounded time.
+          python3 scripts/install_published.py \
+            "$RUNNER_TEMP/import-check/bin/python" "scion-sdk==$version"
           "$RUNNER_TEMP/import-check/bin/python" scripts/check_published_imports.py
 
   # The GitHub release for the tag, created only after the wheel is on PyPI, so

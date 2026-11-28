@@ -270,3 +270,76 @@ def test_import_check_script_fails_on_a_missing_replacement(tmp_path: Path) -> N
     assert "scion_sdk.does_not_import_xyz" in result.stdout
     ok = subprocess.run([sys.executable, str(script)], capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
+
+
+def _install_script() -> object:
+    spec = importlib.util.spec_from_file_location(
+        "install_published", ROOT / "scripts" / "install_published.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class _Installer:
+    """Fails ``failures`` times, as an index that does not list the version yet."""
+
+    def __init__(self, failures: int) -> None:
+        self.failures = failures
+        self.calls: list[list[str]] = []
+        self.now = 0.0
+        self.sleeps: list[float] = []
+
+    def run(self, argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess:
+        self.calls.append(argv)
+        code = 1 if len(self.calls) <= self.failures else 0
+        return subprocess.CompletedProcess(argv, code, "", "no version of x")
+
+    def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.now += seconds
+
+    def clock(self) -> float:
+        return self.now
+
+
+@pytest.mark.spec("SCION-CENTRALIZED-CAPABILITIES-R046.3")
+def test_the_published_install_waits_for_the_index_and_stops_at_the_deadline() -> None:
+    """A version the index lists late is installed; one it never lists fails."""
+    module = _install_script()
+
+    lagging = _Installer(failures=3)
+    assert (
+        module.install_published(  # type: ignore[attr-defined]
+            "py",
+            "scion-sdk==9.9.9",
+            run=lagging.run,
+            sleep=lagging.sleep,
+            clock=lagging.clock,
+        )
+        == 0
+    )
+    assert len(lagging.calls) == 4
+    assert lagging.sleeps == [5.0, 10.0, 20.0]  # exponential backoff
+    assert all("--refresh" in call for call in lagging.calls)  # no cached index answer
+
+    never = _Installer(failures=10**6)
+    assert (
+        module.install_published(  # type: ignore[attr-defined]
+            "py",
+            "scion-sdk==9.9.9",
+            deadline_seconds=100.0,
+            run=never.run,
+            sleep=never.sleep,
+            clock=never.clock,
+        )
+        == 1
+    )
+    assert sum(never.sleeps) == 100.0  # bounded: never waits past the deadline
+    assert max(never.sleeps) <= 60.0  # each wait is capped
+
+    release = (ROOT / ".github" / "workflows" / "release.yml").read_text("utf-8")
+    check = release.split("post-publish-import-check:")[1].split("github-release:")[0]
+    assert "scripts/install_published.py" in check
+    assert "uv pip install" not in check  # no bare, single-shot install of the tag
