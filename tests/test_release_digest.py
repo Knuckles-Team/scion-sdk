@@ -55,10 +55,18 @@ def _install(site: Path, files: dict[str, bytes]) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(body)
     info = site / "digestdemo-1.0.0.dist-info"
-    (info / "INSTALLER").write_text("pip\n")  # an installer file: not in the digest
-    (info / "RECORD").write_text(
-        (info / "RECORD").read_text() + "digestdemo-1.0.0.dist-info/INSTALLER,,\n"
-    )
+    # Installer files (pip and uv) are listed in the installed RECORD and are not in the digest.
+    added = {
+        "INSTALLER": b"uv\n",
+        "REQUESTED": b"",
+        "direct_url.json": b"{}\n",
+        "uv_cache.json": b"{}\n",
+    }
+    rows = ""
+    for name, body in added.items():
+        (info / name).write_bytes(body)
+        rows += _record_row(f"digestdemo-1.0.0.dist-info/{name}", body) + "\n"
+    (info / "RECORD").write_text((info / "RECORD").read_text() + rows)
 
 
 @pytest.mark.spec("SCION-CONNECTOR-CONTROL-R650.2")

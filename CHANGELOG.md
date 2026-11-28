@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.1
+
+### Fixed
+
+- The wheel content digest ignores `uv_cache.json`, an installer file `uv` writes into `.dist-info`. A connector
+  installed with `uv` reported a different digest from its wheel, so the runner refused it with
+  `RELEASE_DIGEST_MISMATCH` (SCION-CONNECTOR-CONTROL-R650.2).
+
 ## 0.13.0
 
 ### Changed

@@ -6,7 +6,7 @@ computed from the wheel's ``RECORD`` at release time and from the installed
 distribution's ``RECORD`` at run time, and the two are equal for one wheel. At
 run time each file is also hashed from disk, so an edit made after install
 changes the answer. Files that an installer adds (``RECORD``, ``INSTALLER``,
-``REQUESTED``, ``direct_url.json``), bytecode and files outside the package
+``REQUESTED``, ``direct_url.json``, ``uv_cache.json``), bytecode and files outside the package
 directories (console scripts) do not take part.
 """
 
@@ -37,7 +37,9 @@ __all__ = [
 #: Prefix of a content digest inside a release record's artifact digests.
 CONTENT_PREFIX = "content-sha256:"
 _DOMAIN = b"scion-wheel-content-v1\0"
-_INSTALLER_FILES = frozenset({"RECORD", "INSTALLER", "REQUESTED", "direct_url.json"})
+_INSTALLER_FILES = frozenset(
+    {"RECORD", "INSTALLER", "REQUESTED", "direct_url.json", "uv_cache.json"}
+)
 _HEX = re.compile(r"[0-9a-f]{64}\Z")
 
 
