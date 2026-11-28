@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+import msgpack
 import pytest
 from release_fixture import CONNECTOR, KINDS, package, session
 from release_support import CONTENT, DISTRIBUTION, EVIDENCE, PINNED, VERSION, FakePins
@@ -75,9 +77,15 @@ async def test_pins_come_from_the_caller_or_the_engine_record(
     pins = _release_pins(None, client)
     assert isinstance(pins, MedullaReleasePins)
     sent: list[tuple[object, dict[str, str], str | None]] = []
-    record = {
+    record = {  # the engine stores the whole record as JSON text in ``release_record``
         "type": "Release",
-        "artifact_digests": ["sha256:" + "1" * 64, EVIDENCE.pin],
+        "release_record": json.dumps(
+            {
+                "repo": DISTRIBUTION,
+                "version": VERSION,
+                "artifact_digests": ["sha256:" + "1" * 64, EVIDENCE.pin],
+            }
+        ),
     }
 
     async def send(
@@ -85,8 +93,8 @@ async def test_pins_come_from_the_caller_or_the_engine_record(
     ) -> object:
         sent.append((client_, params, graph))
         if params["node_id"] == release_node_id(DISTRIBUTION, VERSION):
-            return record
-        return {}
+            return msgpack.packb(record)  # the engine answers MessagePack bytes
+        return msgpack.packb({})
 
     monkeypatch.setattr("medulla.generated.graph.send_get_node_properties", send)
     assert EVIDENCE.pin in await pins.pinned_digests(DISTRIBUTION, VERSION)

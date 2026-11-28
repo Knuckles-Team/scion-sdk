@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.2
+
+### Fixed
+
+- The runner reads a release's pinned digests from the `release_record` text property the engine's
+  `RecordRelease` stores. It read a top-level `artifact_digests` property the engine never writes, so
+  every recorded release refused with `RELEASE_PIN_MISSING`. It also decodes the MessagePack bytes the engine
+  answers a node read with (SCION-CONNECTOR-CONTROL-R650.1.4).
+
 ## 0.13.1
 
 ### Fixed
