@@ -722,6 +722,7 @@ units = [
     "exchange",
     "finance",
     "ingest",
+    "machine",
     "manifest",
     "meeting",
     "raw_source",
