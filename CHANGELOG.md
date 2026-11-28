@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.14.0
+
+### Added
+
+- `scion_sdk.machine`: one helper links a connector record to the machine it describes.
+  `observes_machine(record_id, kind, raw)` builds the `observes` relationship to the key anchor of a
+  machine key (`uuid`, `serial`, `bmc` or `host`); `machine_key_anchor` returns the anchor id the engine
+  derives; `OBSERVES_RELATION` declares the relation on a connector resource; `MachineKeyRefused`
+  carries the kind and the reason (`malformed`, `placeholder` or `empty`) of a refused key
+  (SCION-CENTRALIZED-CAPABILITIES-R057). The anchor id is derived by the engine wheel's
+  `machine_key_ref`, never recomputed in the SDK.
+
 ## 0.13.2
 
 ### Fixed
